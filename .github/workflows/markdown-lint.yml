@@ -12,7 +12,7 @@ jobs:
       - name: job-start
         run: echo "job-start workflow=markdown-lint job=markdownlint sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
       - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v16
+      - uses: DavidAnson/markdownlint-cli2-action@v24
         with:
           globs: '**/*.md'
       - name: job-finish
