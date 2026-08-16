@@ -22,7 +22,7 @@ jobs:
       - name: Log job start
         run: echo "job-start workflow=deploy-pages job=build sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/upload-pages-artifact@v5
         with:
