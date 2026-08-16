@@ -1,0 +1,6 @@
+extends: default
+rules:
+  document-start: disable
+  truthy: enable
+  comments: disable
+  comments-indentation: disable

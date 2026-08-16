@@ -1,0 +1,12 @@
+title = "Gitleaks config for uFawkes suite"
+[allowlist]
+description = "Educational/placeholder values allowed in curriculum content"
+paths = []
+regexes = [
+  '''CHANGEME''',
+  '''PLACEHOLDER''',
+  '''changeme''',
+  '''your-.*-here''',
+  '''example\.com''',
+  '''fake-.*-key''',
+]
