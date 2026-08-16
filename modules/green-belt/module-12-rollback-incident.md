@@ -47,4 +47,4 @@ By the end of this module, you will:
 | **30 minutes** | $20,833      | Moderate        | Minor             |
 | **2 hours**    | $83,333      | Significant     | Moderate          |
 | **8 hours**    | $333,333     | Severe          | Major             |
-| **24 hours**   | $1,000,000   |
+| **24 hours**   | $1,000,000   | Severe           | Major              |
