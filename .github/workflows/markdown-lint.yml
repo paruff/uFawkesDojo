@@ -1,0 +1,20 @@
+name: Markdown Lint
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: job-start
+        run: echo "job-start workflow=markdown-lint job=markdownlint sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
+      - uses: actions/checkout@v4
+      - uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: '**/*.md'
+      - name: job-finish
+        if: always()
+        run: echo "job-finish workflow=markdown-lint job=markdownlint sha=${{ github.sha }} time=$(date -u +%FT%TZ)"

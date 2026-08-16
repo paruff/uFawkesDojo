@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ufawkes-dojo
+  description: Belt-level platform engineering curriculum for the Fawkes IDP family
+  tags:
+    - learning
+    - dojo
+    - fawkes
+  links:
+    - url: https://github.com/paruff/fawkes
+      title: fawkes (core platform)
+spec:
+  type: documentation
+  lifecycle: production
+  owner: paruff

@@ -158,7 +158,7 @@ def start(module: int, user: str | None):
         click.echo(f"   1. Review Module {module} content")
         click.echo("   2. Complete hands-on exercises")
         click.echo("   3. Run: fawkes lab validate --lab [lab-name]")
-        click.echo(f"\n   Documentation: https://docs.fawkes.io/dojo/module-{module}")
+        click.echo(f"\n   Documentation: https://github.com/paruff/uFawkesDojo/blob/main/modules/module-{module}.md")
     except Exception as e:
         click.echo(f"❌ Error starting lab: {e!s}", err=True)
         sys.exit(1)
