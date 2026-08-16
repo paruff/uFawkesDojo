@@ -1,12 +1,15 @@
 # uFawkesDojo
 
 [![Markdown Lint](https://github.com/paruff/uFawkesDojo/actions/workflows/markdown-lint.yml/badge.svg)](https://github.com/paruff/uFawkesDojo/actions/workflows/markdown-lint.yml)
+[![Deploy Pages](https://github.com/paruff/uFawkesDojo/actions/workflows/pages.yml/badge.svg)](https://github.com/paruff/uFawkesDojo/actions/workflows/pages.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Learning Plane — Fawkes IDP Family.** uFawkesDojo is the belt-level,
 hands-on platform engineering curriculum extracted from
 [fawkes](https://github.com/paruff/fawkes). Progress through White → Yellow
 → Green → Brown → Black belt modules, each with labs and assessments.
+
+🌐 **[Live site](https://paruff.github.io/uFawkesDojo/)**
 
 ## Belt Modules
 
