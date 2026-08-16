@@ -1,10 +1,11 @@
 # Pre-commit hooks for uFawkes product suite repos
-# Install: pre-commit install && pre-commit install --hook-type commit-msg && pre-commit install --hook-type pre-push
+# Install: pre-commit install && pre-commit install --hook-type commit-msg
 # Run: pre-commit run --all-files
-# Hook versions are managed by Renovate (see renovate.json in uFawkesPipe) and synced across the suite
+# Hook versions managed by Renovate (see uFawkesPipe renovate.json)
 # Do not edit versions here — update the Renovate config instead
 
-exclude: ^\.git/|^\.github/|^\.vscode/|^\.idea/|^node_modules/|^\.serena/|^\.opencode/|^\.claude/
+exclude: ^\.git/|^\.github/|^\.vscode/|^\.idea/|^node_modules/|
+  ^\.serena/|^\.opencode/|^\.claude/
 
 repos:
   # General file hygiene — runs on every file type
