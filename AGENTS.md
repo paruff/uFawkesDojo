@@ -22,3 +22,9 @@ assessments.
   MD035, MD036, MD040, …) — keep new docs in the same permissive style.
 - Filenames may contain spaces and colons; quote them in shell commands.
 - Keep tooling state out of git: `.omo/`, `.serena/`, `.claude/` are ignored.
+- Commit messages follow Conventional Commits: `type(scope): description`
+  (1-72 chars on the subject line). Types: `feat`, `fix`, `docs`, `style`,
+  `refactor`, `test`, `chore`, `ci`, `perf`, `build`, `revert`. Scope is
+  optional. Enforced locally via `scripts/commit-msg.sh` (run
+  `pre-commit install --hook-type commit-msg` once) and in CI via
+  `.github/workflows/commit-lint.yml` on every PR.
