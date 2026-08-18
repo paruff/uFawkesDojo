@@ -1,0 +1,34 @@
+name: Commit Lint
+on:
+  pull_request:
+
+jobs:
+  commit-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: job-start
+        run: echo "job-start workflow=commit-lint job=commit-lint sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
+      - name: Validate Conventional Commits format
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const regex = /^(feat|fix|docs|style|refactor|test|chore|ci|perf|build|revert)(\(.+\))?: .{1,72}$/;
+            const { data: commits } = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            const bad = commits
+              .map((c) => c.commit.message.split("\n")[0])
+              .filter((subject) => !subject.startsWith("Merge ") && !regex.test(subject));
+            if (bad.length > 0) {
+              core.setFailed(
+                "Commit message(s) do not follow Conventional Commits format " +
+                "(type(scope): description, 1-72 chars):\n" +
+                bad.map((s) => `  "${s}"`).join("\n")
+              );
+            }
+      - name: job-finish
+        if: always()
+        run: echo "job-finish workflow=commit-lint job=commit-lint sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
