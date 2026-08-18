@@ -28,3 +28,7 @@ assessments.
   optional. Enforced locally via `scripts/commit-msg.sh` (run
   `pre-commit install --hook-type commit-msg` once) and in CI via
   `.github/workflows/commit-lint.yml` on every PR.
+- Never swallow an exception in a lab check/validator (e.g. `fawkes-cli.py`
+  grading logic) without logging what broke — a silently-caught exception
+  makes "the check failed to run" look identical to "the check ran and the
+  student passed," which is worse than no check at all.
