@@ -10,7 +10,7 @@ jobs:
       - name: job-start
         run: echo "job-start workflow=commit-lint job=commit-lint sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
       - name: Validate Conventional Commits format
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const regex = /^(feat|fix|docs|style|refactor|test|chore|ci|perf|build|revert)(\(.+\))?: .{1,72}$/;
