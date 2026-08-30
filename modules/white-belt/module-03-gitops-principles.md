@@ -1098,7 +1098,7 @@ kubectl scale deployment/myapp --replicas=10
 
 - [ArgoCD Katacoda Tutorial](https://killercoda.com/argoproj/scenario/argocd) - Interactive lab
 - [GitOps Playground](https://github.com/cloudogu/gitops-playground) - Local GitOps environment
-- [Fawkes Dojo Lab Environment](https://dojo.fawkes.io) - Continue practicing!
+- [Fawkes Dojo Lab Environment](https://dojo.ufawkes.dev) - Continue practicing!
 
 ### Community
 
@@ -1158,7 +1158,7 @@ Next module:
 - ⭐⭐ Needs Improvement
 - ⭐ Poor
 
-**Share feedback**: [Feedback Form](https://dojo.fawkes.io/feedback/module-03)
+**Share feedback**: [Feedback Form](https://dojo.ufawkes.dev/feedback/module-03)
 
 ### Need Help?
 
