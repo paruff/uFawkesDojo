@@ -14,7 +14,7 @@ setup(
     name="fawkes-cli",
     version="1.0.0",
     author="Fawkes Platform Team",
-    author_email="platform-team@fawkes.io",
+    author_email="platform-team@ufawkes.dev",
     description="Command-line tool for Fawkes Platform Engineering Dojo",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -126,7 +126,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Fawkes Platform Team", email = "platform-team@fawkes.io"}
+    {name = "Fawkes Platform Team", email = "platform-team@ufawkes.dev"}
 ]
 keywords = ["platform-engineering", "devops", "kubernetes", "gitops", "dojo"]
 
@@ -380,7 +380,7 @@ mypy src/
 ## Support
 
 - Mattermost: #dojo-support
-- Email: dojo-support@fawkes.io
+- Email: dojo-support@ufawkes.dev
 - Issues: https://github.com/fawkes-platform/fawkes-cli/issues
 
 ## License

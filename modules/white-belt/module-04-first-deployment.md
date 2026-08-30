@@ -974,7 +974,7 @@ Next up is the **White Belt Assessment** (2 hours):
 **Questions or Issues?**
 
 - 💬 Ask in `#dojo-white-belt` on Mattermost
-- 📧 Email: dojo@fawkes.io
+- 📧 Email: dojo@ufawkes.dev
 - 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 
 **Feedback?**
