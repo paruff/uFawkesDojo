@@ -33,6 +33,19 @@ By the end of this module, you will be able to:
 - **2x more likely** to exceed customer satisfaction goals
 - **50% more likely** to have higher market share
 
+> **Update (2026): DORA now tracks five metrics, not four.** In late 2025
+> the DORA research program added **Rework Rate** (the percentage of
+> merged work later reverted, hotfixed, or substantially rewritten) as a
+> fifth key metric — a direct response to AI-assisted coding making it
+> easy to ship code quickly without necessarily shipping it _well_. This
+> module still teaches the original four in depth (they remain valid and
+> are the foundation), and flags where the fifth fits in. You'll see all
+> five live in the hands-on lab below — uFawkesObs's own DORA dashboard is
+> already titled "DORA 2026 — Five Key Metrics." See
+> [dora.dev](https://dora.dev/guides/dora-metrics-four-keys/) and the
+> [CD Foundation's writeup](https://cd.foundation/blog/2025/10/16/dora-5-metrics/)
+> for the full research behind the change.
+
 **Your Opportunity**: These aren't vanity metrics—they're **predictive indicators** of success. Understanding and improving them is literally your competitive advantage.
 
 ### Success Criteria
@@ -366,165 +379,30 @@ Alertmanager detects any incidents
 
 ## 4. Hands-On Lab (20 minutes)
 
-### Lab Overview
+> **Update (2026)**: This section previously described a simulated,
+> LMS-provisioned lab ("click Start Lab", auto-graded submissions,
+> fictional Team Alpha/Bravo/Charlie sample data). That environment was
+> never built. It has been replaced with a real lab that runs against
+> [uFawkesObs](https://github.com/paruff/uFawkesObs)'s actual,
+> self-contained DORA pipeline — you send real events over HTTP and watch
+> real dashboard panels respond.
 
-You'll analyze DORA metrics for a sample application, identify performance bottlenecks, and make recommendations for improvement.
+➡️ **[Lab 01: See DORA Metrics Live in Grafana](../../white-belt/module-02-dora-metrics/lab-01/instructions.md)**
+
+In this lab you will:
+
+- Start uFawkesObs's Docker Compose stack (`make up-dora` — no Kubernetes
+  required)
+- Tour the already-built `DORA Overview` and `DORA Metrics` Grafana
+  dashboards as a worked example
+- Send a real deployment event via `curl` and watch Deployment Frequency
+  move within about a minute
+- Send a failed deployment and watch Change Failure Rate respond
+- Answer retrieval-practice questions to check your own understanding
 
 **Time Estimate**: 20 minutes
 **Difficulty**: Beginner
-**Auto-Graded**: Partially (calculations auto-checked; recommendations manually reviewed)
-**Points**: 60
-
-### Lab Environment
-
-When you click "Start Lab", we'll provision:
-
-- ✅ Access to Grafana DORA dashboards
-- ✅ Sample data for 3 months (90 days)
-- ✅ 3 different teams with varying performance levels
-- ✅ Lab notebook for your analysis
-
-**Environment will be available for 24 hours from start time.**
-
-### Lab Instructions
-
-#### Part 1: Calculate Metrics (30 points)
-
-You'll analyze "Team Alpha's" performance over the last 30 days.
-
-**Given Data** (available in dashboard):
-
-- Total deployments to production: 45
-- Total commits: 180
-- Failed deployments (rollbacks): 7
-- Incidents reported: 3
-- Average time from commit to production: 6 hours
-- Average time to resolve incidents: 2 hours
-
-1. **Calculate Deployment Frequency** (10 points)
-
-   Formula: `Total deployments / Days in period`
-
-   📝 **Submit**: What is Team Alpha's deployment frequency? (deployments per day)
-
-   ✅ **Validation**: Auto-checked against correct calculation
-
-2. **Calculate Lead Time for Changes** (10 points)
-
-   Given: Average time from commit to production = 6 hours
-
-   📝 **Submit**: What is Team Alpha's lead time? Express in hours.
-
-   ✅ **Validation**: Auto-checked
-
-3. **Calculate Change Failure Rate** (10 points)
-
-   Formula: `(Failed deployments / Total deployments) × 100`
-
-   📝 **Submit**: What is Team Alpha's change failure rate? Express as a percentage.
-
-   ✅ **Validation**: Auto-checked against correct calculation
-
-#### Part 2: Performance Classification (15 points)
-
-4. **Classify Team Alpha's Performance** (15 points)
-
-   Based on the metrics you calculated, classify Team Alpha according to DORA performance levels:
-
-   📝 **Submit**:
-
-   - Deployment Frequency Level: [Elite/High/Medium/Low]
-   - Lead Time Level: [Elite/High/Medium/Low]
-   - Change Failure Rate Level: [Elite/High/Medium/Low]
-   - Overall Classification: [Elite/High/Medium/Low]
-
-   ✅ **Validation**: Auto-checked against DORA thresholds
-
-#### Part 3: Compare Teams (15 points)
-
-5. **Analyze Team Bravo vs. Team Charlie** (15 points)
-
-   Open the "Team Comparison" dashboard and compare Team Bravo and Team Charlie.
-
-   **Team Bravo**:
-
-   - DF: 0.3 per day (9 per month)
-   - LT: 3 days
-   - MTTR: 4 hours
-   - CFR: 10%
-
-   **Team Charlie**:
-
-   - DF: 2.5 per day (75 per month)
-   - LT: 45 minutes
-   - MTTR: 30 minutes
-   - CFR: 18%
-
-   📝 **Submit**:
-
-   - Which team is the higher performer overall? [Bravo/Charlie]
-   - What is Team Charlie's biggest weakness? [DF/LT/MTTR/CFR]
-   - If Team Bravo could improve one metric, which would have the biggest impact? [DF/LT/MTTR/CFR]
-   - Explain your reasoning (2-3 sentences)
-
-   ✅ **Validation**: Reasoning manually reviewed by instructors
-
-#### Part 4: Identify Improvement Opportunities (Bonus)
-
-6. **Recommend Improvements for Team Alpha** (Bonus: +10 points)
-
-   Based on Team Alpha's metrics:
-
-   - DF: 1.5 per day (High)
-   - LT: 6 hours (Elite)
-   - MTTR: 2 hours (Elite)
-   - CFR: 15.6% (Elite)
-
-   📝 **Submit**:
-
-   - Team Alpha is performing at Elite level across all metrics. However, what could they do to push even further? (3-5 specific recommendations)
-
-   Examples of good recommendations:
-
-   - "Reduce deployment frequency variability (some days have 5 deploys, others have 0)"
-   - "Investigate the 7 failed deployments to find common root causes"
-   - "Implement chaos engineering to practice MTTR scenarios"
-
-   ✅ **Validation**: Manually reviewed for thoughtfulness and actionability
-
-### Lab Submission
-
-Once you've completed all tasks:
-
-1. Review your calculations in the lab notebook
-2. Ensure all required answers are recorded
-3. Click "Submit Lab" button
-
-**Grading**:
-
-- Parts 1-2: Auto-graded immediately (45 points)
-- Parts 3-4: Reviewed within 24 hours by instructors (15 + 10 points)
-- Passing score: 48/60 (80%)
-
-### Troubleshooting Hints
-
-**Can't access Grafana?**
-
-- Click "Open Grafana" from lab instructions
-- Use provided credentials (auto-populated)
-- Try incognito mode if having authentication issues
-
-**Calculations not matching?**
-
-- Double-check your formulas
-- Ensure you're using correct time periods (30 days)
-- Round to 2 decimal places
-
-**Don't understand a metric?**
-
-- Review the Theory & Concepts section
-- Check the DORA handbook link in resources
-- Ask in #dojo-white-belt on Mattermost
+**Validation**: `bash lab-01/validate.sh` (script-checked, not manually graded)
 
 ---
 
@@ -832,6 +710,8 @@ In Module 3, you'll learn:
 ---
 
 **Module Author**: Fawkes Learning Team
-**Last Updated**: October 2025
-**Version**: 1.0
-**Based On**: DORA State of DevOps 2023 Report
+**Last Updated**: August 2026 — added the DORA five-metric update and
+replaced the simulated Hands-On Lab with a real lab against uFawkesObs
+**Version**: 1.1
+**Based On**: DORA State of DevOps 2023 Report; five-metric update per
+[dora.dev](https://dora.dev/guides/dora-metrics-four-keys/) (2025)
