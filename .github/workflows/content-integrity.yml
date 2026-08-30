@@ -1,0 +1,42 @@
+name: Content Integrity
+
+# Blocks new placeholder/never-built-environment content from entering
+# module or lab docs, per docs/module-authoring-guide.md and issue #11.
+# Only checks *added* lines in a PR diff — it does not retroactively fail
+# on the placeholders already tracked as Phase 5 debt in issue #11.
+
+on:
+  pull_request:
+    paths:
+      - "modules/**/*.md"
+      - "white-belt/**/*.md"
+      - "labs/**/*.md"
+
+jobs:
+  check-placeholders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: job-start
+        run: echo "job-start workflow=content-integrity job=check-placeholders sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check for new placeholder / unbuilt-environment markers
+        run: |
+          set -euo pipefail
+          PATTERN='VIDEO PLACEHOLDER|SCRIPT PLACEHOLDER|When you click "Start Lab"|we.ll provision'
+          # The workflow trigger's `paths:` filter already scopes this to
+          # module/lab markdown, so diffing the whole PR here is safe and
+          # avoids git pathspec globstar quirks.
+          ADDED_HITS=$(git diff --unified=0 "origin/${{ github.base_ref }}...HEAD" \
+            | grep -E '^\+' | grep -Ev '^\+\+\+' | grep -Ei "$PATTERN" || true)
+          if [ -n "$ADDED_HITS" ]; then
+            echo "::error::New content adds a placeholder or unbuilt-environment marker. See docs/module-authoring-guide.md — 'No lab step may be described unless it has been run, for real.'"
+            echo "$ADDED_HITS"
+            exit 1
+          fi
+          echo "No new placeholder markers introduced."
+      - name: job-finish
+        if: always()
+        run: echo "job-finish workflow=content-integrity job=check-placeholders sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
