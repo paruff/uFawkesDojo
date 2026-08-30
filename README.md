@@ -9,7 +9,10 @@ hands-on platform engineering curriculum extracted from
 [fawkes](https://github.com/paruff/fawkes). Progress through White → Yellow
 → Green → Brown → Black belt modules, each with labs and assessments.
 
-🌐 **[Live site](https://paruff.github.io/uFawkesDojo/)**
+🌐 **[Live site](https://dojo.ufawkes.dev)** (also reachable at
+[paruff.github.io/uFawkesDojo](https://paruff.github.io/uFawkesDojo/) until
+DNS for the custom domain is confirmed — see `CNAME` and
+[issue #11](https://github.com/paruff/uFawkesDojo/issues/11), Phase 6)
 
 ## Belt Modules
 
