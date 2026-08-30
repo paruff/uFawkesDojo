@@ -46,6 +46,18 @@ By the end of this module, you will:
 | **Change Failure Rate**   | % of deployments causing failures | 0-15%             |
 | **Mean Time to Restore**  | Time to recover from failure      | < 1 hour          |
 
+> **Update (2026)**: DORA added a fifth key metric, **Rework Rate** (% of
+> merged work later reverted, hotfixed, or substantially rewritten), in
+> late 2025 — a direct response to AI-assisted coding making it easy to
+> ship fast without necessarily shipping well. This module still walks
+> through building a collector for the original four; if you're
+> implementing this against uFawkesObs rather than from scratch, its
+> `dora-compute` service already computes all five (see
+> `dora/compute/archetype.py` in that repo) — you can skip straight to
+> Part 4 and analyze real output instead of building your own collector.
+> See [dora.dev](https://dora.dev/guides/dora-metrics-four-keys/) for the
+> research behind the change.
+
 ### Why These Four?
 
 Research shows these metrics are:
