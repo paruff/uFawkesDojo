@@ -420,7 +420,7 @@ A: White/Yellow/Green/Brown: No expiration. Black Belt: 2 years (recertification
 A: Review score report, retake after waiting period (Green: 14 days, Brown: 21 days, Black: 30 days)
 
 **Q: Can I get accommodations?**
-A: Yes. Contact dojo-accessibility@fawkes.io for extended time, alternate formats, etc.
+A: Yes. Contact dojo-accessibility@ufawkes.dev for extended time, alternate formats, etc.
 
 **Q: Are assessments proctored?**
 A: Written exams: No. Labs: Auto-validated. Black Belt presentation: Yes (live panel)
