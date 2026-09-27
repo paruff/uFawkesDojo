@@ -11,9 +11,13 @@ assessments.
 
 - `modules/<belt>/` — belt module docs (`module-01-what-is-idp.md`, etc.)
 - `labs/` — per-lab instructions (e.g. `white-belt/module-01-what-is-idp/lab-01/instructions.md`)
-  are the real, run-for-real lab flow today (plain kubectl steps). `labs/fawkes-cli.py`
-  and `labs/setup.py` are an unbuilt CLI prototype — see the STATUS note at the top
-  of each file before touching them.
+  are the real, run-for-real lab flow today (plain kubectl steps, or
+  `make up`/`make init` for uFawkes Compose stacks). There is no wrapping
+  CLI — a `labs/fawkes-cli.py` prototype existed briefly and was removed
+  (2026-09-27) as unneeded: each stack already has its own Makefile
+  interface. See [`intent.md`](intent.md) for current direction and
+  `docs/uFawkes-suite-integration-spec.md` for the in-progress curriculum
+  integration plan.
 - `assessments/` — belt certification exams
 - `white-belt/module-01-what-is-idp/` — first module's labs (top-level)
 - `README.md` — canonical index of belts, labs, and assessments
@@ -31,10 +35,11 @@ assessments.
   optional. Enforced locally via `scripts/commit-msg.sh` (run
   `pre-commit install --hook-type commit-msg` once) and in CI via
   `.github/workflows/commit-lint.yml` on every PR.
-- Never swallow an exception in a lab check/validator (e.g. `fawkes-cli.py`
-  grading logic) without logging what broke — a silently-caught exception
-  makes "the check failed to run" look identical to "the check ran and the
-  student passed," which is worse than no check at all.
+- Never swallow an exception in a lab check/validator without logging what
+  broke — a silently-caught exception makes "the check failed to run" look
+  identical to "the check ran and the student passed," which is worse than
+  no check at all.
 - The module-authoring guide's rule — "no lab step may be described unless
   it has been run, for real" — applies to code, not just markdown. Don't
-  remove a file's STATUS: PROTOTYPE note without actually running it first.
+  mark a prototype file's status as real/working without actually running
+  it first.

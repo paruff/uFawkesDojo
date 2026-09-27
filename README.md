@@ -27,9 +27,10 @@ DNS for the custom domain is confirmed — see `CNAME` and
 Each module's hands-on lab is a per-lab `instructions.md` with plain kubectl
 steps — see
 [`white-belt/module-01-what-is-idp/lab-01/instructions.md`](white-belt/module-01-what-is-idp/lab-01/instructions.md)
-for the first lab. [`labs/fawkes-cli.py`](labs/fawkes-cli.py) is an unbuilt
-CLI prototype (see the STATUS note at the top of the file) — it does not
-run today and is not part of the current lab flow.
+for the first lab. There is no wrapping CLI — a prior `labs/fawkes-cli.py`
+prototype was removed as unnecessary (each `make up`/`make init`-driven
+uFawkes stack already has its own interface); see [`intent.md`](intent.md)
+for current direction.
 
 ## Assessments
 
