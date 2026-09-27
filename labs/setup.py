@@ -1,5 +1,12 @@
 # =============================================================================
 # setup.py - Package installation configuration
+#
+# STATUS: PROTOTYPE, NOT INSTALLABLE. `packages=find_packages(where="src")`
+# below points at a src/fawkes_cli tree that doesn't exist, and everything
+# past the setup() call is dead code — draft requirements.txt/pyproject.toml/
+# README/gitignore/LICENSE text kept as string literals, not real files.
+# `pip install -e .` will fail here today. See labs/fawkes-cli.py for the
+# matching prototype-status note.
 # =============================================================================
 
 from pathlib import Path

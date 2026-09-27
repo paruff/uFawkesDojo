@@ -24,10 +24,12 @@ DNS for the custom domain is confirmed — see `CNAME` and
 
 ## Labs
 
-Hands-on lab automation lives in [`labs/`](labs/), driven by
-[`labs/fawkes-cli.py`](labs/fawkes-cli.py). See
+Each module's hands-on lab is a per-lab `instructions.md` with plain kubectl
+steps — see
 [`white-belt/module-01-what-is-idp/lab-01/instructions.md`](white-belt/module-01-what-is-idp/lab-01/instructions.md)
-for the first lab.
+for the first lab. [`labs/fawkes-cli.py`](labs/fawkes-cli.py) is an unbuilt
+CLI prototype (see the STATUS note at the top of the file) — it does not
+run today and is not part of the current lab flow.
 
 ## Assessments
 
