@@ -17,7 +17,8 @@ labs and a certification assessment.
 ## Direction (as of 2026-09-27)
 
 The curriculum today (all 20 modules, all shipped labs) is built entirely
-against `fawkes` (Kubernetes, ArgoCD, Jenkins) starting from Module 1 —
+against `fawkes` (Kubernetes, ArgoCD, and Jenkins historically — Fawkes has
+since dropped Jenkins for Tekton) starting from Module 1 —
 `white-belt/module-01-what-is-idp/lab-01/instructions.md` opens with
 `kubectl rollout status`. That's a real, working lab, but it assumes a
 Kubernetes cluster is already available, which is a high barrier for
@@ -90,6 +91,13 @@ been run, for real").
 - Platform Engineering University co-branding, mentioned on the live site
   — still an idea, not a confirmed partnership. No implementation implied;
   revisit the site copy if it reads as more certain than that.
+- CI tooling: Jenkins is dropped from Fawkes entirely, replaced by Tekton
+  (Fawkes-internal change). `uFawkesPipe` was always Woodpecker — a
+  separate fact, not the resolution of that rename. Both mean Yellow Belt
+  Module 5's Jenkins content is stale, regardless of which plane it
+  targets.
+- `uFawkesRes` is deprecated (confirmed). Dojo will not teach it or send
+  learners to run it.
 
 **Open, needs your call (see spec for detail):**
 - Certification/badge mechanics: the live site promises verifiable badges
@@ -100,29 +108,28 @@ been run, for real").
   they don't replace it"). Building real badge infrastructure is a much
   bigger lift than the curriculum content itself; recommend deferring it
   until belt completion numbers justify it.
-- Whether to formally consolidate `uFawkesRes` — `uFawkesObs`'s README
-  states it was retired 2026-08-18 (merged into Obs/Pipe), but
-  `uFawkesDevX`'s architecture doc (updated 2026-09-14, after that date)
-  still shows it as a live dependency for Postgres. This is a cross-repo
-  inconsistency outside this repo's own docs — flagged here because it
-  affects which stack Dojo labs should point at for shared Postgres/SSO.
+- What `uFawkesDevX` now uses for Postgres/Coder-DB/Backstage-DB, now that
+  its documented `uFawkesRes` dependency is confirmed stale — that repo's
+  own docs need their own fix, and Dojo's White Belt setup steps can't be
+  written concretely until this is answered.
 
 ## Related repos
 
 The uFawkes suite, per the ecosystem site's roadmap and each repo's own
-README (cross-checked 2026-09-27 — some repos disagree on `uFawkesRes`'s
-status, see above):
+README (cross-checked 2026-09-27):
 
-- `fawkes` — Kubernetes-native IDP; the graduation target, not a suite-tier
-  peer.
+- `fawkes` — Kubernetes-native IDP (ArgoCD, Tekton); the graduation target,
+  not a suite-tier peer.
 - `uFawkesObs` — observability plane (Compose: OTel, Prometheus, Loki,
   Tempo, Grafana).
 - `uFawkesPipe` — CI/CD + security plane (Compose: Woodpecker, SonarQube,
   Trivy, Gitleaks, DefectDojo, Infisical — merged former `uFawkesSec`).
 - `uFawkesDevX` — developer experience plane (Compose: Coder, Backstage,
-  Score service, golden-path Cookiecutter templates).
-- `uFawkesRes` — resource plane (Postgres, Valkey, Traefik, Authelia);
-  status disputed across repos, see above.
+  Score service, golden-path Cookiecutter templates). Its own docs still
+  reference the now-deprecated `uFawkesRes` for Postgres — stale, see
+  Decisions.
+- `uFawkesRes` — deprecated. Formerly the resource plane (Postgres, Valkey,
+  Traefik, Authelia).
 - `uFawkesAI` — not a suite plane; an `AGENTS.md` scaffolding template used
   to build the others.
 - `uFawkes.dev` — the suite's marketing/ecosystem site.
