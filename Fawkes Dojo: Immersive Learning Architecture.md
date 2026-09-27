@@ -958,6 +958,15 @@ All 24 DORA capabilities covered across belt progression:
 
 ## Implementation Roadmap
 
+> **Status (2026-09-27):** Superseded. Beyond the architecture doc itself,
+> nothing in this roadmap was built: no Backstage plugin, no lab
+> provisioning, no auto-validation, no progress tracking. The current
+> direction is Compose-first labs on the released uFawkes stacks, each lab
+> self-started and validated by its own script. See
+> [`INTENT.md`](INTENT.md) and
+> [`docs/ai-sdlc/compose-curriculum/`](docs/ai-sdlc/compose-curriculum/).
+> The vision and learning philosophy above still stand.
+
 ### Phase 1: MVP (Weeks 1-4)
 
 - ✅ Dojo architecture documented

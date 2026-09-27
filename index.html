@@ -231,34 +231,6 @@
         line-height: 1.4;
       }
 
-      .progress-section {
-        background: white;
-        border-radius: 12px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      }
-
-      .progress-bar {
-        width: 100%;
-        height: 30px;
-        background: #e9ecef;
-        border-radius: 15px;
-        overflow: hidden;
-        margin: 1rem 0;
-      }
-
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        transition: width 0.5s ease;
-      }
-
       .cta-section {
         background: white;
         border-radius: 12px;
@@ -400,15 +372,15 @@
         <div class="philosophy-grid">
           <div class="philosophy-card">
             <h3>✅ Learn by Doing</h3>
-            <p>Every concept practiced immediately in production-like environment</p>
+            <p>Labs run against real, running platform stacks, not simulations</p>
           </div>
           <div class="philosophy-card">
             <h3>✅ Safe to Fail</h3>
-            <p>Isolated environments where mistakes are learning opportunities</p>
+            <p>Labs run on your own machine or cluster, so mistakes cost nothing</p>
           </div>
           <div class="philosophy-card">
             <h3>✅ Immediate Feedback</h3>
-            <p>Automated validation, metrics, and mentor review</p>
+            <p>Lab validation scripts and live dashboards show whether each step worked</p>
           </div>
           <div class="philosophy-card">
             <h3>✅ Progressive Mastery</h3>
@@ -419,8 +391,8 @@
             <p>Same tools used in production environments</p>
           </div>
           <div class="philosophy-card">
-            <h3>✅ Recognized Credentials</h3>
-            <p>Earn badges and certificates valued by employers</p>
+            <h3>✅ Open Source</h3>
+            <p>Every module and lab is MIT-licensed on GitHub</p>
           </div>
         </div>
       </div>
@@ -489,23 +461,12 @@
         </div>
       </div>
 
-      <!-- Progress Tracking -->
-      <div class="progress-section">
-        <h2>Your Progress</h2>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: 0%" id="progressBar">0%</div>
-        </div>
-        <p style="text-align: center; color: #666">
-          Complete modules to track your progress toward Platform Architect certification
-        </p>
-      </div>
-
       <!-- CTA Section -->
       <div class="cta-section">
         <h2>Ready to Begin Your Journey?</h2>
         <p style="margin: 1rem 0">Start with Module 1 or jump to any belt level based on your experience</p>
         <a href="#white-belt" class="cta-button">Start White Belt</a>
-        <a href="#certification" class="cta-button">View Certifications</a>
+        <a href="#certification" class="cta-button">Certification Status</a>
       </div>
 
       <!-- White Belt -->
@@ -517,7 +478,7 @@
             <div class="belt-meta">
               <span>⏱️ 8 hours</span>
               <span>📚 4 modules</span>
-              <span>🎓 Certification: Fawkes Platform Operator</span>
+              <span>🎓 Certification (planned): Fawkes Platform Operator</span>
             </div>
             <div class="dora-coverage">🎯 4 of 24 DORA Capabilities</div>
           </div>
@@ -579,7 +540,7 @@
             <div class="belt-meta">
               <span>⏱️ 8 hours</span>
               <span>📚 4 modules</span>
-              <span>🎓 Certification: Fawkes CI/CD Specialist</span>
+              <span>🎓 Certification (planned): Fawkes CI/CD Specialist</span>
             </div>
             <div class="dora-coverage">🎯 6 additional DORA Capabilities (10 total)</div>
           </div>
@@ -641,7 +602,7 @@
             <div class="belt-meta">
               <span>⏱️ 8 hours</span>
               <span>📚 4 modules</span>
-              <span>🎓 Certification: Fawkes Deployment Engineer</span>
+              <span>🎓 Certification (planned): Fawkes Deployment Engineer</span>
             </div>
             <div class="dora-coverage">🎯 7 additional DORA Capabilities (17 total)</div>
           </div>
@@ -703,7 +664,7 @@
             <div class="belt-meta">
               <span>⏱️ 8 hours</span>
               <span>📚 4 modules</span>
-              <span>🎓 Certification: Fawkes SRE Practitioner</span>
+              <span>🎓 Certification (planned): Fawkes SRE Practitioner</span>
             </div>
             <div class="dora-coverage">🎯 5 additional DORA Capabilities (22 total)</div>
           </div>
@@ -765,7 +726,7 @@
             <div class="belt-meta">
               <span>⏱️ 8 hours</span>
               <span>📚 4 modules</span>
-              <span>🎓 Certification: Fawkes Platform Architect</span>
+              <span>🎓 Certification (planned): Fawkes Platform Architect</span>
             </div>
             <div class="dora-coverage">🎯 2 final DORA Capabilities (24 total - 100%)</div>
           </div>
@@ -821,10 +782,10 @@
 
       <!-- Certification Path -->
       <div class="certification-path" id="certification">
-        <h2>🎓 Certification Path</h2>
+        <h2>🎓 Certification Path (planned)</h2>
         <p>
-          Earn industry-recognized certifications as you progress through each belt level. Digital badges are verifiable
-          and can be shared on LinkedIn.
+          Belt certifications are planned but not available yet. There is no exam platform, badge, or verification
+          today. The cards below show what each certification is intended to cover.
         </p>
         <div class="cert-grid">
           <div class="cert-card">
@@ -952,7 +913,7 @@
               >Module 5: Continuous Integration Fundamentals</a
             ></strong
           >
-          (Yellow Belt) or take the placement assessment.
+          (Yellow Belt).
         </p>
 
         <h3 style="margin-top: 1.5rem">For Platform Engineers (Experienced)</h3>
@@ -968,41 +929,48 @@
 
         <h3 style="margin-top: 1.5rem">Lab Environment</h3>
         <p>
-          Each module includes hands-on labs in isolated Kubernetes namespaces. Labs are auto-provisioned when you start
-          a module and include:
+          Labs run on real stacks you start yourself; nothing is auto-provisioned. Two modules have runnable labs today:
         </p>
         <ul style="margin-top: 0.5rem; margin-left: 1.5rem">
-          <li>Personal namespace with resource quotas</li>
-          <li>Pre-deployed sample applications</li>
-          <li>Automated validation and feedback</li>
-          <li>Real-time DORA metrics tracking</li>
-        </ul>
-
-        <h3 style="margin-top: 1.5rem">Assessment & Certification</h3>
-        <p>Each belt requires:</p>
-        <ul style="margin-top: 0.5rem; margin-left: 1.5rem">
-          <li>Complete all modules in the belt</li>
-          <li>Pass hands-on practical exam</li>
-          <li>Pass written assessment (80-90% depending on belt)</li>
           <li>
-            Black Belt also requires: platform design project, peer review, code contribution, and mentoring 2 learners
+            <a
+              href="lesson.html?src=white-belt/module-01-what-is-idp/lab-01/instructions.md"
+              style="color: #667eea"
+              >Module 1</a
+            >: deploy a service with kubectl, on a Kubernetes cluster you provide
+          </li>
+          <li>
+            <a
+              href="lesson.html?src=white-belt/module-02-dora-metrics/lab-01/instructions.md"
+              style="color: #667eea"
+              >Module 2</a
+            >: send real deployment events to
+            <a href="https://github.com/paruff/uFawkesObs" style="color: #667eea">uFawkesObs</a> (Docker Compose) and
+            watch the DORA dashboards change
           </li>
         </ul>
+        <p style="margin-top: 0.5rem">
+          Each lab ends with a validation script that tells you whether you finished. More labs are added as each uFawkes
+          stack is released.
+        </p>
+
+        <h3 style="margin-top: 1.5rem">Assessment & Certification</h3>
+        <p>
+          Written belt assessments are available in the
+          <a href="https://github.com/paruff/uFawkesDojo/tree/main/assessments" style="color: #667eea"
+            >assessments folder</a
+          >. Practical exams, scoring, and certification are planned but not built yet.
+        </p>
 
         <h3 style="margin-top: 1.5rem">Support & Community</h3>
         <ul style="margin-top: 0.5rem; margin-left: 1.5rem">
-          <li>💬 <strong>Mattermost:</strong> #dojo-learners, #dojo-white-belt, #dojo-yellow-belt, etc.</li>
           <li>
             📖 <strong>Documentation:</strong>
             <a href="https://github.com/paruff/uFawkesDojo" style="color: #667eea">github.com/paruff/uFawkesDojo</a>
           </li>
-          <li>🎥 <strong>Office Hours:</strong> Every Friday 2-3pm UTC (live Q&A with mentors)</li>
           <li>
-            🐛 <strong>Report Issues:</strong>
+            🐛 <strong>Questions & Issues:</strong>
             <a href="https://github.com/paruff/uFawkesDojo/issues" style="color: #667eea">GitHub Issues</a>
-          </li>
-          <li>
-            🎓 <strong>Platform Engineering University:</strong> Co-branded learning paths and certification alignment
           </li>
         </ul>
 
@@ -1017,7 +985,7 @@
             🤝 <strong>Cohort Learning:</strong> Join or form a study group - learning together accelerates mastery.
           </li>
           <li>📝 <strong>Practice:</strong> Complete all labs, even if they seem easy. Muscle memory is key.</li>
-          <li>💡 <strong>Ask Questions:</strong> Use Mattermost channels actively - there are no silly questions.</li>
+          <li>💡 <strong>Ask Questions:</strong> Open a GitHub issue - there are no silly questions.</li>
           <li>
             🎯 <strong>Focus on Understanding:</strong> Don't just follow instructions - understand the "why" behind
             each step.
@@ -1025,67 +993,16 @@
         </ul>
       </div>
 
-      <!-- PEU Integration -->
-      <div
-        class="intro-card"
-        style="background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%); border: 2px solid #667eea"
-      >
-        <h2>🎓 Platform Engineering University Integration</h2>
-        <p>The Fawkes Dojo partners with Platform Engineering University for co-branded learning paths:</p>
-
-        <div style="margin-top: 1.5rem">
-          <h3 style="color: #667eea">Observability in Platform Engineering → Brown Belt</h3>
-          <p>
-            Complete the PEU Observability course and get 50% credit toward Fawkes Brown Belt. You'll only need to
-            complete modules 15-16.
-          </p>
-        </div>
-
-        <div style="margin-top: 1.5rem">
-          <h3 style="color: #667eea">Cloud Development Environments → Yellow Belt</h3>
-          <p>PEU CDE certificate holders get credit toward Yellow Belt (skip module 5).</p>
-        </div>
-
-        <div style="margin-top: 1.5rem">
-          <h3 style="color: #667eea">Fawkes → PEU Path</h3>
-          <p>
-            Complete Fawkes White + Yellow Belts and receive 20% discount on PEU courses plus tailored prep materials.
-          </p>
-        </div>
-      </div>
     </div>
 
     <div class="footer">
-      <p>Fawkes Dojo | Platform Engineering Mastery | Version 1.0</p>
-      <p style="margin-top: 0.5rem">Built with ❤️ by the Fawkes Platform Team</p>
-      <p style="margin-top: 0.5rem; font-size: 0.9rem">Last Updated: October 26, 2025</p>
+      <p>
+        Fawkes Dojo · part of the <a href="https://ufawkes.dev" style="color: inherit">uFawkes</a> suite · MIT
+        licensed
+      </p>
     </div>
 
     <script>
-      // Simple progress tracking (integrates with backend)
-      function updateProgress() {
-        const completedModules = parseInt(localStorage.getItem("completedModules") || "0");
-        const percentage = (completedModules / 20) * 100;
-        const progressBar = document.getElementById("progressBar");
-        progressBar.style.width = percentage + "%";
-        progressBar.textContent = Math.round(percentage) + "%";
-      }
-
-      // Track module clicks
-      document.querySelectorAll(".module-card").forEach((card) => {
-        card.addEventListener("click", function (e) {
-          // Track module engagement
-          const moduleTitle = this.querySelector(".module-title").textContent;
-          console.log("Module accessed:", moduleTitle);
-
-          // In production, send analytics to backend
-          // trackEvent('module_access', { module: moduleTitle });
-        });
-      });
-
-      // Initialize progress
-      updateProgress();
-
       // Smooth scroll for anchor links
       document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
         anchor.addEventListener("click", function (e) {

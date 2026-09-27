@@ -16,9 +16,10 @@ labs and a certification assessment.
 
 ## Direction (as of 2026-09-27)
 
-The curriculum today (all 20 modules, all shipped labs) is built entirely
-against `fawkes` (Kubernetes, ArgoCD, and Jenkins historically — Fawkes has
-since dropped Jenkins for Tekton) starting from Module 1 —
+The curriculum today is built mostly against `fawkes` (Kubernetes,
+ArgoCD, and Jenkins historically — Fawkes has since dropped Jenkins for
+Tekton). The exception is Module 2's DORA lab, which already runs on
+uFawkesObs (#10). The Kubernetes assumption starts at Module 1 —
 `white-belt/module-01-what-is-idp/lab-01/instructions.md` opens with
 `kubectl rollout status`. That's a real, working lab, but it assumes a
 Kubernetes cluster is already available, which is a high barrier for
@@ -33,13 +34,22 @@ migration notes state the intended sequencing directly: **"Fawkes replaces
 uFawkesObs wholesale... uFawkesObs is the Compose-tier stepping stone you
 run until Kubernetes earns its operational cost."**
 
-Proposed direction: restructure the curriculum so White/Yellow Belt (and as
-much of Green Belt as holds up) teach the Compose-tier uFawkes stacks —
-lower barrier to entry, faster lab setup, no cluster required — and treat
-Fawkes/Kubernetes explicitly as a later "graduation" track once a learner
-needs what it adds. See `docs/uFawkes-suite-integration-spec.md` for the
-full analysis, phased plan, and open decisions this requires before any
-module gets rewritten.
+Direction: teach the Compose-tier uFawkes stacks first, and treat
+Fawkes/Kubernetes as a later "graduation" belt (Green Belt onward). That
+means a lower barrier to entry, faster lab setup, and no cluster
+required. Labs follow the suite's release order, each pinned to a
+released stack version:
+
+1. uFawkesObs content after its v1.0.0
+2. uFawkesPipe → Yellow Belt after its v2.0.0
+3. uFawkesDevX → White Belt after its v0.1.0
+
+The feature chain is
+[`docs/ai-sdlc/compose-curriculum/`](docs/ai-sdlc/compose-curriculum/)
+(intent → spec → plan). The suite-wide plan lives in
+[uFawkes.dev `docs/ai-sdlc/suite-release/`](https://github.com/paruff/uFawkes.dev/tree/main/docs/ai-sdlc/suite-release),
+and live status in the
+[uFawkes Suite Release Project](https://github.com/users/paruff/projects/7).
 
 ## What's real today vs. aspirational
 
@@ -49,11 +59,15 @@ content out of shipped lessons ("no lab step may be described unless it has
 been run, for real").
 
 **Real, shipped, and load-bearing:**
-- The 20 belt module docs under `modules/<belt>/` — currently all
-  Fawkes/Kubernetes-based (see Direction above for why that's under review).
-- Per-lab `instructions.md` files (e.g.
-  `white-belt/module-01-what-is-idp/lab-01/instructions.md`) — plain kubectl
-  steps against a real cluster, run for real.
+- The 20 belt module docs under `modules/<belt>/`. They are mostly
+  Fawkes/Kubernetes-based; see Direction above for why that's changing.
+- Two runnable labs, each run for real:
+  - `white-belt/module-01-what-is-idp/lab-01/` — kubectl steps against a
+    real cluster.
+  - `white-belt/module-02-dora-metrics/lab-01/` — runs on uFawkesObs
+    (Compose). It clones `main` unpinned; the pin comes after v1.0.0.
+
+  The other 18 modules are theory only, with no executable lab.
 - `dojo.ufawkes.dev`, a static GitHub Pages site (`index.html` +
   `lesson.html`) that lists the belt curriculum and renders each module's
   markdown in place, on-domain.
@@ -71,8 +85,12 @@ been run, for real").
 - Anything in `onboarding.html` describing `fawkes secret set`, `fawkes`
   CLI commands, etc. — these describe the platform CLI's target UX, not a
   currently runnable tool in this repo.
-- Certification badges/verification referenced on the live site (see
-  Decisions below).
+- Certification badges and verification: not built. The live site marks
+  them as planned (see Decisions below).
+- The vision doc's "Implementation Roadmap"
+  (`Fawkes Dojo: Immersive Learning Architecture.md`): Backstage plugin,
+  auto-provisioned labs, auto-validation, progress tracking. None of it is
+  built, and it is superseded by the Compose-first direction above.
 
 ## Non-goals
 
@@ -98,10 +116,14 @@ been run, for real").
   targets.
 - `uFawkesRes` is deprecated (confirmed). Dojo will not teach it or send
   learners to run it.
+- Labs follow the suite release order (Obs → Pipe → DevX), each pinned to
+  a released stack version, never `main`.
+- The live site describes only what exists today. Certification and the
+  PEU partnership appear only as "planned."
 
 **Open, needs your call (see spec for detail):**
-- Certification/badge mechanics: the live site promises verifiable badges
-  and employer recognition, and none of that exists. Suggested direction —
+- Certification/badge mechanics: not implemented, and no longer claimed
+  on the site. Suggested direction —
   a lightweight, self-attested completion artifact tied to a real capstone
   (build/operate something end-to-end), not a verifiable-badge platform,
   per the module-authoring guide's own rule 7 ("badges support competence,

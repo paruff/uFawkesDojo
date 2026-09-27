@@ -29,7 +29,7 @@ steps — see
 [`white-belt/module-01-what-is-idp/lab-01/instructions.md`](white-belt/module-01-what-is-idp/lab-01/instructions.md)
 for the first lab. There is no wrapping CLI — a prior `labs/fawkes-cli.py`
 prototype was removed as unnecessary (each `make up`/`make init`-driven
-uFawkes stack already has its own interface); see [`intent.md`](intent.md)
+uFawkes stack already has its own interface); see [`INTENT.md`](INTENT.md)
 for current direction.
 
 ## Assessments

@@ -1,0 +1,120 @@
+# Spec: Teach the uFawkes Compose Suite First
+
+**Traces to:** [`intent.md`](intent.md) | **Plan:** [`plan.md`](plan.md)
+**Status:** Draft | **Revision:** 3
+**Approval required before risky work:** Yes. This rewrites live curriculum
+content that dojo.ufawkes.dev links to. No module changes until the stack
+it targets is released, and every lab step is run for real first.
+
+## Revision Log
+
+| Rev | Date | Change | Reason |
+|---|---|---|---|
+| 1 | 2026-09-27 | Initial draft | Review of uFawkesObs/Pipe/DevX |
+| 2 | 2026-09-27 | CI tooling facts; uFawkesRes resolved | Confirmed: Fawkes = Tekton, uFawkesPipe = Woodpecker, uFawkesRes deprecated |
+| 3 | 2026-09-27 | Split into intent/spec/plan (uFawkesAI convention); pilot changed from "White Belt Module 4 on DevX" to "pin Module 2's existing uFawkesObs lab to v1.0.0"; corrected "all modules are Kubernetes-based" | Decided: labs follow suite release order (Obs → Pipe → DevX). Module 2's lab (#10) already runs on uFawkesObs. |
+
+## Requirements
+
+- **R1 — Pinned stacks.** Every lab states which stack version it runs
+  against and clones that tag, never `main`. For example:
+  `git clone --branch v1.0.0 https://github.com/paruff/uFawkesObs.git`.
+- **R2 — Run for real.** Every lab step is run against the pinned version
+  before merge, with real output pasted in. See
+  [`docs/module-authoring-guide.md`](../../module-authoring-guide.md).
+- **R3 — Stable links.** Every module URL published on dojo.ufawkes.dev
+  (`lesson.html?src=...`) keeps resolving: either to rewritten content at
+  the same path, or to an explicit deprecation note. It never 404s.
+- **R4 — Kubernetes as graduation.** Fawkes/Kubernetes content starts at
+  Green Belt, and is framed as "why Kubernetes now," not as a
+  prerequisite.
+- **R5 — Timing.** Modules follow the authoring guide's timing rules:
+  - no more than about 5 minutes of theory before hands-on work;
+  - an explicit spacing boundary if a module runs over about 90 minutes.
+
+  Re-measure each module's length after its rewrite; don't carry the old
+  estimates over.
+
+## Design
+
+### Belt → stack mapping
+
+| Belt | Today | Target | Why |
+|---|---|---|---|
+| White | Module 1 lab is kubectl; **Module 2 lab already on uFawkesObs** (#10) | uFawkesDevX (Backstage catalog, golden-path Cookiecutter "first deployment") for Modules 1/3/4. Module 2 stays on uFawkesObs, pinned. | Removes the cluster barrier from the first labs |
+| Yellow | Jenkins-in-Fawkes (stale) | uFawkesPipe: Woodpecker, the `.fawkespipe.yml` contract, Gitleaks/Trivy/SonarQube, DefectDojo | Teaches what the Compose tier actually runs |
+| Green | Fawkes ArgoCD | **Graduation belt.** Opens with why Kubernetes now, then ArgoCD and progressive delivery on Fawkes; CI references use Tekton. | GitOps and canary patterns have no clean Compose analog |
+| Brown | Fawkes in-cluster observability | uFawkesObs for SLIs, SLOs and dashboards, plus a short graduation-delta lab on what changes on Fawkes (Loki → OpenSearch is a rewrite, per `uFawkesObs/docs/fawkes-migration.md`) | Reuses real portability findings |
+| Black | Fawkes multi-tenancy, zero-trust, multi-cloud | Unchanged | Kubernetes-native by nature |
+
+### Version pinning
+
+Each lab's header carries a line like
+`**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0)`.
+Its clone step uses the same tag. When a stack ships a new minor
+version, bump labs deliberately, one PR per lab, and re-run each one. Never
+float to `main`.
+
+### Module length
+
+Compose stacks start faster than a cluster plus an ArgoCD sync. That
+shifts time within the nominal 60-minute module toward
+worked-example-then-practice; it doesn't shrink the budget. Two things to
+measure during rewrite rather than assume:
+
+- Yellow Belt's real first-run cost may be uFawkesPipe's GitHub OAuth app
+  registration, not stack startup.
+- Brown Belt Module 13 (currently 3–4 hours) may shrink on uFawkesObs.
+
+## Concerns
+
+| Risk | Handling |
+|---|---|
+| A path change breaks published lesson links | R3; the choice of in-place rewrite vs. new modules is an open question in `intent.md` |
+| A lab written against an unreleased or moving stack | R1 and R2. Each plan phase starts only after its stack's release. |
+| uFawkesDevX's Postgres source is unknown (uFawkesRes deprecated) | White Belt Modules 1/3/4 are blocked until paruff/uFawkesDevX#55 and AC-DEVX-01 resolve it. Nothing earlier depends on it. |
+| `content-integrity.yml` only scans `.md` files | Non-`.md` lab assets (compose overrides, scripts) still fall under R2 |
+| Forcing a Compose analog for GitOps | Green Belt is the graduation seam by design |
+
+## Acceptance Criteria
+
+### AC-001: Module 2's lab is pinned to uFawkesObs v1.0.0 and re-run for real (pilot)
+
+- **Scenario:** uFawkesObs v1.0.0 is released
+- **Action:** Update `white-belt/module-02-dora-metrics/lab-01/` to
+  clone `--branch v1.0.0` and name that version in its header. Then run
+  the whole lab, including `validate.sh`, against the tag.
+- **Expected:** Every step and the validator pass against v1.0.0. The
+  output pasted into the lab matches that run.
+- **Must not:** Clone `main`, or keep any output captured against an
+  older version
+- **Verification:** A real run transcript in the PR, plus the
+  `content-integrity.yml` pass
+- **Priority:** Required. This is the first release-order step and the
+  pattern every later lab follows.
+
+### AC-002: Published lesson links keep working
+
+- **Scenario:** A bookmarked
+  `dojo.ufawkes.dev/lesson.html?src=modules/.../module-NN-*.md` from
+  before a rewrite
+- **Expected:** It resolves to the rewritten content or to an explicit
+  deprecation note
+- **Must not:** 404 silently
+- **Verification:** A manual link check after each deploy
+- **Priority:** Required
+
+### AC-003: No lab targets `main`
+
+- **Expected:** `grep -rn "git clone" white-belt modules labs` shows a
+  `--branch vX.Y.Z` on every uFawkes stack clone
+- **Verification:** The grep, run in the PR that touches any lab
+- **Priority:** Required
+
+### AC-004: uFawkesDevX's Postgres source is known before the White Belt DevX rewrite
+
+- **Scenario:** Before Modules 1/3/4 move to uFawkesDevX
+- **Expected:** A decided, documented Postgres source (the ADR from
+  uFawkesDevX AC-DEVX-01)
+- **Verification:** A link to that ADR in the rewrite PR
+- **Priority:** Required. It blocks only the White Belt phase.

@@ -15,8 +15,8 @@ assessments.
   `make up`/`make init` for uFawkes Compose stacks). There is no wrapping
   CLI — a `labs/fawkes-cli.py` prototype existed briefly and was removed
   (2026-09-27) as unneeded: each stack already has its own Makefile
-  interface. See [`intent.md`](intent.md) for current direction and
-  `docs/uFawkes-suite-integration-spec.md` for the in-progress curriculum
+  interface. See [`INTENT.md`](INTENT.md) for current direction and
+  `docs/ai-sdlc/compose-curriculum/` for the in-progress curriculum
   integration plan.
 - `assessments/` — belt certification exams
 - `white-belt/module-01-what-is-idp/` — first module's labs (top-level)
