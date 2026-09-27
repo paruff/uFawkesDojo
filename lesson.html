@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fawkes Dojo - Lesson</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥋</text></svg>" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #333;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      .header {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        padding: 1.25rem 0;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .header .header-inner {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .header a {
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        opacity: 0.9;
+      }
+
+      .header a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem 3rem;
+      }
+
+      .lesson-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .lesson-card :first-child {
+        margin-top: 0;
+      }
+
+      .lesson-card h1,
+      .lesson-card h2,
+      .lesson-card h3 {
+        color: #667eea;
+        margin: 1.5rem 0 0.75rem;
+        line-height: 1.3;
+      }
+
+      .lesson-card h1 {
+        font-size: 2rem;
+      }
+      .lesson-card h2 {
+        font-size: 1.5rem;
+      }
+      .lesson-card h3 {
+        font-size: 1.2rem;
+      }
+
+      .lesson-card p,
+      .lesson-card li {
+        margin-bottom: 0.5rem;
+      }
+
+      .lesson-card ul,
+      .lesson-card ol {
+        margin: 0 0 1rem 1.5rem;
+      }
+
+      .lesson-card a {
+        color: #764ba2;
+      }
+
+      .lesson-card pre {
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 1rem;
+        overflow-x: auto;
+        margin: 1rem 0;
+      }
+
+      .lesson-card code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+      }
+
+      .lesson-card :not(pre) > code {
+        background: #f0f0f5;
+        padding: 0.15em 0.4em;
+        border-radius: 4px;
+      }
+
+      .lesson-card table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+      }
+
+      .lesson-card th,
+      .lesson-card td {
+        border: 1px solid #e0e0e6;
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+      }
+
+      .lesson-card blockquote {
+        border-left: 4px solid #764ba2;
+        padding-left: 1rem;
+        color: #555;
+        margin: 1rem 0;
+      }
+
+      .status {
+        color: white;
+        text-align: center;
+        padding: 3rem 1rem;
+      }
+
+      .status a {
+        color: white;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-inner">
+        <a href="index.html">← 🥋 Fawkes Dojo</a>
+        <a id="source-link" href="#" target="_blank" rel="noopener">View on GitHub ↗</a>
+      </div>
+    </div>
+    <div class="container">
+      <div id="lesson-card" class="lesson-card" hidden></div>
+      <div id="status" class="status">Loading lesson…</div>
+    </div>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const src = params.get("src");
+      const statusEl = document.getElementById("status");
+      const cardEl = document.getElementById("lesson-card");
+      const sourceLink = document.getElementById("source-link");
+
+      function showError(message) {
+        statusEl.innerHTML = message;
+      }
+
+      if (!src || src.includes("..") || src.startsWith("/") || src.includes("://")) {
+        showError("No valid lesson specified. <a href=\"index.html\">Return to the Dojo</a>.");
+      } else {
+        sourceLink.href = `https://github.com/paruff/uFawkesDojo/blob/main/${src}`;
+        fetch(src)
+          .then((res) => {
+            if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+            return res.text();
+          })
+          .then((markdown) => {
+            cardEl.innerHTML = marked.parse(markdown);
+            cardEl.hidden = false;
+            statusEl.hidden = true;
+            document.title = `Fawkes Dojo - ${src.split("/").pop()}`;
+          })
+          .catch((err) => {
+            showError(
+              `Could not load this lesson (${err.message}). ` +
+                `<a href="https://github.com/paruff/uFawkesDojo/blob/main/${src}" target="_blank" rel="noopener">View it on GitHub instead ↗</a>`,
+            );
+          });
+      }
+    </script>
+  </body>
+</html>

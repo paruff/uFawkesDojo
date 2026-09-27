@@ -2,6 +2,14 @@
 """
 Fawkes CLI - Command Line Interface for Fawkes Platform
 
+STATUS: PROTOTYPE, NOT RUNNABLE. This imports `lab_automation` (below),
+which does not exist in this repo or in github.com/paruff/fawkes. Every
+command here raises ModuleNotFoundError before running. The labs that
+actually ship today (see white-belt/module-01-what-is-idp/lab-01/instructions.md)
+use plain kubectl steps, not this CLI. Treat this file as a design sketch
+for a future packaged CLI, not a working tool, until `lab_automation` is
+written and this note is removed.
+
 This is the main CLI tool that provides all the commands referenced
 in the documentation and lab automation.
 
@@ -24,7 +32,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 import yaml
@@ -158,16 +165,18 @@ def start(module: int, user: str | None):
         click.echo(f"   1. Review Module {module} content")
         click.echo("   2. Complete hands-on exercises")
         click.echo("   3. Run: fawkes lab validate --lab [lab-name]")
-        click.echo(f"\n   Documentation: https://github.com/paruff/uFawkesDojo/blob/main/modules/module-{module}.md")
+        click.echo(
+            f"\n   Documentation: https://github.com/paruff/uFawkesDojo/blob/main/modules/module-{module}.md"
+        )
     except Exception as e:
         click.echo(f"❌ Error starting lab: {e!s}", err=True)
         sys.exit(1)
 
 
-@lab.command()
+@lab.command(name="validate")
 @click.option("--lab", "-l", required=True, help="Lab name (e.g., white-belt-lab1)")
 @click.option("--verbose", "-v", is_flag=True, help="Show detailed validation output")
-def validate(lab: str, verbose: bool):
+def validate_lab(lab: str, verbose: bool):
     """Validate lab completion"""
 
     click.echo(f"🔍 Validating {lab}...")
@@ -216,7 +225,9 @@ def stop(module: int, force: bool):
     """Stop and cleanup a lab environment"""
 
     if not force:
-        click.confirm(f"Are you sure you want to cleanup lab for Module {module}?", abort=True)
+        click.confirm(
+            f"Are you sure you want to cleanup lab for Module {module}?", abort=True
+        )
 
     click.echo(f"🧹 Cleaning up lab environment for Module {module}...")
 
@@ -262,9 +273,9 @@ def list_labs():
         sys.exit(1)
 
 
-@lab.command()
+@lab.command(name="status")
 @click.option("--module", "-m", type=int, required=True, help="Module number")
-def status(module: int):
+def lab_status(module: int):
     """Check status of a lab environment"""
 
     namespace = f"lab-module-{module}"
@@ -274,10 +285,17 @@ def status(module: int):
 
     try:
         # Get all resources
-        result = subprocess.run(["kubectl", "get", "all", "-n", namespace], capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            ["kubectl", "get", "all", "-n", namespace],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
 
         if result.returncode != 0:
-            click.echo(f"❌ Lab not found. Start with: fawkes lab start --module {module}")
+            click.echo(
+                f"❌ Lab not found. Start with: fawkes lab start --module {module}"
+            )
             sys.exit(1)
 
         click.echo(result.stdout)
@@ -319,11 +337,15 @@ def assessment():
     """Manage belt assessments"""
 
 
-@assessment.command()
+@assessment.command(name="validate")
 @click.option(
-    "--belt", "-b", required=True, type=click.Choice(["white", "yellow", "green", "brown", "black"]), help="Belt level"
+    "--belt",
+    "-b",
+    required=True,
+    type=click.Choice(["white", "yellow", "green", "brown", "black"]),
+    help="Belt level",
 )
-def validate(belt: str):
+def validate_assessment(belt: str):
     """Validate complete belt assessment"""
 
     click.echo(f"🎓 Validating {belt.upper()} Belt Assessment...\n")
@@ -337,12 +359,16 @@ def validate(belt: str):
         click.echo("=" * 60)
         click.echo(f"   {result['belt'].upper()} BELT ASSESSMENT RESULTS")
         click.echo("=" * 60)
-        click.echo(f"\n   Total Score: {result['total_points']}/{result['max_points']} ({result['percentage']:.1f}%)")
+        click.echo(
+            f"\n   Total Score: {result['total_points']}/{result['max_points']} ({result['percentage']:.1f}%)"
+        )
         click.echo(f"   Passing Threshold: {result['passing_threshold']}%")
 
         if result["passed"]:
             click.echo("\n   ✅ PASSED - Congratulations!")
-            click.echo(f"\n   You have earned the {result['belt'].upper()} Belt certification!")
+            click.echo(
+                f"\n   You have earned the {result['belt'].upper()} Belt certification!"
+            )
             click.echo("\n   Next steps:")
             click.echo("   1. Check your email for certificate")
             click.echo("   2. Add badge to LinkedIn")
@@ -355,7 +381,9 @@ def validate(belt: str):
         click.echo("\n   Lab Results:")
         for lab in result["labs"]:
             status = "✅" if lab["passed"] else "❌"
-            click.echo(f"      {status} {lab['lab']}: {lab['points']}/{lab['max_points']}")
+            click.echo(
+                f"      {status} {lab['lab']}: {lab['points']}/{lab['max_points']}"
+            )
 
         click.echo("=" * 60 + "\n")
 
@@ -368,7 +396,12 @@ def validate(belt: str):
 
 
 @assessment.command(name="check-eligibility")
-@click.option("--belt", "-b", required=True, type=click.Choice(["white", "yellow", "green", "brown", "black"]))
+@click.option(
+    "--belt",
+    "-b",
+    required=True,
+    type=click.Choice(["white", "yellow", "green", "brown", "black"]),
+)
 def check_eligibility(belt: str):
     """Check if you're eligible to take an assessment"""
 
@@ -399,7 +432,12 @@ def check_eligibility(belt: str):
 
 
 @assessment.command()
-@click.option("--belt", "-b", required=True, type=click.Choice(["white", "yellow", "green", "brown", "black"]))
+@click.option(
+    "--belt",
+    "-b",
+    required=True,
+    type=click.Choice(["white", "yellow", "green", "brown", "black"]),
+)
 @click.option("--date", "-d", help="Date (YYYY-MM-DD)")
 @click.option("--time", "-t", help="Time (HH:MM)")
 def schedule(belt: str, date: str | None, time: str | None):
@@ -426,12 +464,12 @@ def schedule(belt: str, date: str | None, time: str | None):
 # =============================================================================
 
 
-@cli.group()
-def config():
+@cli.group(name="config")
+def config_group():
     """Manage Fawkes CLI configuration"""
 
 
-@config.command()
+@config_group.command()
 @click.argument("key")
 @click.argument("value")
 def set(key: str, value: str):
@@ -441,7 +479,7 @@ def set(key: str, value: str):
     click.echo(f"✅ Set {key} = {value}")
 
 
-@config.command()
+@config_group.command()
 @click.argument("key")
 def get(key: str):
     """Get a configuration value"""
@@ -453,7 +491,7 @@ def get(key: str):
         click.echo(f"❌ {key} not found")
 
 
-@config.command(name="list")
+@config_group.command(name="list")
 def list_config():
     """List all configuration values"""
 
@@ -474,7 +512,10 @@ def setup(force: bool):
     click.echo("🔧 Setting up Fawkes Dojo lab infrastructure...")
 
     if not force:
-        click.confirm("This will install Prometheus, ArgoCD, Flagger, and other tools. Continue?", abort=True)
+        click.confirm(
+            "This will install Prometheus, ArgoCD, Flagger, and other tools. Continue?",
+            abort=True,
+        )
 
     try:
         setup_lab_environment()
@@ -506,20 +547,25 @@ def login():
     click.echo(f"\n✅ Logged in as {email}")
 
 
-@cli.command()
-def status():
+@cli.command(name="status")
+def platform_status():
     """Check Fawkes platform status"""
 
     click.echo("📊 Fawkes Platform Status:\n")
 
     try:
         # Check cluster connectivity
-        result = subprocess.run(["kubectl", "cluster-info"], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["kubectl", "cluster-info"], capture_output=True, text=True, check=True
+        )
         click.echo("✅ Kubernetes cluster: Connected")
 
         # Check monitoring
         result = subprocess.run(
-            ["kubectl", "get", "pods", "-n", "monitoring"], capture_output=True, text=True, check=False
+            ["kubectl", "get", "pods", "-n", "monitoring"],
+            capture_output=True,
+            text=True,
+            check=False,
         )
         if "prometheus" in result.stdout:
             click.echo("✅ Monitoring: Running")
@@ -527,7 +573,12 @@ def status():
             click.echo("⚠️  Monitoring: Not installed")
 
         # Check ArgoCD
-        result = subprocess.run(["kubectl", "get", "pods", "-n", "argocd"], capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            ["kubectl", "get", "pods", "-n", "argocd"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         if "argocd-server" in result.stdout:
             click.echo("✅ ArgoCD: Running")
         else:

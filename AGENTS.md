@@ -10,7 +10,10 @@ assessments.
 ## Layout
 
 - `modules/<belt>/` — belt module docs (`module-01-what-is-idp.md`, etc.)
-- `labs/` — lab automation, driven by `labs/fawkes-cli.py`
+- `labs/` — per-lab instructions (e.g. `white-belt/module-01-what-is-idp/lab-01/instructions.md`)
+  are the real, run-for-real lab flow today (plain kubectl steps). `labs/fawkes-cli.py`
+  and `labs/setup.py` are an unbuilt CLI prototype — see the STATUS note at the top
+  of each file before touching them.
 - `assessments/` — belt certification exams
 - `white-belt/module-01-what-is-idp/` — first module's labs (top-level)
 - `README.md` — canonical index of belts, labs, and assessments
@@ -32,3 +35,6 @@ assessments.
   grading logic) without logging what broke — a silently-caught exception
   makes "the check failed to run" look identical to "the check ran and the
   student passed," which is worse than no check at all.
+- The module-authoring guide's rule — "no lab step may be described unless
+  it has been run, for real" — applies to code, not just markdown. Don't
+  remove a file's STATUS: PROTOTYPE note without actually running it first.

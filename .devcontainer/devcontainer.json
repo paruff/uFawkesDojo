@@ -1,0 +1,28 @@
+{
+  "name": "uFawkesDojo Development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true
+    }
+  },
+  "postCreateCommand": "pip install --user pre-commit && pre-commit install --hook-type commit-msg",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "davidanson.vscode-markdownlint",
+        "redhat.vscode-yaml",
+        "charliermarsh.ruff",
+        "GitHub.vscode-pull-request-github"
+      ]
+    }
+  },
+  "forwardPorts": [8000],
+  "remoteUser": "node"
+}
