@@ -447,6 +447,7 @@ spec:
 import kubernetes
 from jinja2 import Template
 
+
 class NamespaceProvisioner:
     def __init__(self, k8s_config):
         kubernetes.config.load_kube_config(k8s_config)
@@ -466,16 +467,16 @@ class NamespaceProvisioner:
         self._create_namespace(namespace_name, tenant_config)
 
         # 2. Create resource quota
-        self._create_resource_quota(namespace_name, tenant_config['quotas'])
+        self._create_resource_quota(namespace_name, tenant_config["quotas"])
 
         # 3. Create limit ranges
-        self._create_limit_range(namespace_name, tenant_config['limits'])
+        self._create_limit_range(namespace_name, tenant_config["limits"])
 
         # 4. Create network policies
         self._create_network_policies(namespace_name)
 
         # 5. Create RBAC roles
-        self._create_rbac(namespace_name, tenant_config['members'])
+        self._create_rbac(namespace_name, tenant_config["members"])
 
         # 6. Create service accounts
         self._create_service_accounts(namespace_name)
@@ -488,15 +489,15 @@ class NamespaceProvisioner:
             metadata=kubernetes.client.V1ObjectMeta(
                 name=name,
                 labels={
-                    'team': config['team'],
-                    'environment': config['environment'],
-                    'managed-by': 'platform-automation'
+                    "team": config["team"],
+                    "environment": config["environment"],
+                    "managed-by": "platform-automation",
                 },
                 annotations={
-                    'owner': config['owner'],
-                    'cost-center': config['cost_center'],
-                    'created-by': 'namespace-provisioner'
-                }
+                    "owner": config["owner"],
+                    "cost-center": config["cost_center"],
+                    "created-by": "namespace-provisioner",
+                },
             )
         )
         self.api.create_namespace(namespace)
@@ -508,13 +509,13 @@ class NamespaceProvisioner:
             metadata=kubernetes.client.V1ObjectMeta(name="tenant-quota"),
             spec=kubernetes.client.V1ResourceQuotaSpec(
                 hard={
-                    'requests.cpu': quotas['cpu_requests'],
-                    'requests.memory': quotas['memory_requests'],
-                    'limits.cpu': quotas['cpu_limits'],
-                    'limits.memory': quotas['memory_limits'],
-                    'persistentvolumeclaims': str(quotas['pvc_count'])
+                    "requests.cpu": quotas["cpu_requests"],
+                    "requests.memory": quotas["memory_requests"],
+                    "limits.cpu": quotas["cpu_limits"],
+                    "limits.memory": quotas["memory_limits"],
+                    "persistentvolumeclaims": str(quotas["pvc_count"]),
                 }
-            )
+            ),
         )
         self.api.create_namespaced_resource_quota(namespace, quota)
         print(f"✅ Created resource quota in {namespace}")
@@ -529,64 +530,56 @@ class NamespaceProvisioner:
                 kubernetes.client.V1PolicyRule(
                     api_groups=[""],
                     resources=["pods", "services", "configmaps"],
-                    verbs=["get", "list", "watch"]
+                    verbs=["get", "list", "watch"],
                 ),
                 kubernetes.client.V1PolicyRule(
                     api_groups=["apps"],
                     resources=["deployments"],
-                    verbs=["get", "list", "watch", "update", "patch"]
-                )
-            ]
+                    verbs=["get", "list", "watch", "update", "patch"],
+                ),
+            ],
         )
         self.rbac_api.create_namespaced_role(namespace, dev_role)
 
         # Bind developers
-        for member in members.get('developers', []):
+        for member in members.get("developers", []):
             binding = kubernetes.client.V1RoleBinding(
-                metadata=kubernetes.client.V1ObjectMeta(
-                    name=f"{member}-developer"
-                ),
+                metadata=kubernetes.client.V1ObjectMeta(name=f"{member}-developer"),
                 subjects=[
                     kubernetes.client.V1Subject(
-                        kind="User",
-                        name=member,
-                        api_group="rbac.authorization.k8s.io"
+                        kind="User", name=member, api_group="rbac.authorization.k8s.io"
                     )
                 ],
                 role_ref=kubernetes.client.V1RoleRef(
-                    kind="Role",
-                    name="developer",
-                    api_group="rbac.authorization.k8s.io"
-                )
+                    kind="Role", name="developer", api_group="rbac.authorization.k8s.io"
+                ),
             )
             self.rbac_api.create_namespaced_role_binding(namespace, binding)
 
         print(f"✅ Created RBAC in {namespace}")
 
+
 # Usage
 config = {
-    'team': 'alpha',
-    'environment': 'production',
-    'owner': 'alice@company.com',
-    'cost_center': '1234',
-    'quotas': {
-        'cpu_requests': '100',
-        'memory_requests': '200Gi',
-        'cpu_limits': '200',
-        'memory_limits': '400Gi',
-        'pvc_count': 20
+    "team": "alpha",
+    "environment": "production",
+    "owner": "alice@company.com",
+    "cost_center": "1234",
+    "quotas": {
+        "cpu_requests": "100",
+        "memory_requests": "200Gi",
+        "cpu_limits": "200",
+        "memory_limits": "400Gi",
+        "pvc_count": 20,
     },
-    'limits': {
-        'default_cpu': '500m',
-        'default_memory': '512Mi'
+    "limits": {"default_cpu": "500m", "default_memory": "512Mi"},
+    "members": {
+        "developers": ["alice@company.com", "bob@company.com"],
+        "admins": ["carol@company.com"],
     },
-    'members': {
-        'developers': ['alice@company.com', 'bob@company.com'],
-        'admins': ['carol@company.com']
-    }
 }
 
-provisioner = NamespaceProvisioner('/path/to/kubeconfig')
+provisioner = NamespaceProvisioner("/path/to/kubeconfig")
 namespace = provisioner.create_tenant_namespace(config)
 ```
 

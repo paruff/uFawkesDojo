@@ -42,7 +42,7 @@ record_test() {
 
 check_prerequisites() {
   log_info "Checking prerequisites..."
-  if command -v docker >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then
+  if command -v docker > /dev/null 2>&1 && command -v curl > /dev/null 2>&1; then
     record_test "Prerequisites" "PASS" "docker and curl are installed"
   else
     record_test "Prerequisites" "FAIL" \
@@ -53,7 +53,7 @@ check_prerequisites() {
 check_container_running() {
   local label="$1" container_name="$2"
   if docker ps --filter "name=^${container_name}\$" --filter "status=running" \
-      --format '{{.Names}}' 2>/dev/null | grep -q "^${container_name}\$"; then
+    --format '{{.Names}}' 2> /dev/null | grep -q "^${container_name}\$"; then
     record_test "Stack" "PASS" "$label container ($container_name) is running"
   else
     record_test "Stack" "FAIL" \
@@ -65,8 +65,8 @@ check_dora_api_health() {
   log_info "Checking dora-api health..."
   local body http_code
   http_code=$(curl -s -o /tmp/dora-health-body -w "%{http_code}" \
-    --max-time 5 "${DORA_API_URL}/health" 2>/dev/null || echo "000")
-  body=$(cat /tmp/dora-health-body 2>/dev/null || echo "")
+    --max-time 5 "${DORA_API_URL}/health" 2> /dev/null || echo "000")
+  body=$(cat /tmp/dora-health-body 2> /dev/null || echo "")
   rm -f /tmp/dora-health-body
 
   if [ "$http_code" = "200" ] && echo "$body" | grep -q "queue_depth"; then
@@ -81,7 +81,7 @@ check_grafana_health() {
   log_info "Checking Grafana health..."
   local http_code
   http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-    --max-time 5 "${GRAFANA_URL}/api/health" 2>/dev/null || echo "000")
+    --max-time 5 "${GRAFANA_URL}/api/health" 2> /dev/null || echo "000")
 
   if [ "$http_code" = "200" ]; then
     record_test "Grafana Health" "PASS" "reachable at ${GRAFANA_URL}"
@@ -117,7 +117,7 @@ check_dashboard() {
   local http_code
   http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
     -u "${GRAFANA_USER}:${GRAFANA_PASS}" \
-    "${GRAFANA_URL}/api/dashboards/uid/${uid}" 2>/dev/null || echo "000")
+    "${GRAFANA_URL}/api/dashboards/uid/${uid}" 2> /dev/null || echo "000")
 
   if [ "$http_code" = "200" ]; then
     record_test "$label Dashboard" "PASS" "reachable via Grafana API (uid=${uid})"

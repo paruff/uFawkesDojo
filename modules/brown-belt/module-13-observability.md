@@ -211,12 +211,17 @@ from prometheus_client import Gauge, push_to_gateway
 import os
 from datetime import datetime
 
-lead_time_gauge = Gauge('lead_time_seconds', 'Time from commit to deployment', ['application', 'environment'])
+lead_time_gauge = Gauge(
+    "lead_time_seconds",
+    "Time from commit to deployment",
+    ["application", "environment"],
+)
+
 
 def record_lead_time(commit_timestamp, deploy_timestamp, app, env):
     lead_time = (deploy_timestamp - commit_timestamp).total_seconds()
     lead_time_gauge.labels(application=app, environment=env).set(lead_time)
-    push_to_gateway('prometheus-pushgateway:9091', job='lead_time', registry=registry)
+    push_to_gateway("prometheus-pushgateway:9091", job="lead_time", registry=registry)
 ```
 
 ### Change Failure Rate

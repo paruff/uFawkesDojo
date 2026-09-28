@@ -175,20 +175,21 @@ Total Lead Time =
 
 ```python
 # Webhook receiver for Git commits
-@app.route('/webhook/commit', methods=['POST'])
+@app.route("/webhook/commit", methods=["POST"])
 def record_commit():
-    commit_sha = request.json['after']
-    commit_time = request.json['head_commit']['timestamp']
+    commit_sha = request.json["after"]
+    commit_time = request.json["head_commit"]["timestamp"]
 
     # Store in database
     db.store_commit(commit_sha, commit_time)
 
-    return '', 200
+    return "", 200
+
 
 # Webhook receiver for deployments
-@app.route('/webhook/deploy', methods=['POST'])
+@app.route("/webhook/deploy", methods=["POST"])
 def record_deployment():
-    commit_sha = request.json['revision']
+    commit_sha = request.json["revision"]
     deploy_time = datetime.utcnow()
 
     # Calculate lead time
@@ -198,7 +199,7 @@ def record_deployment():
     # Send to Prometheus
     lead_time_histogram.labels(app=app_name).observe(lead_time)
 
-    return '', 200
+    return "", 200
 ```
 
 **Prometheus Query**:
@@ -247,19 +248,18 @@ def calculate_change_failure_rate(timeframe_hours=24):
     failures = 0
 
     for deployment in deployments:
-        deploy_time = deployment['timestamp']
+        deploy_time = deployment["timestamp"]
 
         # Check for incidents within 24h
         incidents = get_incidents(
-            since=deploy_time,
-            until=deploy_time + timedelta(hours=24)
+            since=deploy_time, until=deploy_time + timedelta(hours=24)
         )
 
         # Check for rollbacks
         rollback = get_rollback(
-            deployment_id=deployment['id'],
+            deployment_id=deployment["id"],
             since=deploy_time,
-            until=deploy_time + timedelta(hours=24)
+            until=deploy_time + timedelta(hours=24),
         )
 
         if incidents or rollback:
@@ -745,14 +745,16 @@ import pandas as pd
 from scipy.stats import pearsonr
 
 # Fetch data
-df = pd.DataFrame({
-    'team': teams,
-    'deployment_freq': [get_deployment_freq(t) for t in teams],
-    'cfr': [get_cfr(t) for t in teams]
-})
+df = pd.DataFrame(
+    {
+        "team": teams,
+        "deployment_freq": [get_deployment_freq(t) for t in teams],
+        "cfr": [get_cfr(t) for t in teams],
+    }
+)
 
 # Calculate correlation
-correlation, p_value = pearsonr(df['deployment_freq'], df['cfr'])
+correlation, p_value = pearsonr(df["deployment_freq"], df["cfr"])
 
 print(f"Correlation: {correlation:.2f}")
 print(f"P-value: {p_value:.4f}")

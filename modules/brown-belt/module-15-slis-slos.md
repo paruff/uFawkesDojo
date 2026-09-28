@@ -787,7 +787,7 @@ def forecast_budget_exhaustion(current_burn_rate, remaining_budget):
         Days until exhaustion
     """
     if current_burn_rate <= 0:
-        return float('inf')  # Never exhausts
+        return float("inf")  # Never exhausts
 
     # Days in 30-day window
     days_in_window = 30
@@ -802,6 +802,7 @@ def forecast_budget_exhaustion(current_burn_rate, remaining_budget):
     days_remaining = remaining_budget / actual_daily
 
     return days_remaining
+
 
 # Example
 burn_rate = 5  # 5x normal
