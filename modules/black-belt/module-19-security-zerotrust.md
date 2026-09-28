@@ -820,7 +820,7 @@ helm install external-secrets external-secrets/external-secrets -n external-secr
 # Create a secret to act as our "vault"
 kubectl create secret generic payment-secrets -n payments \
   --from-literal=stripe-api-key=sk_test_abc123 \
-  --from-literal=db-password=super-secret-password
+  --from-literal=db-password=super-secret-password  # pragma: allowlist secret
 
 kubectl apply -f - <<EOF
 apiVersion: external-secrets.io/v1beta1

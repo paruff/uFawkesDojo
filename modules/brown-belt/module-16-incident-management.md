@@ -641,6 +641,7 @@ from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 import requests
 import json
 
+
 class IncidentAutomation:
     def __init__(self, mattermost_webhook, pagerduty_key):
         self.mattermost_webhook = mattermost_webhook
@@ -650,11 +651,11 @@ class IncidentAutomation:
         """Automatically create incident from alert"""
 
         # Extract details
-        severity = alert['labels']['severity']
-        service = alert['labels']['service']
-        summary = alert['annotations']['summary']
-        description = alert['annotations']['description']
-        runbook = alert['annotations'].get('runbook', '')
+        severity = alert["labels"]["severity"]
+        service = alert["labels"]["service"]
+        summary = alert["annotations"]["summary"]
+        description = alert["annotations"]["description"]
+        runbook = alert["annotations"].get("runbook", "")
 
         # Generate incident ID
         incident_id = self.generate_incident_id()
@@ -666,15 +667,18 @@ class IncidentAutomation:
         self.page_oncall(severity, summary, war_room)
 
         # Post initial notification
-        self.post_notification(war_room, {
-            'incident_id': incident_id,
-            'severity': severity,
-            'service': service,
-            'summary': summary,
-            'description': description,
-            'runbook': runbook,
-            'status': 'INVESTIGATING'
-        })
+        self.post_notification(
+            war_room,
+            {
+                "incident_id": incident_id,
+                "severity": severity,
+                "service": service,
+                "summary": summary,
+                "description": description,
+                "runbook": runbook,
+                "status": "INVESTIGATING",
+            },
+        )
 
         # Create incident ticket
         ticket = self.create_ticket(incident_id, severity, summary)
@@ -697,8 +701,8 @@ class IncidentAutomation:
                 "name": channel_name,
                 "display_name": f"🚨 Incident {incident_id} - {service}",
                 "type": "O",  # Public
-                "header": f"Incident response for {service}"
-            }
+                "header": f"Incident response for {service}",
+            },
         )
 
         return channel_name
@@ -707,20 +711,17 @@ class IncidentAutomation:
         """Page oncall via PagerDuty"""
 
         # SEV0 and SEV1 = page immediately
-        if severity in ['sev0', 'sev1']:
-            urgency = 'high'
+        if severity in ["sev0", "sev1"]:
+            urgency = "high"
         else:
-            urgency = 'low'
+            urgency = "low"
 
         incident = {
             "incident": {
                 "type": "incident",
                 "title": summary,
                 "urgency": urgency,
-                "body": {
-                    "type": "incident_body",
-                    "details": f"War room: #{war_room}"
-                }
+                "body": {"type": "incident_body", "details": f"War room: #{war_room}"},
             }
         }
 
@@ -728,9 +729,9 @@ class IncidentAutomation:
             "https://api.pagerduty.com/incidents",
             headers={
                 "Authorization": f"Token token={self.pagerduty_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
-            json=incident
+            json=incident,
         )
 
         return response.json()
@@ -739,14 +740,14 @@ class IncidentAutomation:
         """Post incident notification to Mattermost"""
 
         message = f"""
-🚨 **INCIDENT DECLARED - {incident_data['severity'].upper()}**
+🚨 **INCIDENT DECLARED - {incident_data["severity"].upper()}**
 
-**Service**: {incident_data['service']}
-**Summary**: {incident_data['summary']}
-**Description**: {incident_data['description']}
-**Incident ID**: {incident_data['incident_id']}
-**Status**: {incident_data['status']}
-**Runbook**: {incident_data.get('runbook', 'N/A')}
+**Service**: {incident_data["service"]}
+**Summary**: {incident_data["summary"]}
+**Description**: {incident_data["description"]}
+**Incident ID**: {incident_data["incident_id"]}
+**Status**: {incident_data["status"]}
+**Runbook**: {incident_data.get("runbook", "N/A")}
 
 **Next Steps**:
 1. Acknowledge you're responding
@@ -757,28 +758,26 @@ class IncidentAutomation:
 War room: #{channel}
         """
 
-        requests.post(
-            self.mattermost_webhook,
-            json={"text": message}
-        )
+        requests.post(self.mattermost_webhook, json={"text": message})
+
 
 # Usage
 automation = IncidentAutomation(
-    mattermost_webhook="https://mattermost.company.com/hooks/xxx",
-    pagerduty_key="xxx"
+    mattermost_webhook="https://mattermost.company.com/hooks/xxx", pagerduty_key="xxx"
 )
 
+
 # Triggered by AlertManager webhook
-@app.route('/webhook/alerts', methods=['POST'])
+@app.route("/webhook/alerts", methods=["POST"])
 def handle_alert():
-    alerts = request.json['alerts']
+    alerts = request.json["alerts"]
 
     for alert in alerts:
-        if alert['labels'].get('auto_incident') == 'true':
+        if alert["labels"].get("auto_incident") == "true":
             incident_id = automation.create_incident(alert)
             print(f"Created incident: {incident_id}")
 
-    return '', 200
+    return "", 200
 ```
 
 ### Automated Remediation
@@ -788,11 +787,11 @@ def handle_alert():
 class AutoRemediation:
     def __init__(self):
         self.remediation_actions = {
-            'high_cpu': self.scale_horizontally,
-            'out_of_memory': self.restart_pods,
-            'disk_full': self.cleanup_logs,
-            'connection_pool_exhausted': self.increase_pool,
-            'circuit_breaker_open': self.reset_circuit_breaker
+            "high_cpu": self.scale_horizontally,
+            "out_of_memory": self.restart_pods,
+            "disk_full": self.cleanup_logs,
+            "connection_pool_exhausted": self.increase_pool,
+            "circuit_breaker_open": self.reset_circuit_breaker,
         }
 
     def handle_incident(self, incident_type, service):
@@ -819,11 +818,9 @@ class AutoRemediation:
         print(f"Scaling {service} from {current_replicas} to {new_replicas}")
 
         # Scale via kubectl
-        subprocess.run([
-            'kubectl', 'scale',
-            f'deployment/{service}',
-            f'--replicas={new_replicas}'
-        ])
+        subprocess.run(
+            ["kubectl", "scale", f"deployment/{service}", f"--replicas={new_replicas}"]
+        )
 
         return True
 
@@ -831,10 +828,7 @@ class AutoRemediation:
         """Rolling restart of pods"""
         print(f"Restarting pods for {service}")
 
-        subprocess.run([
-            'kubectl', 'rollout', 'restart',
-            f'deployment/{service}'
-        ])
+        subprocess.run(["kubectl", "rollout", "restart", f"deployment/{service}"])
 
         return True
 
@@ -846,7 +840,7 @@ class AutoRemediation:
         print(f"Increasing pool from {current_pool} to {new_pool}")
 
         # Update ConfigMap
-        self.update_config(service, 'pool_size', new_pool)
+        self.update_config(service, "pool_size", new_pool)
 
         # Restart to apply
         self.restart_pods(service)
