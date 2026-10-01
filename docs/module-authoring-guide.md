@@ -35,7 +35,8 @@ lab, because it looks complete during review.
 Have learners study something already built and working before asking them
 to build their own. Novices learn faster from a worked example than from
 solving from scratch — cognitive load theory (Sweller) and a meta-analysis
-of worked-example design (Crissman, effect size 0.52; Wittwer & Renkl, 2010)
+of worked-example design (Crissman, 2006, an unpublished dissertation
+reporting d ≈ 0.57; Wittwer & Renkl, 2010)
 both support this. In lab terms: "here's the pre-built dashboard, here's
 what each panel means" comes *before* "now build your own panel."
 
@@ -102,6 +103,90 @@ Before merging, grep the module for facts that might have moved on:
 - Contact info and URLs (e.g. `fawkes.io` → `ufawkes.dev` for email — see
   issue #11 and PR #12)
 - "Last Updated" / version footer, if the module has one — bump it
+
+### 9. Retrieval is cumulative and spaced across modules
+
+Item 4 puts a recall question in each module; this item spaces them out.
+Open every module with two or three recall questions from earlier modules,
+not only the current one. Practice testing beats restudying (g = 0.51) and
+beats no activity by more (g = 0.93) (Adesope, Trevisan & Sundararajan,
+2017, a meta-analysis of 217 studies). Dunlosky et al. (2013) rate practice
+testing and distributed practice the two highest-utility study techniques.
+*Make It Stick* (Brown, Roediger & McDaniel, 2014) is the readable summary
+of this research. Point learners to it.
+
+### 10. Later belts interleave; early belts block
+
+Mixing problem types in practice beats practising one type at a time on
+delayed tests (Rohrer & Taylor, 2007), because learners have to choose the
+right approach, not just repeat it. White and Yellow Belt can practise one
+tool at a time. From Green Belt on, mix them: a lab that has to decide
+whether a failure is a pipeline, observability or deployment problem
+teaches more than three single-tool labs.
+
+### 11. Fade the worked examples as belts advance
+
+Item 1's worked examples help novices and can hinder experienced learners
+(the expertise-reversal effect; Kalyuga, Ayres, Chandler & Sweller, 2003).
+Fade them: full worked example at White Belt, a partly completed one at
+Yellow and Green (the learner finishes it), and open problems at Brown and
+Black. The belt ladder is what makes this fading possible, so use it.
+
+### 12. Calibrate: predict, then measure
+
+Learners are poor judges of what they know. Fluent re-reading feels like
+learning (*Make It Stick*, ch. 5, "Avoid Illusions of Knowing"). Before a
+lab, ask learners to predict the result or the time it will take; after
+it, have them compare. The platform has a ready example: experienced
+developers using AI were measured 19% slower while believing they were 20%
+faster (METR, 2025). Use that to teach measuring, not assuming.
+
+### 13. Support self-regulation, because the Dojo is self-paced
+
+Self-paced online courses lose most learners. In MIT and Harvard MOOCs,
+completion fell from 2013 to 2018, and 52% of registrants never opened the
+courseware (Reich & Ruipérez-Valiente, 2019). In online courses, time
+management, metacognition and effort regulation predict achievement
+(Broadbent & Poon, 2015). Each module therefore states:
+
+- a time estimate per sub-session (it pairs with item 5's boundaries)
+- a "plan your sessions" prompt at the start of each belt
+- visible progress: what's done and what's next
+
+Belts themselves are mastery learning, which has strong support: across
+108 controlled evaluations, mastery programs raised exam performance with
+lasting effects, most for weaker learners (Kulik, Kulik & Bangert-Drowns,
+1990). Badges add a small extra (gamification meta-analysis: g = 0.25–0.49;
+Sailer & Homner, 2020), which is why item 7 keeps them secondary.
+
+### Sources for items 9–13
+
+- Adesope, O. O., Trevisan, D. A., & Sundararajan, N. (2017). Rethinking
+  the use of tests. *Review of Educational Research*, 87(3), 659–701.
+  https://eric.ed.gov/?id=EJ1141817
+- Broadbent, J., & Poon, W. L. (2015). Self-regulated learning strategies
+  and academic achievement in online higher education. *The Internet and
+  Higher Education*, 27, 1–13.
+- Brown, P. C., Roediger, H. L., & McDaniel, M. A. (2014). *Make It Stick:
+  The Science of Successful Learning*. Harvard University Press.
+- Dunlosky, J., et al. (2013). Improving students' learning with effective
+  learning techniques. *Psychological Science in the Public Interest*,
+  14(1), 4–58.
+- Kalyuga, S., Ayres, P., Chandler, P., & Sweller, J. (2003). The
+  expertise reversal effect. *Educational Psychologist*, 38(1), 23–31.
+- Kulik, C.-L. C., Kulik, J. A., & Bangert-Drowns, R. L. (1990).
+  Effectiveness of mastery learning programs. *Review of Educational
+  Research*, 60(2), 265–299.
+- METR (2025). Measuring the impact of early-2025 AI on experienced
+  open-source developer productivity.
+  https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/
+- Reich, J., & Ruipérez-Valiente, J. A. (2019). The MOOC pivot. *Science*,
+  363(6423), 130–131. https://www.science.org/doi/10.1126/science.aav7958
+- Rohrer, D., & Taylor, K. (2007). The shuffling of mathematics problems
+  improves learning. *Instructional Science*, 35, 481–498.
+- Sailer, M., & Homner, L. (2020). The gamification of learning: A
+  meta-analysis. *Educational Psychology Review*, 32, 77–112.
+  https://eric.ed.gov/?id=EJ1245270
 
 ## What this guide does not cover
 
