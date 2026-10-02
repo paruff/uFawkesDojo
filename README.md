@@ -43,3 +43,9 @@ Part of the [Fawkes IDP family](https://github.com/paruff/fawkes):
 [uFawkesPipe](https://github.com/paruff/uFawkesPipe) (CI/CD) ·
 [uFawkesObs](https://github.com/paruff/uFawkesObs) (observability) ·
 [uFawkes.dev](https://github.com/paruff/uFawkes.dev) (marketing site)
+
+## Design and brand
+
+This repo follows the shared Fawkes and uFawkes design reference:
+[DESIGN.md](https://github.com/paruff/uFawkes.dev/blob/main/DESIGN.md), with tokens at <https://ufawkes.dev/design/tokens.json>. It is owned by
+[uFawkes.dev](https://github.com/paruff/uFawkes.dev).
