@@ -5,7 +5,7 @@ if [[ -z "$MSG_FILE" ]]; then
   echo "ERROR: No commit message file provided" >&2
   exit 1
 fi
-MSG=$(cat "$MSG_FILE")
+MSG=$(head -n 1 "$MSG_FILE") # subject line only, as CI checks; a body must not count toward the 72
 if [[ "$MSG" =~ ^(fixup!|squash!|merge ) ]]; then
   exit 0
 fi
