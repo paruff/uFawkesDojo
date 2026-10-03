@@ -28,7 +28,7 @@ GitOps is a fundamental practice in modern platform engineering:
 
 - **Netflix** deploys 1000+ times per day using GitOps
 - **Weaveworks** reported 2x faster deployments with GitOps
-- **DORA research** shows GitOps directly improves all four key metrics
+- **DORA research** shows GitOps supports improvement across all five delivery metrics
 - **90% of cloud-native teams** use or plan to use GitOps (CNCF Survey 2024)
 
 Understanding GitOps is essential for elite delivery performance.

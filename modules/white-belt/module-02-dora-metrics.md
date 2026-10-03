@@ -13,7 +13,7 @@
 
 By the end of this module, you will be able to:
 
-- ✅ Explain the Four Key Metrics and why they predict software delivery performance
+- ✅ Explain the five DORA metrics and why they predict software delivery performance
 - ✅ Differentiate between Elite, High, Medium, and Low performers using data
 - ✅ Calculate each DORA metric for your team
 - ✅ Interpret DORA metrics dashboards and identify improvement opportunities
@@ -26,25 +26,20 @@ By the end of this module, you will be able to:
 
 > _"What separates high-performing software teams from everyone else?"_
 
-**The Discovery**: Just **four metrics** predict organizational performance better than any other measures. Organizations that excel at these metrics are:
+**The Discovery**: A small set of delivery metrics predicts organizational performance better than activity measures. Organizations that excel at these metrics are:
 
 - **2x more likely** to exceed profitability goals
 - **2x more likely** to exceed productivity goals
 - **2x more likely** to exceed customer satisfaction goals
 - **50% more likely** to have higher market share
 
-> **Update (2026): DORA now tracks five metrics, not four.** In late 2025
-> the DORA research program added **Rework Rate** (the percentage of
-> merged work later reverted, hotfixed, or substantially rewritten) as a
-> fifth key metric — a direct response to AI-assisted coding making it
-> easy to ship code quickly without necessarily shipping it _well_. This
-> module still teaches the original four in depth (they remain valid and
-> are the foundation), and flags where the fifth fits in. You'll see all
-> five live in the hands-on lab below — uFawkesObs's own DORA dashboard is
-> already titled "DORA 2026 — Five Key Metrics." See
-> [dora.dev](https://dora.dev/guides/dora-metrics-four-keys/) and the
-> [CD Foundation's writeup](https://cd.foundation/blog/2025/10/16/dora-5-metrics/)
-> for the full research behind the change.
+> **Current model**: DORA uses five software delivery performance metrics.
+> **Deployment Rework Rate** joined the model to measure unplanned deployments
+> made in response to production incidents. The metrics are grouped into
+> throughput (Deployment Frequency, Change Lead Time, and Failed Deployment
+> Recovery Time) and instability (Change Fail Rate and Deployment Rework Rate).
+> See [DORA's metrics guide](https://dora.dev/guides/dora-metrics/) for the
+> current definitions.
 
 **Your Opportunity**: These aren't vanity metrics—they're **predictive indicators** of success. Understanding and improving them is literally your competitive advantage.
 
@@ -56,19 +51,19 @@ You've mastered this module when you can:
 - Look at a DORA dashboard and immediately spot problems
 - Calculate metrics for your own team
 - Recommend specific improvements based on metric trends
-- Understand how platform engineering improves all four metrics
+- Understand how platform engineering improves all five metrics
 
 ---
 
 ## 2. Theory & Concepts (15 minutes)
 
-### 📺 Video: The Four Key Metrics Explained (7 minutes)
+### 📺 Video: The DORA Metrics Explained (7 minutes)
 
 > **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document**
 
-### The Four Key Metrics
+### The Five DORA Metrics
 
-DORA identified four metrics that matter most for software delivery performance:
+DORA identifies five metrics that matter most for software delivery performance:
 
 #### 1. 🚀 Deployment Frequency (DF)
 
@@ -184,9 +179,30 @@ DORA identified four metrics that matter most for software delivery performance:
 
 ---
 
+#### 5. ♻️ Deployment Rework Rate (DRR)
+
+**Definition**: What percentage of deployments are unplanned work performed in
+response to a production incident?
+
+**Why It Matters**: DRR exposes delivery capacity spent repairing production
+problems. A lower rate means:
+
+- More deployment capacity goes toward planned customer value
+- Incidents create less follow-up work
+- Teams can distinguish planned delivery from recovery work
+
+**Example**: A team makes 50 deployments in a month. Five are unplanned fixes
+for production incidents, so its Deployment Rework Rate is 10%.
+
+**How Fawkes Tracks It**: Marks incident-driven deployments and divides them by
+all deployments in the same period.
+
+---
+
 ### The Performance Spectrum
 
-Here's how teams compare across the four metrics:
+The legacy performance bands below cover the established benchmarked measures.
+Track Deployment Rework Rate alongside them and aim for a downward trend.
 
 | Performance | Deployment Freq          | Lead Time          | MTTR           | Change Fail Rate |
 | ----------- | ------------------------ | ------------------ | -------------- | ---------------- |
@@ -199,7 +215,7 @@ Here's how teams compare across the four metrics:
 
 ---
 
-### Why These Four Metrics?
+### Why These Five Metrics?
 
 #### They Balance Speed and Stability
 
@@ -210,10 +226,11 @@ Here's how teams compare across the four metrics:
 
 **Stability Metrics**:
 
-- Time to Restore Service
+- Failed Deployment Recovery Time
 - Change Failure Rate
+- Deployment Rework Rate
 
-You can't optimize for speed alone (you'll break everything) or stability alone (you'll move too slowly). **Elite performers excel at all four simultaneously.**
+You can't optimize for speed alone (you'll break everything) or stability alone (you'll move too slowly). High-performing teams improve throughput and stability together.
 
 #### They're Predictive, Not Descriptive
 
@@ -267,7 +284,7 @@ Good metrics (DORA): How fast you deliver value and how reliably
 
 ### How Platform Engineering Improves DORA Metrics
 
-A well-designed platform (like Fawkes) directly improves all four metrics:
+A well-designed platform (like Fawkes) directly improves all five metrics:
 
 #### Deployment Frequency ↑
 
@@ -292,6 +309,12 @@ A well-designed platform (like Fawkes) directly improves all four metrics:
 - **Quality Gates**: Automated security scanning, testing
 - **Consistent Patterns**: Golden paths reduce errors
 - **Progressive Delivery**: Canary deployments catch issues early
+
+#### Deployment Rework Rate ↓
+
+- **Incident Correlation**: Connect repair deployments to the incidents that caused them
+- **Root-Cause Learning**: Feed recurring failure patterns back into platform guardrails
+- **Planned Recovery**: Standardize rollback and remediation paths so fixes require less rework
 
 **The Platform Advantage**: Manual processes hit scaling limits. Platforms enable teams to improve metrics continuously.
 
@@ -466,14 +489,15 @@ In this lab you will:
 
 #### Question 5
 
-**Which statement is TRUE about DORA metrics?**
+**What does Deployment Rework Rate measure?**
 
-- [ ] A) You must choose between speed (DF/LT) and stability (MTTR/CFR)
-- [x] B) Elite performers excel at all four metrics simultaneously
-- [ ] C) Only deployment frequency matters
-- [ ] D) These metrics only apply to startups, not enterprises
+- [ ] A) Deployments that fail before reaching production
+- [x] B) Unplanned deployments made in response to production incidents
+- [ ] C) Code changes requested during review
+- [ ] D) Time spent refactoring planned features
 
-**Explanation**: **Elite performers are fast AND stable**—they excel at all four metrics at once.
+**Explanation**: Deployment Rework Rate is the percentage of deployments that
+are unplanned responses to production incidents.
 
 ---
 
@@ -559,7 +583,7 @@ Congratulations! 🎉 You've completed Module 2. Let's recap:
 
 ✅ **You now understand**:
 
-- The Four Key Metrics and what they measure
+- The five DORA metrics and what they measure
 - Why these metrics predict business success
 - How to calculate and interpret DORA metrics
 - The difference between Elite and Low performers

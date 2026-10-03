@@ -1209,7 +1209,7 @@ spec:
 ✅ **Build Stages**: Checkout, build, test, package workflow
 ✅ **Troubleshooting**: Common failures and debugging techniques
 ✅ **Best Practices**: Fast builds, fail fast, notifications
-✅ **DORA Impact**: How CI improves all four key metrics
+✅ **DORA Impact**: How CI improves all five delivery metrics
 
 ### DORA Capabilities Achieved
 

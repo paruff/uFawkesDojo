@@ -1004,7 +1004,7 @@ argocd app rollback my-app <revision-number>
 ✅ **Sync Policies**: Manual, automated, self-heal, prune
 ✅ **Troubleshooting**: Common issues and resolution strategies
 ✅ **Best Practices**: Repository structure, projects, progressive delivery
-✅ **DORA Impact**: How GitOps improves all four key metrics
+✅ **DORA Impact**: How GitOps improves all five delivery metrics
 
 ### DORA Capabilities Achieved
 
