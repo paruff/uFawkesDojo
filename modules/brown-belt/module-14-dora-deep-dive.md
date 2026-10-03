@@ -19,7 +19,7 @@
 
 By the end of this module, you will:
 
-1. ✅ Calculate and track all four DORA metrics automatically
+1. ✅ Calculate and track all five DORA metrics automatically
 2. ✅ Build comprehensive DORA dashboards in Grafana
 3. ✅ Implement metric collection across the entire delivery pipeline
 4. ✅ Analyze trends and identify improvement opportunities
@@ -29,7 +29,7 @@ By the end of this module, you will:
 
 **DORA Capabilities Addressed**:
 
-- ✓ All 4 Key Metrics (Deployment Frequency, Lead Time, MTTR, Change Failure Rate)
+- ✓ All five DORA metrics, including Deployment Rework Rate
 - ✓ Monitoring and Observability
 - ✓ Data-Driven Decision Making
 
@@ -37,7 +37,7 @@ By the end of this module, you will:
 
 ## 📖 Part 1: DORA Metrics Review & Advanced Concepts
 
-### The Four Key Metrics (Refresher)
+### The Five DORA Metrics (Refresher)
 
 | Metric                    | What It Measures                  | Elite Performance |
 | ------------------------- | --------------------------------- | ----------------- |
@@ -45,25 +45,21 @@ By the end of this module, you will:
 | **Lead Time for Changes** | Commit → Production time          | < 1 hour          |
 | **Change Failure Rate**   | % of deployments causing failures | 0-15%             |
 | **Mean Time to Restore**  | Time to recover from failure      | < 1 hour          |
+| **Deployment Rework Rate** | % of deployments caused by incidents | Lower is better |
 
-> **Update (2026)**: DORA added a fifth key metric, **Rework Rate** (% of
-> merged work later reverted, hotfixed, or substantially rewritten), in
-> late 2025 — a direct response to AI-assisted coding making it easy to
-> ship fast without necessarily shipping well. This module still walks
-> through building a collector for the original four; if you're
-> implementing this against uFawkesObs rather than from scratch, its
-> `dora-compute` service already computes all five (see
-> `dora/compute/archetype.py` in that repo) — you can skip straight to
-> Part 4 and analyze real output instead of building your own collector.
-> See [dora.dev](https://dora.dev/guides/dora-metrics-four-keys/) for the
-> research behind the change.
+Deployment Rework Rate measures unplanned deployments made in response to a
+production incident. DORA groups Deployment Frequency, Change Lead Time, and
+Failed Deployment Recovery Time as throughput. Change Fail Rate and Deployment
+Rework Rate measure instability. See
+[DORA's metrics guide](https://dora.dev/guides/dora-metrics/) for the current
+definitions.
 
-### Why These Four?
+### Why These Five?
 
 Research shows these metrics are:
 
 - **Predictive** of organizational performance
-- **Balanced** between speed (DF, LT) and stability (CFR, MTTR)
+- **Balanced** between throughput (DF, LT, FDRT) and instability (CFR, DRR)
 - **Actionable** - teams can directly improve them
 - **Universal** - apply across industries and tech stacks
 
@@ -340,6 +336,34 @@ histogram_quantile(0.95, sum(rate(incident_duration_seconds_bucket[30d])) by (le
 
 # MTTR trend
 avg_over_time(incident_duration_seconds[7d])
+```
+
+### Metric 5: Deployment Rework Rate
+
+**Definition**: Percentage of deployments that are unplanned responses to a
+production incident
+
+**Calculation**:
+
+```
+Deployment Rework Rate = (Incident-Driven Deployments / Total Deployments) × 100
+
+Example:
+- Total deployments: 100
+- Incident-driven deployments: 6
+- Deployment Rework Rate = (6 / 100) × 100 = 6%
+```
+
+Record why each deployment occurred rather than inferring rework from commit
+messages. Link remediation deployments to an incident identifier at deploy
+time, then aggregate that structured field.
+
+**Prometheus Query**:
+
+```promql
+sum(rate(deployment_total{work_type="incident_rework"}[30d]))
+/
+sum(rate(deployment_total[30d])) * 100
 ```
 
 ---
@@ -910,7 +934,14 @@ Continue iteration...
    - [x] Identify and optimize the slowest stage
    - [ ] Hire more people
 
-**Answers**: 1-C, 2-B, 3-C, 4-C, 5-B, 6-B, 7-C, 8-C
+9. **What belongs in the numerator of Deployment Rework Rate?**
+
+   - [ ] All failed deployments
+   - [x] Incident-driven, unplanned deployments
+   - [ ] All deployments during an incident
+   - [ ] Reverted commits
+
+**Answers**: 1-C, 2-B, 3-C, 4-C, 5-B, 6-B, 7-C, 8-C, 9-B
 
 ---
 
@@ -918,7 +949,7 @@ Continue iteration...
 
 ### What You Learned
 
-✅ **Advanced Calculation**: All 4 metrics with distributions
+✅ **Advanced Calculation**: All five metrics with distributions
 ✅ **Data Collection**: Webhooks, Prometheus, automation
 ✅ **Dashboards**: Comprehensive Grafana visualizations
 ✅ **Analysis**: Trends, correlations, bottlenecks
@@ -927,7 +958,7 @@ Continue iteration...
 
 ### DORA Capabilities Achieved
 
-- ✅ **All 4 Key Metrics**: Automated collection and tracking
+- ✅ **All five DORA metrics**: Automated collection and tracking
 - ✅ **Monitoring**: Real-time visibility into delivery performance
 - ✅ **Data-Driven**: Metrics inform platform improvements
 
@@ -977,7 +1008,7 @@ Metrics transformed from vanity to value."
 
 - [ ] **Conceptual Understanding**
 
-  - [ ] Calculate all 4 metrics correctly
+  - [ ] Calculate all five metrics correctly
   - [ ] Understand P50/P95/P99 distributions
   - [ ] Explain metric correlations
 

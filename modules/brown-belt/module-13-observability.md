@@ -12,7 +12,7 @@ By the end of this module, you will be able to:
 
 1. Implement comprehensive monitoring and observability for your Fawkes platform
 2. Configure and customize dashboards for platform health and performance
-3. Measure and track the Four Key DORA metrics
+3. Measure and track the five DORA metrics
 4. Set up alerting and incident response workflows
 5. Use observability data to drive continuous improvement
 6. Implement distributed tracing for application performance monitoring
@@ -43,12 +43,13 @@ By the end of this module, you will be able to:
 
 ### Why Observability Matters for DORA
 
-The Four Key Metrics require robust observability:
+The five DORA metrics require robust observability:
 
 1. **Deployment Frequency**: Track deployments through CI/CD events
 2. **Lead Time for Changes**: Measure from commit to production
 3. **Change Failure Rate**: Monitor deployment failures and rollbacks
 4. **Mean Time to Restore (MTTR)**: Detect and measure incident resolution time
+5. **Deployment Rework Rate**: Identify incident-driven deployments and compare them with total deployments
 
 ---
 
@@ -253,7 +254,7 @@ Create a Grafana dashboard (`dora-metrics-dashboard.json`):
 ```json
 {
   "dashboard": {
-    "title": "DORA Four Key Metrics",
+    "title": "DORA Five Metrics",
     "panels": [
       {
         "title": "Deployment Frequency",
@@ -277,7 +278,7 @@ Create a Grafana dashboard (`dora-metrics-dashboard.json`):
         "title": "Change Failure Rate",
         "targets": [
           {
-            "expr": "sum(rate(deployment_result{status='failure'}[7d])) / sum(rate(deployment_result[7d])) * 100"
+            "expr": "sum(rate(deployment_result{status=\"failure\"}[7d])) / sum(rate(deployment_result[7d])) * 100"
           }
         ],
         "type": "gauge"
@@ -290,6 +291,15 @@ Create a Grafana dashboard (`dora-metrics-dashboard.json`):
           }
         ],
         "type": "stat"
+      },
+      {
+        "title": "Deployment Rework Rate",
+        "targets": [
+          {
+            "expr": "sum(rate(deployment_total{work_type=\"incident_rework\"}[7d])) / sum(rate(deployment_total[7d])) * 100"
+          }
+        ],
+        "type": "gauge"
       }
     ]
   }
@@ -615,7 +625,7 @@ public class TracingConfig {
 7. **Measure DORA Metrics**
    - Deploy multiple times
    - Introduce a failure
-   - Calculate all four metrics
+   - Calculate all five metrics
    - Identify improvement opportunities
 
 **Validation Checklist:**

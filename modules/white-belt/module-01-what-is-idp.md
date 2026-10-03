@@ -663,7 +663,7 @@ Take 2 minutes to think about:
 
 In Module 2, you'll learn:
 
-- The Four Key Metrics (Deployment Frequency, Lead Time, MTTR, Change Failure Rate)
+- The five DORA metrics, including Deployment Rework Rate
 - Why these metrics matter to your business
 - How Fawkes automatically tracks DORA metrics
 - How to interpret your team's metrics and drive improvement
