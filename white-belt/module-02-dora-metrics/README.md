@@ -20,12 +20,15 @@ Read that first; this page is the lab launcher.
 | ------- | ------ | ------------------------------------------------------------ |
 | Theory  | 40 min | The DORA key metrics, performance levels, business case      |
 | Lab 01  | 20 min | Watch real DORA metrics move live in Grafana (uFawkesObs)    |
+| Lab 02  | 25 min | Trace delivery events from a real pipeline (uFawkesAI)       |
 
 ---
 
 ## Lab
 
 ➡️ **[Lab 01: See DORA Metrics Live in Grafana](lab-01/instructions.md)**
+
+➡️ **[Lab 02: Trace a Delivery Event from a Real Pipeline](lab-02/instructions.md)**
 
 Unlike Module 1's lab (which runs against the Kubernetes-based `fawkes`
 platform), this lab runs against **uFawkesObs** — the Docker Compose
