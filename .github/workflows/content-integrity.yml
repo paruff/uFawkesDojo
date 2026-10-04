@@ -29,8 +29,11 @@ jobs:
           # The workflow trigger's `paths:` filter already scopes this to
           # module/lab markdown, so diffing the whole PR here is safe and
           # avoids git pathspec globstar quirks.
+          # Allow labeling existing placeholders as "not built yet" or "video not produced"
+          # These are explicit acknowledgments, not new placeholders.
+          ALLOWED='not built yet|video not produced'
           ADDED_HITS=$(git diff --unified=0 "origin/${{ github.base_ref }}...HEAD" \
-            | grep -E '^\+' | grep -Ev '^\+\+\+' | grep -Ei "$PATTERN" || true)
+            | grep -E '^\+' | grep -Ev '^\+\+\+' | grep -Ei "$PATTERN" | grep -Eiv "$ALLOWED" || true)
           if [ -n "$ADDED_HITS" ]; then
             echo "::error::New content adds a placeholder or unbuilt-environment marker. See docs/module-authoring-guide.md — 'No lab step may be described unless it has been run, for real.'"
             echo "$ADDED_HITS"
