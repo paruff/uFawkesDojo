@@ -1120,7 +1120,7 @@ def detectLanguage() {
 
 Our developers now spend time building features, not maintaining pipelines."
 
-- _Platform Engineering Team, Tech Company_
+- *Platform Engineering Team, Tech Company*
 
 ---
 
@@ -1806,6 +1806,6 @@ Next up: **Security Scanning & Quality Gates** - where you'll learn SonarQube, T
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*

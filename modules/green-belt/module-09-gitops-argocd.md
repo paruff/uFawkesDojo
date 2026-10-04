@@ -1031,7 +1031,7 @@ argocd app rollback my-app <revision-number>
 
 The biggest win: junior developers can now deploy confidently because Git history provides instant rollback."
 
-- _Platform Engineering Team, Fortune 500 Company_
+- *Platform Engineering Team, Fortune 500 Company*
 
 ---
 
@@ -1302,7 +1302,7 @@ Git Commits:         3+ required
 
 ## 🎓 Instructor Notes
 
-_For Fawkes Dojo facilitators and mentors:_
+*For Fawkes Dojo facilitators and mentors:*
 
 ### Teaching Tips
 
@@ -1722,6 +1722,6 @@ You've mastered the fundamentals of GitOps with ArgoCD. You're now equipped to d
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*

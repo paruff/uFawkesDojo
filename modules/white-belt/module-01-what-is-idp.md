@@ -79,8 +79,8 @@ Think of it as **"paved roads for software delivery"**—just as cities build ro
 
 ### The Platform as a Product Mindset
 
-Traditional IT: _"Here are some tools. Figure it out yourself."_
-Platform Engineering: _"What do you need to be productive? Let me build that for you."_
+Traditional IT: *"Here are some tools. Figure it out yourself."*
+Platform Engineering: *"What do you need to be productive? Let me build that for you."*
 
 #### Key Principles
 
@@ -110,7 +110,7 @@ Platform Engineering: _"What do you need to be productive? Let me build that for
 
 ### Team Topologies & Enabling Teams
 
-The book _Team Topologies_ by Matthew Skelton and Manuel Pais introduces four fundamental team types. Platform teams are **Enabling Teams**.
+The book *Team Topologies* by Matthew Skelton and Manuel Pais introduces four fundamental team types. Platform teams are **Enabling Teams**.
 
 #### The Four Team Types
 
@@ -219,7 +219,7 @@ Fawkes provides a complete IDP built on industry-standard open-source tools:
 
 #### ❌ Pitfall 1: Building in Isolation
 
-**Problem**: Platform team builds what they _think_ developers need without asking them.
+**Problem**: Platform team builds what they *think* developers need without asking them.
 **Solution**: Conduct regular developer interviews, track NPS, dogfood your own platform.
 
 #### ❌ Pitfall 2: Too Much Control

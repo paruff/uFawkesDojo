@@ -1722,7 +1722,7 @@ You've completed the most comprehensive platform engineering curriculum availabl
 ---
 
 **Module 20: Multi-Cloud Strategies** | Fawkes Dojo | Black Belt
-_"Build once, deploy anywhere"_ | Version 1.0
+*"Build once, deploy anywhere"* | Version 1.0
 
 ---
 

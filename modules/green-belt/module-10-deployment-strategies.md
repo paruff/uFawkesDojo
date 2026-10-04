@@ -914,7 +914,7 @@ spec:
 
 We now deploy during business hours with confidence."
 
-- _Platform Team, Financial Services_
+- *Platform Team, Financial Services*
 
 ---
 
@@ -994,6 +994,6 @@ Module 12: Rollback & Incident    ░░░░░░░░░░░░  0%
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*

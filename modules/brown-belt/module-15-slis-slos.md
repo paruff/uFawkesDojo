@@ -1056,7 +1056,7 @@ error_budget_policy:
 
 We transformed from arguing about reliability to managing it scientifically."
 
-- _Engineering Director, SaaS Platform_
+- *Engineering Director, SaaS Platform*
 
 ---
 
@@ -1064,9 +1064,9 @@ We transformed from arguing about reliability to managing it scientifically."
 
 ### Books
 
-- _Site Reliability Engineering_ - Google (free online)
-- _The Site Reliability Workbook_ - Google
-- _Implementing Service Level Objectives_ - Alex Hidalgo
+- *Site Reliability Engineering* - Google (free online)
+- *The Site Reliability Workbook* - Google
+- *Implementing Service Level Objectives* - Alex Hidalgo
 
 ### Tools
 
@@ -1136,6 +1136,6 @@ Module 16: Incident Management    ░░░░░░░░░░░░  0%
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*

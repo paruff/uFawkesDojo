@@ -607,7 +607,7 @@ stage('Publish') {
 }
 ```
 
-_We'll cover this in detail in Module 8: Artifact Management_
+*We'll cover this in detail in Module 8: Artifact Management*
 
 ---
 
@@ -970,7 +970,7 @@ fawkesJavaPipeline {
 }
 ```
 
-_We'll cover this in Module 6: Golden Path Pipelines_
+*We'll cover this in Module 6: Golden Path Pipelines*
 
 ---
 
@@ -1236,7 +1236,7 @@ spec:
 
 We went from monthly releases to daily deploys."
 
-- _Engineering Team, SaaS Company_
+- *Engineering Team, SaaS Company*
 
 ---
 
@@ -1324,6 +1324,6 @@ You're now ready to build production-ready CI pipelines. Continue to Module 6 to
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*

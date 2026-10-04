@@ -1091,8 +1091,8 @@ kubectl scale deployment/myapp --replicas=10
 
 ### Books
 
-- _GitOps and Kubernetes_ by Billy Yuen, et al.
-- _Continuous Delivery_ by Jez Humble - Foundation for GitOps
+- *GitOps and Kubernetes* by Billy Yuen, et al.
+- *Continuous Delivery* by Jez Humble - Foundation for GitOps
 
 ### Practice
 

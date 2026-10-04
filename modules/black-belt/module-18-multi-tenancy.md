@@ -1094,7 +1094,7 @@ Design multi-tenancy for 10 engineering teams.
 
 We scaled from 5 teams to 50 teams without increasing platform team size."
 
-- _Platform Director, Tech Unicorn_
+- *Platform Director, Tech Unicorn*
 
 ---
 
@@ -1116,7 +1116,7 @@ We scaled from 5 teams to 50 teams without increasing platform team size."
 
 ### Books & Articles
 
-- _Kubernetes Security_ - Liz Rice & Michael Hausenblas
+- *Kubernetes Security* - Liz Rice & Michael Hausenblas
 - [Multi-Tenancy in Kubernetes](https://www.cncf.io/blog/2020/08/31/kubernetes-multi-tenancy/)
 
 ---
@@ -1177,8 +1177,8 @@ Module 20: Platform Leadership     ░░░░░░░░░░░░  0%
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*
 
 **🎉 Module 18 Complete - Multi-Tenancy Mastery Achieved! 🎉**

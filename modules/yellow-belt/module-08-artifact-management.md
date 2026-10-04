@@ -1019,7 +1019,7 @@ spec:
 
 We can now trace every production artifact back to exact source code commit."
 
-- _DevOps Team, E-Commerce Platform_
+- *DevOps Team, E-Commerce Platform*
 
 ---
 
@@ -1206,8 +1206,8 @@ Module 9: Introduction to GitOps with ArgoCD awaits! You'll learn declarative de
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*
 
 **🎉 Yellow Belt Complete - Congratulations, CI/CD Specialist! 🎉**

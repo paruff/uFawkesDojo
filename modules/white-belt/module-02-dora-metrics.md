@@ -57,9 +57,9 @@ You've mastered this module when you can:
 
 ## 2. Theory & Concepts (15 minutes)
 
-### 📺 Video: The DORA Metrics Explained (7 minutes) — *not built yet*
+### 📺 Video: The DORA Metrics Explained (7 minutes) — _not built yet_
 
-> **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document** *(video not produced)*
+> **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document** _(video not produced)_
 
 ### The Five DORA Metrics
 
@@ -386,9 +386,9 @@ Alertmanager detects any incidents
 
 ## 3. Demonstration (10 minutes)
 
-### 📺 Video: Navigating Fawkes DORA Dashboards (10 minutes) — *not built yet*
+### 📺 Video: Navigating Fawkes DORA Dashboards (10 minutes) — _not built yet_
 
-> **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document** *(video not produced)*
+> **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document** _(video not produced)_
 
 ### Key Takeaways from Demo
 

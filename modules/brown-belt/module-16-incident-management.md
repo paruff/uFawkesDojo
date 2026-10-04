@@ -1598,7 +1598,7 @@ insufficient for traffic spike (200 req/s)
 
 We transformed from reactive firefighting to proactive reliability engineering."
 
-- _SRE Team, SaaS Platform_
+- *SRE Team, SaaS Platform*
 
 ---
 
@@ -1694,10 +1694,10 @@ Module 16: Incident Management    ████████████ 100% ✓
 
 ### Books
 
-- _Site Reliability Engineering_ - Google (free online)
-- _The Site Reliability Workbook_ - Google
-- _Observability Engineering_ - Charity Majors et al.
-- _Chaos Engineering_ - Casey Rosenthal
+- *Site Reliability Engineering* - Google (free online)
+- *The Site Reliability Workbook* - Google
+- *Observability Engineering* - Charity Majors et al.
+- *Chaos Engineering* - Casey Rosenthal
 
 ### Tools & Platforms
 
@@ -1925,8 +1925,8 @@ You've achieved mastery in observability, SRE practices, and incident management
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*
 
 ### 🎉 Brown Belt Complete - Congratulations, SRE Practitioner! 🎉

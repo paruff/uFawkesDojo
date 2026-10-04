@@ -982,7 +982,7 @@ Continue iteration...
 
 Metrics transformed from vanity to value."
 
-- _Engineering Director, Tech Company_
+- *Engineering Director, Tech Company*
 
 ---
 
