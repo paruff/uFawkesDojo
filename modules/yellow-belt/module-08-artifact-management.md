@@ -1,5 +1,9 @@
 # Fawkes Dojo Module 8: Artifact Management
 
+> ⚠️ **This module teaches Harbor registry and artifact promotion in Jenkins/Fawkes, which is replaced in Dojo 0.4 by uFawkesPipe (Woodpecker CI with artifact management via the `.fawkespipe.yml` contract and DefectDojo integration).**
+> The Yellow Belt artifact management content is being migrated to uFawkesPipe.
+> See [uFawkesPipe](https://github.com/paruff/uFawkesPipe) and the [Dojo 0.4 release plan](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/plan.md#phase-4--ufawkespipe-v200--dojo-04-gate-ac-pipe-01).
+
 ## 🎯 Module Overview
 
 **Belt Level**: 🟡 Yellow Belt - CI/CD Mastery

@@ -1,5 +1,9 @@
 # Fawkes Dojo Module 7: Security Scanning & Quality Gates
 
+> ⚠️ **This module teaches Jenkins-based security scanning (SonarQube, Trivy, secrets detection in Jenkins pipelines), which is replaced in Dojo 0.4 by uFawkesPipe (Woodpecker CI with Conftest/Rego policy checks, Trivy, Gitleaks, DefectDojo).**
+> The Yellow Belt security content is being migrated to uFawkesPipe's security scanning stack.
+> See [uFawkesPipe](https://github.com/paruff/uFawkesPipe) and the [Dojo 0.4 release plan](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/plan.md#phase-4--ufawkespipe-v200--dojo-04-gate-ac-pipe-01).
+
 ## 🎯 Module Overview
 
 **Belt Level**: 🟡 Yellow Belt - CI/CD Mastery

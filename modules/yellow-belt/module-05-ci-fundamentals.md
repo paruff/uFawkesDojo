@@ -1,5 +1,9 @@
 # Fawkes Dojo Module 5: Continuous Integration Fundamentals
 
+> ⚠️ **This module teaches Jenkins, which is replaced in Dojo 0.4 by uFawkesPipe (Woodpecker CI).**
+> The Yellow Belt CI/CD content is being migrated to Woodpecker and the `.fawkespipe.yml` contract.
+> See [uFawkesPipe](https://github.com/paruff/uFawkesPipe) and the [Dojo 0.4 release plan](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/plan.md#phase-4--ufawkespipe-v200--dojo-04-gate-ac-pipe-01).
+
 ## 🎯 Module Overview
 
 **Belt Level**: 🟡 Yellow Belt - CI/CD Mastery
