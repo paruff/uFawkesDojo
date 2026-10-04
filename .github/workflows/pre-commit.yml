@@ -1,7 +1,9 @@
 name: Pre-commit
 
-# Runs every hook in .pre-commit-config.yaml on all files, the same hooks a
-# contributor runs locally with `pre-commit install`. This replaces
+# Runs every hook in .pre-commit-config.yaml on all files, stage by stage, the
+# same hooks a contributor runs locally with `pre-commit install`, through
+# uFawkesPipe's reusable Pre-flight (pre-commit and pre-push stages, and each
+# PR commit's message through the commit-msg hook). This replaces
 # pre-commit.ci, which this repo no longer uses.
 
 "on":
@@ -17,40 +19,7 @@ permissions:
 jobs:
   pre-commit:
     name: Pre-commit hooks
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: job-start
-        run: |
-          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          echo "sha:${{ github.sha }}"
-          echo "workflow:${{ github.workflow }}"
-          echo "job:${{ github.job }}"
-
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: "3.13"
-
-      - name: Install pre-commit
-        run: pip install pre-commit
-
-      - name: Cache pre-commit environments
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-          restore-keys: |
-            pre-commit-${{ runner.os }}-
-
-      - name: Run pre-commit hooks
-        run: pre-commit run --all-files --show-diff-on-failure
-
-      - name: job-finish
-        if: always()
-        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    uses: paruff/uFawkesPipe/.github/workflows/reusable-preflight.yml@56226a057899ec3407c7a5c6bd5182d88783d2d2 # v1.11.0-beta.1
+    with:
+      pr-size-limit: 0 # this repo had no PR size gate; Pre-flight's default is 400
+      commit-format: conventional
