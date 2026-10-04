@@ -27,6 +27,16 @@ before requesting review:
       and any "Last Updated" footer are current (see
       [issue #11](https://github.com/paruff/uFawkesDojo/issues/11) for
       known in-flight changes: Jenkins → Tekton, `fawkes.io` → `ufawkes.dev`)
+- [ ] **Cumulative, spaced retrieval**: module opens with 2–3 recall
+      questions from *earlier* modules, not only the current one
+- [ ] **Interleaving**: Green+ belt modules mix problem types; White/Yellow
+      may block on one tool at a time
+- [ ] **Faded worked examples**: White = full, Yellow/Green = partial,
+      Brown/Black = open problems
+- [ ] **Calibration prompt**: learners predict result/time before lab,
+      compare after (counters illusion of competence)
+- [ ] **Self-regulation supports**: per-sub-session time estimates, "plan
+      your sessions" prompt at belt start, visible progress (done/next)
 
 If any box can't be checked, say why in a comment rather than leaving it
 unchecked silently — some modules have a good reason (e.g. a lab genuinely
