@@ -186,7 +186,7 @@ Developer → Commits Code → Git Repository
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Your First ArgoCD Deployment
+## 🛠️ Part 3: Hands-On Lab - Your First ArgoCD Deployment — *not built yet*
 
 ### Lab Scenario
 
@@ -1240,7 +1240,7 @@ Bootstrap ArgoCD to manage itself:
 
 1. **Check the Troubleshooting Section** (Part 5) - covers 90% of common issues
 2. **ArgoCD Slack** - #argo-cd channel, very responsive community
-3. **Fawkes Mattermost** - #dojo-green-belt channel
+3. **GitHub Discussions** - `#dojo-green-belt` category
 4. **Office Hours** - Bi-weekly live Q&A (see dojo calendar)
 
 ### Share Your Success
@@ -1250,7 +1250,7 @@ Completed the module? Share with the community!
 - **Tweet**: "Just completed @FawkesPlatform Dojo Module 6: GitOps with ArgoCD! 🎉 #GitOps #Platform Engineering"
 - **LinkedIn Post**: Share your reflection and learnings
 - **Fawkes Blog**: Write a guest post about your experience
-- **Mattermost**: Share screenshots in #show-and-tell
+- **GitHub Discussions**: Share screenshots in `#show-and-tell` category
 
 ### Help Others
 
@@ -1453,7 +1453,7 @@ You're now ready to:
 
 1. **Complete the lab** - Deploy your first ArgoCD application today
 2. **Submit artifacts** - Get your completion badge
-3. **Join the community** - Share your experience in Mattermost
+3. **Join the community** - Share your experience in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions)
 4. **Schedule Module 7** - Keep your momentum going
 
 ---

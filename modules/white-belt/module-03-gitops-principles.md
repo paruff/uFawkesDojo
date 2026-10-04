@@ -718,7 +718,7 @@ myapp-7d8f5c9b8d-ghi56   1/1     Running   2m
 
 ---
 
-## 🧪 Hands-On Lab: GitOps Workflow (15 minutes)
+## 🧪 Hands-On Lab: GitOps Workflow (15 minutes) — *not built yet*
 
 ### Lab Objectives
 
@@ -1164,7 +1164,7 @@ Next module:
 
 **Stuck on something?** We're here to help!
 
-- **Mattermost**: Join `#dojo-white-belt` channel
+- **GitHub Discussions**: Join `#dojo-white-belt` category
 - **Office Hours**: Wednesdays 2-3 PM ET, Fridays 10-11 AM ET
 - **Discussion Forum**: [GitHub Discussions](https://github.com/paruff/fawkes/discussions)
 - **Documentation**: [GitOps Guide](https://docs.fawkes.io/gitops)

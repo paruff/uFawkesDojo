@@ -148,7 +148,7 @@ kubectl argo rollouts version
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Progressive Canary
+## 🛠️ Part 3: Hands-On Lab - Progressive Canary — *not built yet*
 
 ### Step 1: Deploy Baseline Application
 

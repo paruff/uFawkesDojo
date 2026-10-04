@@ -624,7 +624,7 @@ Result: Multi-cloud loses ~15% in discounts
 
 ---
 
-## 🏗️ Hands-On Lab: Multi-Cloud Deployment
+## 🏗️ Hands-On Lab: Multi-Cloud Deployment — *not built yet*
 
 ### Lab Overview
 
@@ -1614,7 +1614,7 @@ We'd love to hear about your Fawkes Dojo journey!
 
 **Join the community**:
 
-- 💬 **Mattermost**: `#dojo-graduates` channel
+- 💬 **GitHub Discussions**: `#dojo-graduates` category
 - 🐦 **Twitter**: Tweet with `#FawkesDojo` and `@FawkesPlatform`
 - 💼 **LinkedIn**: Add "Fawkes Platform Architect" to certifications
 - 📝 **Blog**: Write about your learning experience
@@ -1715,7 +1715,7 @@ You've completed the most comprehensive platform engineering curriculum availabl
 - **Documentation**: https://docs.fawkes.io
 - **GitHub**: https://github.com/fawkes-platform
 - **Community Forum**: https://community.fawkes.io
-- **Mattermost**: #platform-engineering
+- **GitHub Discussions**: https://github.com/paruff/uFawkesDojo/discussions
 - **Twitter**: @FawkesPlatform
 - **YouTube**: Fawkes Platform Engineering
 

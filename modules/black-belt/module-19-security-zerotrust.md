@@ -490,7 +490,7 @@ spec:
 
 ---
 
-## 🛠️ Hands-On Lab: Implementing Zero Trust for Fawkes
+## 🛠️ Hands-On Lab: Implementing Zero Trust for Fawkes — *not built yet*
 
 ### Lab Overview
 

@@ -411,7 +411,7 @@ error_budget_policy:
 
 ---
 
-## 🛠️ Part 5: Hands-On Lab - Implementing SLIs/SLOs
+## 🛠️ Part 5: Hands-On Lab - Implementing SLIs/SLOs — *not built yet*
 
 ### Step 1: Define SLIs
 

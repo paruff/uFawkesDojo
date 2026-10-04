@@ -541,7 +541,7 @@ Target: 80% of issues resolved in <1 hour
 
 ---
 
-## 🛠️ Hands-On Lab: Building a Platform Product
+## 🛠️ Hands-On Lab: Building a Platform Product — *not built yet*
 
 ### Lab Overview
 

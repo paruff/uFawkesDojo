@@ -932,7 +932,7 @@ spec:
 
 ---
 
-## 💪 Part 7: Hands-On Lab - Build Multi-Tenant Platform
+## 💪 Part 7: Hands-On Lab - Build Multi-Tenant Platform — *not built yet*
 
 ### Scenario
 

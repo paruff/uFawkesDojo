@@ -96,7 +96,7 @@ Fawkes includes an integrated monitoring stack:
 
 ---
 
-## Part 3: Hands-On Lab - Deploying the Monitoring Stack
+## Part 3: Hands-On Lab - Deploying the Monitoring Stack — *not built yet*
 
 ### Lab Setup
 

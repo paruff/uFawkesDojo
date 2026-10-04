@@ -237,7 +237,7 @@ Modern Jenkins uses **declarative pipelines** defined in `Jenkinsfile`:
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Your First Pipeline
+## 🛠️ Part 3: Hands-On Lab - Your First Pipeline — *not built yet*
 
 ### Lab Scenario
 
@@ -1258,7 +1258,7 @@ We went from monthly releases to daily deploys."
 
 - [Jenkins Community](https://www.jenkins.io/participate/)
 - [Jenkins Slack](https://www.jenkins.io/chat/)
-- [Fawkes Mattermost](https://mattermost.fawkes.internal) - #yellow-belt channel
+- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-yellow-belt` category
 
 ---
 

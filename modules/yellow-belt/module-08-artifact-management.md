@@ -127,7 +127,7 @@ Harbor is an open-source container registry that secures artifacts with policies
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Publishing Artifacts
+## 🛠️ Part 3: Hands-On Lab - Publishing Artifacts — *not built yet*
 
 ### Step 1: Configure Harbor in Pipeline
 
@@ -1128,7 +1128,7 @@ Module 8: Artifact Management    ████████████ 100% ✓
 
 ### Community
 
-- [Fawkes Mattermost](https://mattermost.fawkes.internal) - #yellow-belt
+- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-yellow-belt` category
 - Share your certification achievement!
 - Help newcomers in #white-belt
 

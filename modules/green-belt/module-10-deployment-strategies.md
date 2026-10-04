@@ -124,7 +124,7 @@ Switch traffic from Blue → Green when ready.
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Blue-Green Deployment
+## 🛠️ Part 3: Hands-On Lab - Blue-Green Deployment — *not built yet*
 
 ### Step 1: Deploy Blue Environment
 

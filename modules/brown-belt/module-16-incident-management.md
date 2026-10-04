@@ -1194,7 +1194,7 @@ sum(action_items_completed_on_time) / sum(action_items_total) * 100
 
 ---
 
-## 🎯 Part 8: Hands-On Lab - Full Incident Simulation
+## 🎯 Part 8: Hands-On Lab - Full Incident Simulation — *not built yet*
 
 ### Lab Overview
 
@@ -1717,7 +1717,7 @@ Module 16: Incident Management    ████████████ 100% ✓
 
 - [SRE Weekly Newsletter](https://sreweekly.com/)
 - [Chaos Engineering Slack](https://chaos-community.slack.com/)
-- [Fawkes Mattermost](https://mattermost.fawkes.internal) - #brown-belt
+- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-brown-belt` category
 - Share your certification achievement!
 
 ---

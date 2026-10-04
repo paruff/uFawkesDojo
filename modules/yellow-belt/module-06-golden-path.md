@@ -160,7 +160,7 @@ fawkes-pipeline-library/
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Create Your First Shared Library
+## 🛠️ Part 3: Hands-On Lab - Create Your First Shared Library — *not built yet*
 
 ### Step 1: Set Up Shared Library Repository
 
@@ -1140,7 +1140,7 @@ Our developers now spend time building features, not maintaining pipelines."
 ### Community
 
 - [Jenkins Community Forums](https://community.jenkins.io/)
-- [Fawkes #yellow-belt Mattermost](https://mattermost.fawkes.internal)
+- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-yellow-belt` category
 
 ---
 
