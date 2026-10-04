@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: job-start
         run: echo "job-start workflow=content-integrity job=check-placeholders sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
       - name: Check for new placeholder / unbuilt-environment markers
@@ -32,7 +32,7 @@ jobs:
           # Allow labeling existing placeholders as "not built yet" or "video not produced"
           # These are explicit acknowledgments, not new placeholders.
           ALLOWED='not built yet|video not produced'
-          ADDED_HITS=$(git diff --unified=0 "origin/${{ github.base_ref }}...HEAD" \
+          ADDED_HITS=$(git diff --unified=0 "origin/${GITHUB_BASE_REF}...HEAD" \
             | grep -E '^\+' | grep -Ev '^\+\+\+' | grep -Ei "$PATTERN" | grep -Eiv "$ALLOWED" || true)
           if [ -n "$ADDED_HITS" ]; then
             echo "::error::New content adds a placeholder or unbuilt-environment marker. See docs/module-authoring-guide.md — 'No lab step may be described unless it has been run, for real.'"
