@@ -159,11 +159,59 @@ lasting effects, most for weaker learners (Kulik, Kulik & Bangert-Drowns,
 1990). Badges add a small extra (gamification meta-analysis: g = 0.25–0.49;
 Sailer & Homner, 2020), which is why item 7 keeps them secondary.
 
-### Sources for items 9–13
+### 14. A failed check leads to a corrective, not a waiting period
+
+Mastery learning only works with Bloom's feedback-and-correctives cycle:
+check, give targeted correction, then check again (Bloom, 1968; Guskey,
+2007). A pause before a retake teaches nothing on its own. When a learner
+misses a check:
+
+- point each missed item to the section or worked example that teaches it;
+- make the corrective *different* from the first explanation (another
+  example, a diagram, a smaller step), not "re-read the module";
+- retest with different questions on the same objectives, not the same
+  questions again.
+
+The current belt exams use plain waiting periods (7–30 days, see
+`assessments/`). Replace them with this loop the next time an exam is
+revised.
+
+### 15. One mastery bar: 80% before the next module
+
+Each module ends with a short check, and the learner moves on at 80% or
+higher. The bar is a fixed criterion, not a curve against other learners.
+Kulik, Kulik & Bangert-Drowns (1990) found larger effects in programs that
+set a high mastery standard. A belt exam alone gates too late: by then, a
+gap from module 1 has been built on for three more modules. State the bar
+in the module's Success Criteria section, so the learner knows it before
+starting.
+
+### 16. Feedback says where to go next
+
+Feedback works when it answers three questions: where am I going, how am I
+going, and where to next (Hattie & Timperley, 2007). Item 6 makes feedback
+fast; this item makes it useful. In lab terms: every failure line a
+validator prints names its fix, or the Troubleshooting entry that has it.
+`NOT reachable` answers "how am I going". `NOT reachable — run make up,
+see Troubleshooting: Grafana won't start` also answers "where to next."
+
+### 17. A diagram next to the words it explains
+
+People learn more from words plus pictures than from words alone (Mayer,
+2009, the multimedia principle; Paivio, 1986, dual coding). Put at least
+one diagram in each module, placed beside the text it explains rather
+than in a separate section (Mayer's contiguity principle). Good fits: the
+data flow through a stack, before and after a pipeline change, or where a
+DORA metric gets measured. Every image needs alt text that carries the
+same meaning.
+
+### Sources for items 9–17
 
 - Adesope, O. O., Trevisan, D. A., & Sundararajan, N. (2017). Rethinking
   the use of tests. *Review of Educational Research*, 87(3), 659–701.
   https://eric.ed.gov/?id=EJ1141817
+- Bloom, B. S. (1968). Learning for mastery. *Evaluation Comment*, 1(2),
+  1–12.
 - Broadbent, J., & Poon, W. L. (2015). Self-regulated learning strategies
   and academic achievement in online higher education. *The Internet and
   Higher Education*, 27, 1–13.
@@ -172,14 +220,23 @@ Sailer & Homner, 2020), which is why item 7 keeps them secondary.
 - Dunlosky, J., et al. (2013). Improving students' learning with effective
   learning techniques. *Psychological Science in the Public Interest*,
   14(1), 4–58.
+- Guskey, T. R. (2007). Closing achievement gaps: Revisiting Benjamin S.
+  Bloom's "Learning for Mastery." *Journal of Advanced Academics*, 19(1),
+  8–31.
+- Hattie, J., & Timperley, H. (2007). The power of feedback. *Review of
+  Educational Research*, 77(1), 81–112.
 - Kalyuga, S., Ayres, P., Chandler, P., & Sweller, J. (2003). The
   expertise reversal effect. *Educational Psychologist*, 38(1), 23–31.
 - Kulik, C.-L. C., Kulik, J. A., & Bangert-Drowns, R. L. (1990).
   Effectiveness of mastery learning programs. *Review of Educational
   Research*, 60(2), 265–299.
+- Mayer, R. E. (2009). *Multimedia Learning* (2nd ed.). Cambridge
+  University Press.
 - METR (2025). Measuring the impact of early-2025 AI on experienced
   open-source developer productivity.
   https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/
+- Paivio, A. (1986). *Mental Representations: A Dual Coding Approach*.
+  Oxford University Press.
 - Reich, J., & Ruipérez-Valiente, J. A. (2019). The MOOC pivot. *Science*,
   363(6423), 130–131. https://www.science.org/doi/10.1126/science.aav7958
 - Rohrer, D., & Taylor, K. (2007). The shuffling of mathematics problems

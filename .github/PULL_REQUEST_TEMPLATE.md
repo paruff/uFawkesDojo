@@ -37,6 +37,15 @@ before requesting review:
       compare after (counters illusion of competence)
 - [ ] **Self-regulation supports**: per-sub-session time estimates, "plan
       your sessions" prompt at belt start, visible progress (done/next)
+- [ ] **Corrective loop**: a failed check points each missed item to the
+      section that teaches it, then retests with different questions — no
+      bare waiting period
+- [ ] **Mastery bar**: the module ends with a check at 80% or higher, and
+      Success Criteria states that bar up front
+- [ ] **Where to next**: every validator failure line names its fix or
+      Troubleshooting entry
+- [ ] **Diagram**: at least one diagram beside the text it explains, with
+      alt text
 
 If any box can't be checked, say why in a comment rather than leaving it
 unchecked silently — some modules have a good reason (e.g. a lab genuinely

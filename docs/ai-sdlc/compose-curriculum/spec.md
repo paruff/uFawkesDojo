@@ -1,7 +1,7 @@
 # Spec: Teach the uFawkes Compose Suite First
 
 **Traces to:** [`intent.md`](intent.md) | **Plan:** [`plan.md`](plan.md)
-**Status:** Draft | **Revision:** 3
+**Status:** Draft | **Revision:** 4
 **Approval required before risky work:** Yes. This rewrites live curriculum
 content that dojo.ufawkes.dev links to. No module changes until the stack
 it targets is released, and every lab step is run for real first.
@@ -13,6 +13,7 @@ it targets is released, and every lab step is run for real first.
 | 1 | 2026-09-27 | Initial draft | Review of uFawkesObs/Pipe/DevX |
 | 2 | 2026-09-27 | CI tooling facts; uFawkesRes resolved | Confirmed: Fawkes = Tekton, uFawkesPipe = Woodpecker, uFawkesRes deprecated |
 | 3 | 2026-09-27 | Split into intent/spec/plan (uFawkesAI convention); pilot changed from "White Belt Module 4 on DevX" to "pin Module 2's existing uFawkesObs lab to v1.0.0"; corrected "all modules are Kubernetes-based" | Decided: labs follow suite release order (Obs → Pipe → DevX). Module 2's lab (#10) already runs on uFawkesObs. |
+| 4 | 2026-10-04 | Added R6 and AC-005: rewritten modules pass the whole authoring-guide checklist | Review against mastery learning and Visible Learning: R5 bound only two of the guide's items, so a rewrite could meet every AC and skip retrieval, feedback and correctives |
 
 ## Requirements
 
@@ -34,6 +35,12 @@ it targets is released, and every lab step is run for real first.
 
   Re-measure each module's length after its rewrite; don't carry the old
   estimates over.
+- **R6 — Learning design.** Every rewritten module passes the whole
+  [module-authoring guide](../../module-authoring-guide.md) checklist
+  (items 1–17), not only the timing items in R5. That covers worked
+  examples, retrieval, feedback that says where to go next, an 80% bar
+  with a corrective loop, and diagrams. If an item can't be met, the PR
+  says why.
 
 ## Design
 
@@ -118,3 +125,12 @@ measure during rewrite rather than assume:
   uFawkesDevX AC-DEVX-01)
 - **Verification:** A link to that ADR in the rewrite PR
 - **Priority:** Required. It blocks only the White Belt phase.
+
+### AC-005: Rewritten modules pass the authoring-guide checklist
+
+- **Scenario:** A PR rewrites or adds a module or lab
+- **Expected:** Every box in the PR template's authoring-guide section is
+  checked, or has a stated reason in the PR
+- **Must not:** Leave a box unchecked without saying why
+- **Verification:** The PR template checklist, checked at review
+- **Priority:** Required
