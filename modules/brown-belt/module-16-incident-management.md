@@ -1194,7 +1194,7 @@ sum(action_items_completed_on_time) / sum(action_items_total) * 100
 
 ---
 
-## 🎯 Part 8: Hands-On Lab - Full Incident Simulation
+## 🎯 Part 8: Hands-On Lab - Full Incident Simulation — *not built yet*
 
 ### Lab Overview
 
@@ -1598,7 +1598,7 @@ insufficient for traffic spike (200 req/s)
 
 We transformed from reactive firefighting to proactive reliability engineering."
 
-- _SRE Team, SaaS Platform_
+- *SRE Team, SaaS Platform*
 
 ---
 
@@ -1694,10 +1694,10 @@ Module 16: Incident Management    ████████████ 100% ✓
 
 ### Books
 
-- _Site Reliability Engineering_ - Google (free online)
-- _The Site Reliability Workbook_ - Google
-- _Observability Engineering_ - Charity Majors et al.
-- _Chaos Engineering_ - Casey Rosenthal
+- *Site Reliability Engineering* - Google (free online)
+- *The Site Reliability Workbook* - Google
+- *Observability Engineering* - Charity Majors et al.
+- *Chaos Engineering* - Casey Rosenthal
 
 ### Tools & Platforms
 
@@ -1717,7 +1717,7 @@ Module 16: Incident Management    ████████████ 100% ✓
 
 - [SRE Weekly Newsletter](https://sreweekly.com/)
 - [Chaos Engineering Slack](https://chaos-community.slack.com/)
-- [Fawkes Mattermost](https://mattermost.fawkes.internal) - #brown-belt
+- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-brown-belt` category
 - Share your certification achievement!
 
 ---
@@ -1925,8 +1925,8 @@ You've achieved mastery in observability, SRE practices, and incident management
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*
 
 ### 🎉 Brown Belt Complete - Congratulations, SRE Practitioner! 🎉

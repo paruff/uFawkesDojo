@@ -164,7 +164,7 @@ fawkes-pipeline-library/
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Create Your First Shared Library
+## 🛠️ Part 3: Hands-On Lab - Create Your First Shared Library — *not built yet*
 
 ### Step 1: Set Up Shared Library Repository
 
@@ -1124,7 +1124,7 @@ def detectLanguage() {
 
 Our developers now spend time building features, not maintaining pipelines."
 
-- _Platform Engineering Team, Tech Company_
+- *Platform Engineering Team, Tech Company*
 
 ---
 
@@ -1144,7 +1144,7 @@ Our developers now spend time building features, not maintaining pipelines."
 ### Community
 
 - [Jenkins Community Forums](https://community.jenkins.io/)
-- [Fawkes #yellow-belt Mattermost](https://mattermost.fawkes.internal)
+- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-yellow-belt` category
 
 ---
 
@@ -1810,6 +1810,6 @@ Next up: **Security Scanning & Quality Gates** - where you'll learn SonarQube, T
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*

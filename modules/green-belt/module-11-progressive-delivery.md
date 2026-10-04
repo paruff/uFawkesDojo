@@ -148,7 +148,7 @@ kubectl argo rollouts version
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Progressive Canary
+## 🛠️ Part 3: Hands-On Lab - Progressive Canary — *not built yet*
 
 ### Step 1: Deploy Baseline Application
 
@@ -939,7 +939,7 @@ spec:
 
 We deploy to production during business hours without fear."
 
-- _SRE Team, E-Commerce Platform_
+- *SRE Team, E-Commerce Platform*
 
 ---
 
@@ -1021,6 +1021,6 @@ Module 12: Rollback & Incident    ░░░░░░░░░░░░  0%
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*

@@ -541,7 +541,7 @@ Target: 80% of issues resolved in <1 hour
 
 ---
 
-## 🛠️ Hands-On Lab: Building a Platform Product
+## 🛠️ Hands-On Lab: Building a Platform Product — *not built yet*
 
 ### Lab Overview
 
@@ -1631,4 +1631,4 @@ Next: Module 18 to continue your Black Belt journey!
 ---
 
 **Module 17: Platform as a Product** | Fawkes Dojo | Black Belt
-_"Build what users need, not what you think they need"_ | Version 1.0
+*"Build what users need, not what you think they need"* | Version 1.0

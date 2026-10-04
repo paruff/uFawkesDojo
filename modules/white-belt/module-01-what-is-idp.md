@@ -45,9 +45,9 @@ You've mastered this module when you can:
 
 ## 2. Theory & Concepts (15 minutes)
 
-### 📺 Video: What is an Internal Delivery Platform? (7 minutes)
+### 📺 Video: What is an Internal Delivery Platform? (7 minutes) — *not built yet*
 
-> **[VIDEO PLACEHOLDER]** > **Script Summary**:
+> **[VIDEO PLACEHOLDER]** > **Script Summary** *(video not produced)*:
 >
 > - Opening: Show developer frustration with 12-step deployment process
 > - Definition: IDP as "self-service platform that provides golden paths"
@@ -79,8 +79,8 @@ Think of it as **"paved roads for software delivery"**—just as cities build ro
 
 ### The Platform as a Product Mindset
 
-Traditional IT: _"Here are some tools. Figure it out yourself."_
-Platform Engineering: _"What do you need to be productive? Let me build that for you."_
+Traditional IT: *"Here are some tools. Figure it out yourself."*
+Platform Engineering: *"What do you need to be productive? Let me build that for you."*
 
 #### Key Principles
 
@@ -110,7 +110,7 @@ Platform Engineering: _"What do you need to be productive? Let me build that for
 
 ### Team Topologies & Enabling Teams
 
-The book _Team Topologies_ by Matthew Skelton and Manuel Pais introduces four fundamental team types. Platform teams are **Enabling Teams**.
+The book *Team Topologies* by Matthew Skelton and Manuel Pais introduces four fundamental team types. Platform teams are **Enabling Teams**.
 
 #### The Four Team Types
 
@@ -186,7 +186,7 @@ Fawkes provides a complete IDP built on industry-standard open-source tools:
 │  └──────────────┘  └──────────────┘  └──────────────┘   │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
 │  │  Artifacts   │  │  Security    │  │ Collaboration│   │
-│  │  (Harbor)    │  │  (Trivy)     │  │ (Mattermost) │   │
+│  │  (Harbor)    │  │  (Trivy)     │  │ (GitHub Discussions) │   │
 │  └──────────────┘  └──────────────┘  └──────────────┘   │
 └───────────────────────────────────────────────────────────┘
                           │
@@ -212,14 +212,14 @@ Fawkes provides a complete IDP built on industry-standard open-source tools:
 | **Prometheus/Grafana** | Metrics & monitoring              | Prometheus stack        |
 | **OpenSearch**         | Log aggregation & search          | OpenSearch              |
 | **Grafana Tempo**      | Distributed tracing               | Grafana Tempo           |
-| **Mattermost**         | Team collaboration                | Mattermost              |
+| **GitHub Discussions** | Team collaboration & Q&A          | GitHub Discussions      |
 | **Focalboard**         | Project tracking                  | Focalboard              |
 
 ### Common Pitfalls & How to Avoid Them
 
 #### ❌ Pitfall 1: Building in Isolation
 
-**Problem**: Platform team builds what they _think_ developers need without asking them.
+**Problem**: Platform team builds what they *think* developers need without asking them.
 **Solution**: Conduct regular developer interviews, track NPS, dogfood your own platform.
 
 #### ❌ Pitfall 2: Too Much Control
@@ -246,9 +246,9 @@ Fawkes provides a complete IDP built on industry-standard open-source tools:
 
 ## 3. Demonstration (10 minutes)
 
-### 📺 Video: Fawkes Platform Tour (10 minutes)
+### 📺 Video: Fawkes Platform Tour (10 minutes) — *not built yet*
 
-> **[VIDEO PLACEHOLDER]** > **Script**: Instructor walks through Fawkes platform showing:
+> **[VIDEO PLACEHOLDER]** > **Script** *(video not produced)*: Instructor walks through Fawkes platform showing:
 >
 > 1. **Backstage Home** (1 min)
 >    - Overview page, quick links
@@ -342,7 +342,7 @@ When you click "Start Lab", we'll provision:
 
    - On the `sample-spring-boot-app` page, find the "About" section
    - Note the owner (person or team)
-   - Find the Mattermost channel for support
+   - Find the GitHub Discussions category for support
 
    📝 **Submit**: Who owns this service? (Type answer in lab notebook)
 
@@ -408,7 +408,7 @@ Once you've completed all tasks:
 
 - Verify you're using your dojo username (not email)
 - Try incognito/private browsing mode
-- Check #dojo-support in Mattermost
+- Check [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for support
 
 **Can't find a service?**
 
@@ -653,7 +653,7 @@ Take 2 minutes to think about:
 
 **💬 Community**:
 
-- Join `#dojo-white-belt` in Mattermost
+- Join [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-white-belt`
 - Share your "aha!" moments
 - Help others who are just starting
 
@@ -694,7 +694,7 @@ In Module 2, you'll learn:
 
 **Questions or Issues?**
 
-- 💬 Ask in `#dojo-white-belt` on Mattermost
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-white-belt`
 - 📧 Email: dojo@ufawkes.dev
 - 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 

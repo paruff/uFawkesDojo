@@ -142,7 +142,7 @@ SonarQube is the SAST tool integrated into Fawkes platform.
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Implementing Security Scanning
+## 🛠️ Part 3: Hands-On Lab - Implementing Security Scanning — *not built yet*
 
 ### Step 1: Add SonarQube to Pipeline
 

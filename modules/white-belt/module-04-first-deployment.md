@@ -46,9 +46,9 @@ You've mastered this module when you can:
 
 ## 2. Theory & Concepts (15 minutes)
 
-### 📺 Video: The Fawkes Deployment Pipeline (7 minutes)
+### 📺 Video: The Fawkes Deployment Pipeline (7 minutes) — *not built yet*
 
-> **[VIDEO PLACEHOLDER]** > **Script Summary**:
+> **[VIDEO PLACEHOLDER]** > **Script Summary** *(video not produced)*:
 >
 > - Opening: Show the full deployment pipeline diagram
 > - Code commit → Jenkins build → Harbor registry → ArgoCD sync
@@ -304,9 +304,9 @@ Git → Jenkins → Harbor → ArgoCD → Dev → Staging → Production
 
 ## 3. Demonstration (10 minutes)
 
-### 📺 Video: Deploying the Sample Application (10 minutes)
+### 📺 Video: Deploying the Sample Application (10 minutes) — *not built yet*
 
-> **[VIDEO PLACEHOLDER]** > **Script**: Instructor performs a complete deployment showing:
+> **[VIDEO PLACEHOLDER]** > **Script** *(video not produced)*: Instructor performs a complete deployment showing:
 >
 > **Part 1: Create from Template (2 min)**
 >
@@ -363,7 +363,7 @@ Git → Jenkins → Harbor → ArgoCD → Dev → Staging → Production
 
 ---
 
-## 4. Hands-On Lab (25 minutes)
+## 4. Hands-On Lab (25 minutes) — *not built yet*
 
 ### Lab Overview
 
@@ -973,7 +973,7 @@ Next up is the **White Belt Assessment** (2 hours):
 
 **Questions or Issues?**
 
-- 💬 Ask in `#dojo-white-belt` on Mattermost
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-white-belt`
 - 📧 Email: dojo@ufawkes.dev
 - 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 

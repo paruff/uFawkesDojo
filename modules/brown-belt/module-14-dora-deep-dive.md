@@ -545,7 +545,7 @@ sum(rate(deployment_total[30d])) * 100
 
 ---
 
-## 🎯 Part 4: Hands-On Lab - Complete DORA Implementation
+## 🎯 Part 4: Hands-On Lab - Complete DORA Implementation — *not built yet*
 
 ### Objective
 
@@ -982,7 +982,7 @@ Continue iteration...
 
 Metrics transformed from vanity to value."
 
-- _Engineering Director, Tech Company_
+- *Engineering Director, Tech Company*
 
 ---
 

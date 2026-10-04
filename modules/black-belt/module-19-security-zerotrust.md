@@ -490,7 +490,7 @@ spec:
 
 ---
 
-## 🛠️ Hands-On Lab: Implementing Zero Trust for Fawkes
+## 🛠️ Hands-On Lab: Implementing Zero Trust for Fawkes — *not built yet*
 
 ### Lab Overview
 
@@ -1449,4 +1449,4 @@ After completing all Black Belt modules (17-20), you will:
 ---
 
 **Module 19: Security & Zero Trust** | Fawkes Dojo | Black Belt
-_"Never trust, always verify"_ | Version 1.0
+*"Never trust, always verify"* | Version 1.0

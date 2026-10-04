@@ -241,7 +241,7 @@ Modern Jenkins uses **declarative pipelines** defined in `Jenkinsfile`:
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Your First Pipeline
+## 🛠️ Part 3: Hands-On Lab - Your First Pipeline — *not built yet*
 
 ### Lab Scenario
 
@@ -611,7 +611,7 @@ stage('Publish') {
 }
 ```
 
-_We'll cover this in detail in Module 8: Artifact Management_
+*We'll cover this in detail in Module 8: Artifact Management*
 
 ---
 
@@ -974,7 +974,7 @@ fawkesJavaPipeline {
 }
 ```
 
-_We'll cover this in Module 6: Golden Path Pipelines_
+*We'll cover this in Module 6: Golden Path Pipelines*
 
 ---
 
@@ -1240,7 +1240,7 @@ spec:
 
 We went from monthly releases to daily deploys."
 
-- _Engineering Team, SaaS Company_
+- *Engineering Team, SaaS Company*
 
 ---
 
@@ -1262,7 +1262,7 @@ We went from monthly releases to daily deploys."
 
 - [Jenkins Community](https://www.jenkins.io/participate/)
 - [Jenkins Slack](https://www.jenkins.io/chat/)
-- [Fawkes Mattermost](https://mattermost.fawkes.internal) - #yellow-belt channel
+- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-yellow-belt` category
 
 ---
 
@@ -1328,6 +1328,6 @@ You're now ready to build production-ready CI pipelines. Continue to Module 6 to
 
 ---
 
-_Fawkes Dojo - Where Platform Engineers Are Forged_
-_Version 1.0 | Last Updated: October 2025_
-_License: MIT | https://github.com/paruff/fawkes_
+*Fawkes Dojo - Where Platform Engineers Are Forged*
+*Version 1.0 | Last Updated: October 2025*
+*License: MIT | https://github.com/paruff/fawkes*

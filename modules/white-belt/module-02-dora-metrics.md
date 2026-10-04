@@ -57,9 +57,9 @@ You've mastered this module when you can:
 
 ## 2. Theory & Concepts (15 minutes)
 
-### 📺 Video: The DORA Metrics Explained (7 minutes)
+### 📺 Video: The DORA Metrics Explained (7 minutes) — _not built yet_
 
-> **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document**
+> **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document** _(video not produced)_
 
 ### The Five DORA Metrics
 
@@ -386,9 +386,9 @@ Alertmanager detects any incidents
 
 ## 3. Demonstration (10 minutes)
 
-### 📺 Video: Navigating Fawkes DORA Dashboards (10 minutes)
+### 📺 Video: Navigating Fawkes DORA Dashboards (10 minutes) — _not built yet_
 
-> **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document**
+> **[VIDEO PLACEHOLDER]** > **See detailed script in supporting document** _(video not produced)_
 
 ### Key Takeaways from Demo
 
@@ -721,7 +721,7 @@ In Module 3, you'll learn:
 
 **Questions or Issues?**
 
-- 💬 Ask in `#dojo-white-belt` on Mattermost
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-white-belt`
 - 📧 Email: dojo@ufawkes.dev
 - 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 
