@@ -66,3 +66,4 @@ This phase can run any time, in parallel with 0.2.2–0.2.4.
 | AC-002 | Manual check of each changed module's `lesson.html?src=` URL after deploy | Every phase |
 | AC-003 | `grep -rn "git clone" white-belt modules labs` shows `--branch vX.Y.Z` on every stack clone | Every lab PR |
 | AC-004 | A link to uFawkesDevX's Postgres ADR in the Phase 0.2.4 PR | Phase 0.2.4 start |
+| AC-005 | Authoring-guide boxes in the PR template checked, or each gap explained | Every module PR |
