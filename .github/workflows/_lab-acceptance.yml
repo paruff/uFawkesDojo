@@ -95,7 +95,9 @@ jobs:
         working-directory: uFawkesObs
         run: |
           cp .env.example .env
-          sed -i 's/^GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=ci-live-acceptance-not-a-real-secret/' .env
+          # Reuse the job-level value so .env and the compose environment
+          # can't drift apart (and the literal exists in exactly one place).
+          sed -i "s/^GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}/" .env
           sed -i 's/^SLACK_WEBHOOK_URL=.*/SLACK_WEBHOOK_URL=/' .env
 
       - name: Create data directories
