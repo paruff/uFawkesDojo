@@ -13,7 +13,7 @@
 # White Belt 01/03/04, Yellow Belt 05-08 (scaffolded services, pipelines,
 # repos) and Brown Belt 15/16 (learner-created recording rules, injected
 # failures, postmortem docs). Their checks cannot pass on a clean runner
-# without scripting the whole lab flow; tracked as a follow-up.
+# without scripting the whole lab flow — tracked in #73.
 name: Live Acceptance (Nightly)
 
 on:
