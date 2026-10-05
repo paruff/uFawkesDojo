@@ -1,0 +1,107 @@
+# SPDX-License-Identifier: Apache-2.0
+# Live Acceptance (Nightly) — uFawkesDojo's entry for uFawkes.dev's
+# docs/ai-sdlc/suite-release/live-checks.yml.
+#
+# For every published lab whose self-check runs against the stack itself:
+# boot a real uFawkesObs stack on a clean runner (the setup half of the lab),
+# then run that lab's own validate.sh against it. Any red self-check fails
+# the run — a lab that rots when the stack it targets changes turns this
+# workflow red instead of rotting quietly.
+#
+# Deliberately NOT wired here (not silently skipped): the nine labs whose
+# self-check verifies student artifacts created by *completing* the lab —
+# White Belt 01/03/04, Yellow Belt 05-08 (scaffolded services, pipelines,
+# repos) and Brown Belt 15/16 (learner-created recording rules, injected
+# failures, postmortem docs). Their checks cannot pass on a clean runner
+# without scripting the whole lab flow; tracked as a follow-up.
+name: Live Acceptance (Nightly)
+
+on:
+  schedule:
+    # 02:00 UTC daily — catches stack-side changes overnight.
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-acceptance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  white-belt-m02-lab-01:
+    name: White Belt M02 Lab 01 — See DORA Metrics Live
+    uses: ./.github/workflows/_lab-acceptance.yml
+    with:
+      lab_name: White Belt M02 Lab 01 — See DORA Metrics Live
+      validate_path: white-belt/module-02-dora-metrics/lab-01/validate.sh
+      # This self-check reads Grafana credentials from ./.env beside the stack.
+      run_from: stack
+      make_target: up-dora
+      artifact_name: wb-m02-lab-01
+
+  white-belt-m02-lab-02:
+    name: White Belt M02 Lab 02 — Emit and See It in Grafana
+    uses: ./.github/workflows/_lab-acceptance.yml
+    with:
+      lab_name: White Belt M02 Lab 02 — Emit and See It in Grafana
+      validate_path: white-belt/module-02-dora-metrics/lab-02/validate.sh
+      make_target: up-dora
+      needs_ai: true
+      artifact_name: wb-m02-lab-02
+
+  brown-belt-m13-lab-01:
+    name: Brown Belt M13 Lab 01 — Observability Stack
+    uses: ./.github/workflows/_lab-acceptance.yml
+    with:
+      lab_name: Brown Belt M13 Lab 01 — Observability Stack
+      validate_path: brown-belt/module-13-observability/lab-01/validate.sh
+      # Tempo trace checks need the telemetry generator (apps profile).
+      make_target: up-full
+      telemetry: true
+      artifact_name: bb-m13-lab-01
+
+  brown-belt-m14-lab-01:
+    name: Brown Belt M14 Lab 01 — DORA Metrics Deep Dive
+    uses: ./.github/workflows/_lab-acceptance.yml
+    with:
+      lab_name: Brown Belt M14 Lab 01 — DORA Metrics Deep Dive
+      validate_path: brown-belt/module-14-dora-deep-dive/lab-01/validate.sh
+      make_target: up-dora
+      artifact_name: bb-m14-lab-01
+
+  summary:
+    name: Live Acceptance Summary
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # Presentation only: the lab jobs fail on their own, which is what turns
+    # the run red — this just writes the per-lab table for the run page.
+    if: always()
+    needs:
+      - white-belt-m02-lab-01
+      - white-belt-m02-lab-02
+      - brown-belt-m13-lab-01
+      - brown-belt-m14-lab-01
+    steps:
+      - name: Write per-lab result table
+        env:
+          WB01: ${{ needs.white-belt-m02-lab-01.result }}
+          WB02: ${{ needs.white-belt-m02-lab-02.result }}
+          BB13: ${{ needs.brown-belt-m13-lab-01.result }}
+          BB14: ${{ needs.brown-belt-m14-lab-01.result }}
+        run: |
+          {
+            echo "## Live Acceptance (Nightly)"
+            echo
+            echo "Each lab ran its own self-check against a real stack on a clean runner."
+            echo
+            echo "| Lab | Self-check result |"
+            echo "| --- | ----------------- |"
+            echo "| White Belt M02 Lab 01 — See DORA Metrics Live | ${WB01} |"
+            echo "| White Belt M02 Lab 02 — Emit and See It in Grafana | ${WB02} |"
+            echo "| Brown Belt M13 Lab 01 — Observability Stack | ${BB13} |"
+            echo "| Brown Belt M14 Lab 01 — DORA Metrics Deep Dive | ${BB14} |"
+          } >> "$GITHUB_STEP_SUMMARY"

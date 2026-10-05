@@ -1,0 +1,190 @@
+# SPDX-License-Identifier: Apache-2.0
+# Reusable worker for Live Acceptance (Nightly): boots one real uFawkesObs
+# stack on a clean runner, waits for it to be genuinely healthy, then runs a
+# single published lab's self-check (validate.sh) against it. Called once per
+# lab by live-acceptance.yml, so each lab gets an isolated stack — a failure
+# in one lab can't mask or fake a result in another.
+#
+# The stack setup mirrors the labs' documented flow exactly: clone the ref
+# the lab's clone command uses (default branch), `cp .env.example .env`,
+# `make <target>`, steady state, then the lab's own self-check.
+name: _Lab Acceptance (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      lab_name:
+        description: Human-readable lab name used for the job/step name
+        type: string
+        required: true
+      validate_path:
+        description: Path of the lab's validate.sh, relative to the repo root
+        type: string
+        required: true
+      run_from:
+        description: >
+          Where validate.sh runs — "stack" (inside the uFawkesObs checkout, for
+          self-checks that read ./.env beside the stack) or "dojo" (repo root).
+        type: string
+        default: dojo
+      make_target:
+        description: uFawkesOb make target for this lab's documented stack (up-dora or up-full)
+        type: string
+        required: true
+      telemetry:
+        description: Stack includes the apps profile — wait for telemetry-generator too
+        type: boolean
+        default: false
+      needs_ai:
+        description: Lab also needs a uFawkesAI checkout (sibling of the repo root)
+        type: boolean
+        default: false
+      artifact_name:
+        description: Name for the uploaded evidence artifact (validate log + stack logs)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    name: ${{ inputs.lab_name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # Short compute/telemetry intervals so a lab that submits an event sees
+      # refreshed data within the run instead of waiting for the 1h default.
+      DORA_COMPUTE_INTERVAL_SECONDS: "15"
+      OTEL_METRIC_EXPORT_INTERVAL: "5000"
+      # Ephemeral CI-only stack, torn down at job end — not a real credential,
+      # so a plain value here (not a GitHub secret) is fine, matching
+      # uFawkesObs's own ci-acceptance-full.yml. The same value is written
+      # into the stack's .env below, because the lab self-checks read Grafana
+      # credentials from there (or from this environment) — Grafana anonymous
+      # access is disabled by design in uFawkesObs.
+      GRAFANA_ADMIN_USER: admin
+      GRAFANA_ADMIN_PASSWORD: ci-live-acceptance-not-a-real-secret  # pragma: allowlist secret
+      # Compose's `secrets: slack_webhook_url: environment:` source requires
+      # this variable to exist even when it is empty.
+      SLACK_WEBHOOK_URL: ""
+      # Which services the wait loop expects (telemetry is input-gated).
+      EXPECT_TELEMETRY: ${{ inputs.telemetry }}
+      # Where this job checked uFawkesAI out; the self-check reads it through
+      # the same env override (default remains the sibling layout on disk).
+      UFAWKESAI_ROOT: ${{ github.workspace }}/uFawkesAI
+
+    steps:
+      - name: Check out uFawkesDojo
+        uses: actions/checkout@v7.0.1
+
+      - name: Check out uFawkesObs (default branch — the ref the labs clone)
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: paruff/uFawkesObs
+          path: uFawkesObs
+
+      - name: Check out uFawkesAI
+        if: inputs.needs_ai
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: paruff/uFawkesAI
+          path: uFawkesAI
+
+      - name: Configure the stack .env (the flow the labs document)
+        working-directory: uFawkesObs
+        run: |
+          cp .env.example .env
+          sed -i 's/^GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=ci-live-acceptance-not-a-real-secret/' .env
+          sed -i 's/^SLACK_WEBHOOK_URL=.*/SLACK_WEBHOOK_URL=/' .env
+
+      - name: Create data directories
+        working-directory: uFawkesObs
+        run: |
+          mkdir -p data/tempo data/loki data/alloy data/prometheus \
+            data/alertmanager data/grafana data/dora
+          chmod -R a+rwx data/
+
+      - name: Start the stack (make ${{ inputs.make_target }})
+        working-directory: uFawkesObs
+        run: make ${{ inputs.make_target }}
+
+      - name: Wait for the stack to become healthy
+        run: |
+          failed=()
+          wait_for() { # name url — retry for up to 3 minutes
+            local name="$1" url="$2" attempt
+            for attempt in $(seq 1 90); do
+              if curl -fsS --max-time 5 -o /dev/null "$url"; then
+                echo "healthy: ${name}"
+                return 0
+              fi
+              if (( attempt % 15 == 1 )); then
+                echo "waiting on ${name} (attempt ${attempt})..."
+              fi
+              sleep 2
+            done
+            echo "NEVER HEALTHY: ${name} (${url})" >&2
+            return 1
+          }
+          wait_for "Prometheus" "http://localhost:9090/-/ready" || failed+=("Prometheus")
+          wait_for "Alertmanager" "http://localhost:9093/-/healthy" || failed+=("Alertmanager")
+          wait_for "Loki" "http://localhost:3100/ready" || failed+=("Loki")
+          wait_for "Tempo" "http://localhost:3200/ready" || failed+=("Tempo")
+          wait_for "Grafana" "http://localhost:3000/api/health" || failed+=("Grafana")
+          wait_for "OTel Collector" "http://localhost:8888/metrics" || failed+=("OTel Collector")
+          wait_for "Alloy" "http://localhost:12345/-/ready" || failed+=("Alloy")
+          wait_for "DORA Ingestion API" "http://localhost:8088/health" || failed+=("DORA Ingestion API")
+          if [ "${EXPECT_TELEMETRY}" = "true" ]; then
+            wait_for "Telemetry Generator" "http://localhost:5001/" || failed+=("Telemetry Generator")
+          fi
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "stack failed to become healthy: ${failed[*]}" >&2
+            exit 1
+          fi
+          echo "all expected services healthy"
+
+      - name: Steady state (60s — telemetry export and metric computation)
+        run: sleep 60
+
+      - name: Run ${{ inputs.lab_name }} self-check
+        shell: bash
+        run: |
+          run_dir="."
+          if [ "${{ inputs.run_from }}" = "stack" ]; then
+            run_dir="uFawkesObs"
+          fi
+          cd "$run_dir"
+          bash "${GITHUB_WORKSPACE}/${{ inputs.validate_path }}" 2>&1 \
+            | tee "${GITHUB_WORKSPACE}/lab-validate.log"
+
+      - name: Collect stack logs
+        if: always()
+        run: |
+          {
+            if [ -d uFawkesObs ]; then
+              (cd uFawkesObs && docker compose logs --no-color) \
+                || echo "note: docker compose logs exited non-zero (stack may be down)"
+            else
+              echo "note: uFawkesObs checkout missing — no stack logs to collect"
+            fi
+          } > compose-logs.txt 2>&1
+
+      - name: Upload run evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: |
+            lab-validate.log
+            compose-logs.txt
+          if-no-files-found: ignore
+
+      - name: Tear down the stack
+        if: always()
+        run: |
+          if [ -d uFawkesObs ]; then
+            (cd uFawkesObs && docker compose down -v --remove-orphans)
+          else
+            echo "uFawkesObs checkout missing — nothing to tear down"
+          fi
