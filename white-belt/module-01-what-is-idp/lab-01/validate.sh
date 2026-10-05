@@ -2,8 +2,8 @@
 # =============================================================================
 # Script: validate.sh
 # Purpose: Validate White Belt Module 01 Lab 01 completion criteria
-# Usage:   ./docs/dojo/white-belt/module-01-what-is-idp/lab-01/validate.sh
-#          make dojo-validate BELT=white MODULE=01 LAB=01
+# Usage:   Run from uFawkesDojo repo root:
+#            bash white-belt/module-01-what-is-idp/lab-01/validate.sh
 # Exit Codes: 0=all checks passed, 1=one or more checks failed
 # =============================================================================
 
@@ -16,87 +16,32 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Lab configuration
-LAB_NAMESPACE="dojo-lab-01"
-DEPLOYMENT_NAME="hello-fawkes"
-SERVICE_NAME="hello-fawkes"
-ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
+# Configuration (can be overridden by environment variables)
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-dojo-postgres}"
+NETWORK_NAME="${NETWORK_NAME:-fawkes-net}"
 BACKSTAGE_URL="${BACKSTAGE_URL:-http://localhost:7007}"
-GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
-CHECK_HTTP_PORT="${CHECK_HTTP_PORT:-18888}"
+SCORE_API_URL="${SCORE_API_URL:-http://localhost:8000/api/score}"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:8000}"
+CODER_URL="${CODER_URL:-}" # Will be read from uFawkesDevX .env if available
+UFDEVX_DIR="${UFDEVX_DIR:-~/dojo-labs/uFawkesDevX}"
 
 # Test results
 TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
-PF_PID=""
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
 
-log_info() {
-  echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-  echo -e "${GREEN}[✓]${NC} $1"
-}
-
-log_error() {
-  echo -e "${RED}[✗]${NC} $1"
-}
-
-log_warning() {
-  echo -e "${YELLOW}[!]${NC} $1"
-}
-
-usage() {
-  cat << EOF
-Usage: $0 [OPTIONS]
-
-Validate White Belt Module 01 Lab 01 completion criteria.
-
-OPTIONS:
-    -n, --namespace     Lab namespace (default: $LAB_NAMESPACE)
-    -a, --argocd-ns     ArgoCD namespace (default: $ARGOCD_NAMESPACE)
-    -b, --backstage     Backstage URL (default: $BACKSTAGE_URL)
-    -g, --grafana       Grafana URL (default: $GRAFANA_URL)
-    -p, --http-port     Local port for HTTP check (default: $CHECK_HTTP_PORT)
-    -h, --help          Show this help message
-
-ENVIRONMENT VARIABLES:
-    ARGOCD_NAMESPACE    Override default ArgoCD namespace
-    BACKSTAGE_URL       Override default Backstage URL
-    GRAFANA_URL         Override default Grafana URL
-    CHECK_HTTP_PORT     Override local port used for port-forward HTTP check
-
-CHECKS PERFORMED:
-    1. kubectl is installed
-    2. Kubernetes cluster is accessible
-    3. Namespace '$LAB_NAMESPACE' exists and is Active
-    4. Deployment '$DEPLOYMENT_NAME' has at least 1 ready replica
-    5. Service '$SERVICE_NAME' exists
-    6. HTTP GET to service returns 200
-    7. ArgoCD Application '$DEPLOYMENT_NAME' is Synced (skipped if ArgoCD absent)
-    8. Backstage API is reachable
-    9. Grafana API is reachable
-
-EXAMPLES:
-    $0
-    $0 --namespace dojo-lab-01
-    $0 --backstage http://localhost:7007 --grafana http://localhost:3000
-
-EOF
-}
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[✓]${NC} $1"; }
+log_error() { echo -e "${RED}[✗]${NC} $1"; }
+log_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
 
 record_test() {
-  local test_name="$1"
-  local status="$2"
-  local message="$3"
-
+  local test_name="$1" status="$2" message="$3"
   TOTAL_TESTS=$((TOTAL_TESTS + 1))
-
   if [ "$status" = "PASS" ]; then
     PASSED_TESTS=$((PASSED_TESTS + 1))
     log_success "$test_name: $message"
@@ -106,11 +51,8 @@ record_test() {
   fi
 }
 
-cleanup() {
-  if [ -n "$PF_PID" ]; then
-    kill "$PF_PID" 2> /dev/null || true
-    PF_PID=""
-  fi
+check_command() {
+  command -v "$1" > /dev/null 2>&1
 }
 
 # =============================================================================
@@ -120,182 +62,172 @@ cleanup() {
 check_prerequisites() {
   log_info "Checking prerequisites..."
 
-  if command -v kubectl > /dev/null 2>&1; then
-    record_test "Prerequisites" "PASS" "kubectl is installed"
-  else
-    record_test "Prerequisites" "FAIL" \
-      "kubectl not found — install from https://kubernetes.io/docs/tasks/tools/"
-  fi
-}
-
-check_cluster_access() {
-  log_info "Checking cluster access..."
-
-  if kubectl cluster-info > /dev/null 2>&1; then
-    record_test "Cluster Access" "PASS" "Kubernetes cluster is accessible"
-    return 0
-  else
-    record_test "Cluster Access" "FAIL" \
-      "Cannot access Kubernetes cluster — run 'make dev-up' first"
-    return 1
-  fi
-}
-
-check_namespace() {
-  log_info "Checking namespace '$LAB_NAMESPACE'..."
-
-  if kubectl get namespace "$LAB_NAMESPACE" > /dev/null 2>&1; then
-    local phase
-    phase=$(kubectl get namespace "$LAB_NAMESPACE" -o jsonpath='{.status.phase}')
-    if [ "$phase" = "Active" ]; then
-      record_test "Namespace" "PASS" "'$LAB_NAMESPACE' exists and is Active"
-    else
-      record_test "Namespace" "FAIL" \
-        "'$LAB_NAMESPACE' exists but phase is '$phase' (expected Active)"
+  local missing=()
+  for cmd in docker "docker compose" git curl cookiecutter; do
+    if ! check_command "$cmd"; then
+      missing+=("$cmd")
     fi
-  else
-    record_test "Namespace" "FAIL" \
-      "Namespace '$LAB_NAMESPACE' not found — run: kubectl apply -f solution/namespace.yaml"
-  fi
-}
-
-check_deployment() {
-  log_info "Checking deployment '$DEPLOYMENT_NAME'..."
-
-  if ! kubectl get deployment "$DEPLOYMENT_NAME" -n "$LAB_NAMESPACE" > /dev/null 2>&1; then
-    record_test "Deployment" "FAIL" \
-      "Deployment '$DEPLOYMENT_NAME' not found in '$LAB_NAMESPACE' — run: kubectl apply -f solution/deployment.yaml"
-    return
-  fi
-
-  local ready
-  ready=$(kubectl get deployment "$DEPLOYMENT_NAME" -n "$LAB_NAMESPACE" \
-    -o jsonpath='{.status.readyReplicas}' 2> /dev/null || echo "0")
-
-  if [ "${ready:-0}" -ge 1 ]; then
-    local desired
-    desired=$(kubectl get deployment "$DEPLOYMENT_NAME" -n "$LAB_NAMESPACE" \
-      -o jsonpath='{.spec.replicas}' 2> /dev/null || echo "?")
-    record_test "Deployment" "PASS" \
-      "'$DEPLOYMENT_NAME' has $ready/$desired ready replicas"
-  else
-    record_test "Deployment" "FAIL" \
-      "'$DEPLOYMENT_NAME' has 0 ready replicas — check: kubectl get pods -n $LAB_NAMESPACE"
-  fi
-}
-
-check_service() {
-  log_info "Checking service '$SERVICE_NAME'..."
-
-  if kubectl get service "$SERVICE_NAME" -n "$LAB_NAMESPACE" > /dev/null 2>&1; then
-    record_test "Service" "PASS" \
-      "Service '$SERVICE_NAME' exists in '$LAB_NAMESPACE'"
-  else
-    record_test "Service" "FAIL" \
-      "Service '$SERVICE_NAME' not found — run: kubectl apply -f solution/service.yaml"
-  fi
-}
-
-check_http() {
-  log_info "Checking HTTP response from service..."
-
-  local port="$CHECK_HTTP_PORT"
-  local http_code=""
-  local retries=0
-  local max_retries=10
-
-  # Start port-forward in background
-  kubectl port-forward "svc/$SERVICE_NAME" "${port}:80" \
-    -n "$LAB_NAMESPACE" > /dev/null 2>&1 &
-  PF_PID=$!
-
-  # Wait for port-forward to establish by polling the port
-  while [ "$retries" -lt "$max_retries" ]; do
-    if kill -0 "$PF_PID" 2> /dev/null \
-      && curl -s -o /dev/null --max-time 1 "http://localhost:${port}/" 2> /dev/null; then
-      break
-    fi
-    sleep 1
-    retries=$((retries + 1))
   done
 
-  if kill -0 "$PF_PID" 2> /dev/null; then
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-      --max-time 5 "http://localhost:${port}/" 2> /dev/null || echo "000")
+  if [ ${#missing[@]} -eq 0 ]; then
+    record_test "Prerequisites" "PASS" "docker, docker compose, git, curl, cookiecutter installed"
+  else
+    record_test "Prerequisites" "FAIL" "Missing: ${missing[*]} — install Docker Desktop, git, curl, and run 'pip install cookiecutter'"
+  fi
+}
 
-    kill "$PF_PID" 2> /dev/null || true
-    PF_PID=""
+check_postgres() {
+  log_info "Checking PostgreSQL container and databases..."
 
-    if [ "$http_code" = "200" ]; then
-      record_test "HTTP Check" "PASS" \
-        "'$SERVICE_NAME' returned HTTP $http_code"
+  # Check container is running
+  if ! docker ps --filter "name=^${POSTGRES_CONTAINER}$" --filter "status=running" --format '{{.Names}}' 2> /dev/null | grep -q "^${POSTGRES_CONTAINER}$"; then
+    record_test "PostgreSQL" "FAIL" "Container '${POSTGRES_CONTAINER}' not running — run lab Step 1"
+    return
+  fi
+
+  # Check databases exist
+  local dbs=("coder" "backstage" "score")
+  local missing_dbs=()
+  for db in "${dbs[@]}"; do
+    if ! docker exec -i "${POSTGRES_CONTAINER}" psql -U postgres -lqt 2> /dev/null | cut -d'|' -f1 | grep -qw "$db"; then
+      missing_dbs+=("$db")
+    fi
+  done
+
+  if [ ${#missing_dbs[@]} -eq 0 ]; then
+    record_test "PostgreSQL" "PASS" "Container running with coder, backstage, score databases"
+  else
+    record_test "PostgreSQL" "FAIL" "Missing databases: ${missing_dbs[*]} — run lab Step 1 database creation"
+  fi
+}
+
+check_network() {
+  log_info "Checking Docker network..."
+
+  if docker network ls --format '{{.Name}}' 2> /dev/null | grep -q "^${NETWORK_NAME}$"; then
+    record_test "Network" "PASS" "Network '${NETWORK_NAME}' exists"
+  else
+    record_test "Network" "FAIL" "Network '${NETWORK_NAME}' not found — run 'make network' in uFawkesDevX"
+  fi
+}
+
+check_ufdevx_services() {
+  log_info "Checking uFawkesDevX service health..."
+
+  local services=(
+    "developerd-coder:Coder"
+    "developerd-backstage:Backstage"
+    "developerd-score:Score Service"
+    "developerd-plugin-manager:Plugin Manager"
+    "developerd-gateway:API Gateway"
+  )
+
+  local all_healthy=true
+  for entry in "${services[@]}"; do
+    local container="${entry%%:*}"
+    local label="${entry##*:}"
+
+    if docker ps --filter "name=^${container}$" --filter "status=running" --format '{{.Names}}' 2> /dev/null | grep -q "^${container}$"; then
+      # Check health status if available
+      local health
+      health=$(docker inspect --format '{{.State.Health.Status}}' "${container}" 2> /dev/null || echo "none")
+      if [ "$health" = "healthy" ] || [ "$health" = "none" ]; then
+        log_success "  $label ($container): running${health:+ (health: $health)}"
+      else
+        log_error "  $label ($container): health=$health"
+        all_healthy=false
+      fi
     else
-      record_test "HTTP Check" "FAIL" \
-        "'$SERVICE_NAME' returned HTTP $http_code (expected 200)"
+      log_error "  $label ($container): not running"
+      all_healthy=false
+    fi
+  done
+
+  if [ "$all_healthy" = "true" ]; then
+    record_test "uFawkesDevX Stack" "PASS" "All 5 services healthy (coder, backstage, score-service, plugin-manager, gateway)"
+  else
+    record_test "uFawkesDevX Stack" "FAIL" "One or more services not healthy — run 'make status' in uFawkesDevX"
+  fi
+}
+
+check_backstage_catalog() {
+  log_info "Checking Backstage catalog API..."
+
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${BACKSTAGE_URL}/api/catalog/entities" 2> /dev/null || echo "000")
+
+  if [ "$http_code" = "200" ]; then
+    # Verify it returns actual entities (not empty)
+    local body
+    body=$(curl -s --max-time 10 "${BACKSTAGE_URL}/api/catalog/entities" 2> /dev/null || echo "[]")
+    if echo "$body" | grep -q "ufawkes-devx\|score-service\|plugin-manager"; then
+      record_test "Backstage Catalog" "PASS" "API reachable at ${BACKSTAGE_URL} with uFawkes entities"
+    else
+      record_test "Backstage Catalog" "PASS" "API reachable at ${BACKSTAGE_URL} (entities may still be loading)"
     fi
   else
-    PF_PID=""
-    record_test "HTTP Check" "FAIL" \
-      "Port-forward to '$SERVICE_NAME' failed — check deployment is ready"
+    record_test "Backstage Catalog" "FAIL" "Backstage API returned HTTP $http_code at ${BACKSTAGE_URL}/api/catalog/entities — ensure 'make up' finished"
   fi
 }
 
-check_argocd() {
-  log_info "Checking ArgoCD application..."
+check_score_service() {
+  log_info "Checking Score service API..."
 
-  if ! kubectl get namespace "$ARGOCD_NAMESPACE" > /dev/null 2>&1; then
-    log_warning "ArgoCD namespace '$ARGOCD_NAMESPACE' not found — skipping ArgoCD check"
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${SCORE_API_URL}/health" 2> /dev/null || echo "000")
+
+  if [ "$http_code" = "200" ]; then
+    record_test "Score Service" "PASS" "API reachable at ${SCORE_API_URL}"
+  else
+    # Try gateway health as fallback
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${GATEWAY_URL}/health" 2> /dev/null || echo "000")
+    if [ "$http_code" = "200" ]; then
+      record_test "Score Service" "PASS" "Gateway reachable at ${GATEWAY_URL} (Score service behind gateway)"
+    else
+      record_test "Score Service" "FAIL" "Score API returned HTTP $http_code at ${SCORE_API_URL}/health"
+    fi
+  fi
+}
+
+check_coder() {
+  log_info "Checking Coder API..."
+
+  # Try to get CODER_ACCESS_URL from uFawkesDevX .env
+  if [ -z "$CODER_URL" ] && [ -f "${UFDEVX_DIR}/.env" ]; then
+    CODER_URL=$(grep -E '^CODER_ACCESS_URL=' "${UFDEVX_DIR}/.env" | cut -d= -f2- | tr -d '"' || true)
+  fi
+
+  if [ -z "$CODER_URL" ]; then
+    log_warning "Coder: skipped — CODER_ACCESS_URL not set in uFawkesDevX .env or environment"
     return
   fi
 
-  if ! kubectl get application "$DEPLOYMENT_NAME" -n "$ARGOCD_NAMESPACE" > /dev/null 2>&1; then
-    record_test "ArgoCD Application" "FAIL" \
-      "Application '$DEPLOYMENT_NAME' not found in '$ARGOCD_NAMESPACE' — run: kubectl apply -f solution/argocd-application.yaml"
-    return
-  fi
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${CODER_URL}/healthz" 2> /dev/null || echo "000")
 
-  local sync_status
-  sync_status=$(kubectl get application "$DEPLOYMENT_NAME" -n "$ARGOCD_NAMESPACE" \
-    -o jsonpath='{.status.sync.status}' 2> /dev/null || echo "Unknown")
-
-  if [ "$sync_status" = "Synced" ]; then
-    record_test "ArgoCD Application" "PASS" \
-      "'$DEPLOYMENT_NAME' sync status is $sync_status"
+  if [ "$http_code" = "200" ]; then
+    record_test "Coder" "PASS" "API reachable at ${CODER_URL}"
   else
-    record_test "ArgoCD Application" "FAIL" \
-      "'$DEPLOYMENT_NAME' sync status is '$sync_status' (expected Synced)"
+    record_test "Coder" "FAIL" "Coder returned HTTP $http_code at ${CODER_URL}/healthz"
   fi
 }
 
-check_backstage() {
-  log_info "Checking Backstage catalog..."
+check_scaffolded_service() {
+  log_info "Checking scaffolded service in Backstage catalog..."
 
   local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-    --max-time 5 "${BACKSTAGE_URL}/api/catalog/entities" 2> /dev/null || echo "000")
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${BACKSTAGE_URL}/api/catalog/entities?filter=kind=Component&filter=metadata.name=hello-devx" 2> /dev/null || echo "000")
 
   if [ "$http_code" = "200" ]; then
-    record_test "Backstage Catalog" "PASS" \
-      "Backstage API is reachable at ${BACKSTAGE_URL}"
+    local body
+    body=$(curl -s --max-time 10 "${BACKSTAGE_URL}/api/catalog/entities?filter=kind=Component&filter=metadata.name=hello-devx" 2> /dev/null || echo "[]")
+    if echo "$body" | grep -q "hello-devx"; then
+      record_test "Scaffolded Service" "PASS" "hello-devx found in Backstage catalog"
+    else
+      record_test "Scaffolded Service" "FAIL" "hello-devx not found in catalog — check Score service registration and catalog refresh"
+    fi
   else
-    record_test "Backstage Catalog" "FAIL" \
-      "Backstage API returned HTTP $http_code at ${BACKSTAGE_URL} — ensure Backstage is running"
-  fi
-}
-
-check_grafana() {
-  log_info "Checking Grafana observability..."
-
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-    --max-time 5 "${GRAFANA_URL}/api/health" 2> /dev/null || echo "000")
-
-  if [ "$http_code" = "200" ]; then
-    record_test "Grafana Observability" "PASS" \
-      "Grafana API is reachable at ${GRAFANA_URL}"
-  else
-    record_test "Grafana Observability" "FAIL" \
-      "Grafana API returned HTTP $http_code at ${GRAFANA_URL} — ensure Grafana is running"
+    record_test "Scaffolded Service" "FAIL" "Catalog query returned HTTP $http_code"
   fi
 }
 
@@ -313,17 +245,18 @@ print_summary() {
     log_success "All tests passed! ✅"
     echo ""
     echo "🎉 Congratulations! You have completed White Belt Module 1 Lab 01."
-    echo "   Your service is deployed, synced via GitOps, and observable."
+    echo "   Your service is scaffolded, validated, and cataloged."
     echo "   Move on to Module 02: DORA Metrics."
     return 0
   else
     log_error "Some tests failed! ❌"
     echo ""
     echo "Please review the failures above. Common fixes:"
-    echo "  - Run 'make dev-up' if the cluster is not running"
-    echo "  - Apply solution manifests: kubectl apply -f solution/"
-    echo "  - Wait for pods to be ready: kubectl get pods -n $LAB_NAMESPACE"
-    echo "  - See lab-01/instructions.md for step-by-step guidance"
+    echo "  - Run 'make up' in uFawkesDevX if services aren't healthy"
+    echo "  - Ensure PostgreSQL container is running with all 3 databases"
+    echo "  - Check CODER_ACCESS_URL is a LAN IP (not localhost) in .env"
+    echo "  - Re-run cookiecutter and Score service registration steps"
+    echo "  - See lab-01/instructions.md Troubleshooting for more"
     return 1
   fi
 }
@@ -333,63 +266,22 @@ print_summary() {
 # =============================================================================
 
 main() {
-  # Parse arguments
-  while [[ $# -gt 0 ]]; do
-    case $1 in
-      -n | --namespace)
-        LAB_NAMESPACE="$2"
-        shift 2
-        ;;
-      -a | --argocd-ns)
-        ARGOCD_NAMESPACE="$2"
-        shift 2
-        ;;
-      -b | --backstage)
-        BACKSTAGE_URL="$2"
-        shift 2
-        ;;
-      -g | --grafana)
-        GRAFANA_URL="$2"
-        shift 2
-        ;;
-      -p | --http-port)
-        CHECK_HTTP_PORT="$2"
-        shift 2
-        ;;
-      -h | --help)
-        usage
-        exit 0
-        ;;
-      *)
-        log_error "Unknown option: $1"
-        usage
-        exit 1
-        ;;
-    esac
-  done
-
-  trap cleanup EXIT
-
   log_info "Starting White Belt Module 01 Lab 01 validation..."
-  log_info "Lab namespace     : $LAB_NAMESPACE"
-  log_info "ArgoCD namespace  : $ARGOCD_NAMESPACE"
-  log_info "Backstage URL     : $BACKSTAGE_URL"
-  log_info "Grafana URL       : $GRAFANA_URL"
+  log_info "uFawkesDevX dir: $UFDEVX_DIR"
+  log_info "Backstage URL  : $BACKSTAGE_URL"
+  log_info "Score API URL  : $SCORE_API_URL"
+  log_info "Gateway URL    : $GATEWAY_URL"
+  [ -n "$CODER_URL" ] && log_info "Coder URL      : $CODER_URL"
   echo ""
 
   check_prerequisites
-  check_cluster_access || {
-    echo ""
-    echo "Cannot continue without cluster access. Run 'make dev-up'."
-    exit 1
-  }
-  check_namespace
-  check_deployment
-  check_service
-  check_http
-  check_argocd
-  check_backstage
-  check_grafana
+  check_postgres
+  check_network
+  check_ufdevx_services
+  check_backstage_catalog
+  check_score_service
+  check_coder
+  check_scaffolded_service
 
   print_summary
 }

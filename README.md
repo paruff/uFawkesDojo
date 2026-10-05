@@ -24,13 +24,15 @@ DNS for the custom domain is confirmed — see `CNAME` and
 
 ## Labs
 
-Each module's hands-on lab is a per-lab `instructions.md` with plain kubectl
-steps — see
-[`white-belt/module-01-what-is-idp/lab-01/instructions.md`](white-belt/module-01-what-is-idp/lab-01/instructions.md)
-for the first lab. There is no wrapping CLI — a prior `labs/fawkes-cli.py`
-prototype was removed as unnecessary (each `make up`/`make init`-driven
-uFawkes stack already has its own interface); see [`INTENT.md`](INTENT.md)
-for current direction.
+Each module's hands-on lab is a per-lab `instructions.md`:
+
+- **White Belt Module 1**: uFawkesDevX (Docker Compose) — scaffold a service via golden path Cookiecutter template
+  [`white-belt/module-01-what-is-idp/lab-01/instructions.md`](white-belt/module-01-what-is-idp/lab-01/instructions.md)
+- **White Belt Module 2**: uFawkesObs (Docker Compose) — send events to live DORA dashboard
+  [`white-belt/module-02-dora-metrics/lab-01/instructions.md`](white-belt/module-02-dora-metrics/lab-01/instructions.md)
+- **Modules 3-4**: Kubernetes-based (transitional — to be migrated)
+
+There is no wrapping CLI — a prior `labs/fawkes-cli.py` prototype was removed as unnecessary (each `make up`/`make init`-driven uFawkes stack already has its own interface); see [`INTENT.md`](INTENT.md) for current direction.
 
 ## Assessments
 
