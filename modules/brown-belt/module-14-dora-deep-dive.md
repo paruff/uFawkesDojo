@@ -137,7 +137,7 @@ uFawkesObs provides a **self-contained DORA metrics platform** using Docker Comp
 │  └──────────────┘         │                               │               │
 │                           ▼                               │               │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-  │                    dora-compute                                  │   │
+  │        dora-api — in-process compute loop                        │   │
   │              (Aggregates events → DORA metrics)                 │   │
   │                            │                                    │   │
   │                            ▼                                    │   │
@@ -161,12 +161,9 @@ uFawkesObs provides a **self-contained DORA metrics platform** using Docker Comp
 |-----------|--------------|
 | **uFawkesPipe / Woodpecker** | Pipeline execution, emits deployment events |
 | **Score Service** | Validates specs, triggers pipelines, emits events |
-| **dora-api** | Receives deployment events via HTTP, stores in SQLite |
-| **dora-compute** | Aggregates raw events → DORA metrics, exposes Prometheus metrics |
-| **Pushgateway** | Receives push metrics from short-lived jobs |
-| **Prometheus** | Stores time-series metrics, PromQL queries |
+| **dora-api** | Receives deployment events via HTTP, stores in SQLite, computes DORA metrics in-process, exposes them on `/metrics` |
+| **Prometheus** | Scrapes `dora-api:8088/metrics`, stores time-series metrics, PromQL queries |
 | **Grafana** | Dashboards, visualization, alerting UI |
-| **Pushgateway** | Receives metrics from short-lived batch jobs |
 
 ### DORA Event Flow
 
@@ -175,20 +172,19 @@ uFawkesObs provides a **self-contained DORA metrics platform** using Docker Comp
 2. uFawkesPipe / Woodpecker pipeline runs
 3. Pipeline completes → emits deployment event to dora-api
 4. dora-api stores event in SQLite
-5. dora-compute reads events → computes DORA metrics
-6. dora-compute exposes Prometheus metrics
-6. Prometheus scrapes metrics → Grafana dashboards
-7. Grafana alerts → Alertmanager → notifications
+5. dora-api's in-process compute loop aggregates events → DORA metrics
+6. Prometheus scrapes dora-api:8088/metrics (dora:* recording rules)
+7. Grafana queries Prometheus for dashboards; alerts → Alertmanager → notifications
 ```
 
 ### uFawkesObs DORA Profile
 
 Enable with: `make up-dora`
 
-This starts additional services:
-- **dora-api** (port 8088) — HTTP API for receiving deployment events
-- **dora-compute** — Background worker computing DORA metrics
-- **pushgateway** (port 9091) — Receives metrics from short-lived jobs
+This starts one additional service alongside the core stack:
+- **dora-api** (port 8088) — HTTP API for receiving deployment events; computes
+  the DORA metrics in-process on an interval and exposes them on `/metrics`,
+  which Prometheus scrapes
 - **dora-api** health: `http://localhost:8088/health`
 - **dora-api** event endpoint: `POST http://localhost:8088/event`
 
@@ -198,7 +194,7 @@ This starts additional services:
 
 ### How uFawkesObs Computes DORA Metrics
 
-uFawkesObs automates metric calculation via **dora-compute** which reads events from SQLite and exposes Prometheus metrics.
+uFawkesObs automates metric calculation via **dora-api**'s in-process compute loop, which reads events from SQLite and exposes the metrics on `/metrics` for Prometheus to scrape.
 
 ### Event Schema
 
@@ -206,14 +202,15 @@ The dora-api accepts events at `POST /event`:
 
 ```json
 {
+  "schema_version": "1.0",
   "event_type": "deployment",
+  "repo": "org/my-service",
   "service": "my-service",
   "environment": "production",
-  "status": "success",
-  "timestamp": "2026-10-05T14:30:00Z",
   "commit_sha": "abc123def456",
-  "deployed_by": "ci-bot",
-  "work_type": "feature"  // or "incident_rework"
+  "deployed_at": "2026-10-05T14:30:00Z",
+  "status": "success",
+  "pipeline_url": "https://ci.example.org/runs/123"
 }
 ```
 
@@ -224,18 +221,18 @@ The dora-api accepts events at `POST /event`:
 | **Deployment Frequency** | `count(deployment_events) / time_window` |
 | **Lead Time for Changes** | `deployment_timestamp - commit_timestamp` (from commit SHA in event) |
 | **Change Failure Rate** | `failed_deployments / total_deployments` (windowed) |
-| **MTTR** | `incident_resolved_timestamp - incident_created_timestamp` |
-| **Deployment Rework Rate** | `deployments_with_work_type=incident_rework / total_deployments` |
+| **Failed Deployment Recovery Time (FDRT)** | Next successful deployment of the same service after a failed one |
+| **Deployment Rework Rate** | Rework events (hotfix/rollback/patch, matched to a deployment by commit SHA) ÷ total deployments |
 
-### Prometheus Metrics Exposed by dora-compute
+### Prometheus Metrics Exposed by dora-api
 
 | Metric Name | Type | Description |
 |-------------|------|-------------|
-| `dora_deployment_frequency` | Gauge | Deployments per day |
-| `dora_lead_time_seconds` | Histogram | Commit → production latency |
-| `dora_change_failure_rate` | Gauge | Failure rate (0-1) |
-| `dora_mttr_seconds` | Histogram | Incident resolution time |
-| `dora_rework_rate` | Gauge | Rework rate (0-1) |
+| `dora_deployment_frequency_per_week` | Gauge | Successful deployments per week |
+| `dora_lead_time_p50_hours` | Gauge | Median commit → production hours |
+| `dora_cfr_pct` | Gauge | Change failure rate (0–1 ratio) |
+| `dora_fdrt_p50_hours` | Gauge | Median failed-deployment recovery hours |
+| `dora_rework_rate_pct` | Gauge | Rework rate (0–1 ratio) |
 
 ---
 
@@ -265,7 +262,7 @@ You'll enable the uFawkesObs DORA profile, send test events, and build a complet
 ➡️ **[Lab 01: DORA Metrics with uFawkesObs](brown-belt/module-14-dora-deep-dive/lab-01/instructions.md)**
 
 This lab walks you through:
-1. **Verifying DORA Profile** — Confirm dora-api, dora-compute, pushgateway are running
+1. **Verifying DORA Profile** — Confirm dora-api is running (the only service the dora profile adds)
 2. **Sending Test Events** — POST deployment events to dora-api
 3. **Verifying Metrics** — Query Prometheus for DORA metrics
 3. **Building Dashboard** — Create Grafana dashboard with all 5 DORA metrics
@@ -366,14 +363,14 @@ This lab walks you through:
 
 #### Question 6
 
-**What does `dora-compute` do in uFawkesObs?**
+**Where are the DORA metrics computed in uFawkesObs?**
 
-- [ ] A) Runs the pipelines
-- [ ] B) Stores deployment events
-- [x] C) Aggregates events → DORA metrics, exposes Prometheus metrics
-- [ ] D) Sends notifications
+- [ ] A) In a standalone compute container
+- [ ] B) In Prometheus recording rules only
+- [x] C) In dora-api's in-process compute loop, exposed on `/metrics`
+- [ ] D) In Grafana
 
-**Explanation**: dora-compute reads events from SQLite, computes DORA metrics, exposes Prometheus metrics for Grafana/Prometheus.
+**Explanation**: dora-api reads events from SQLite, computes the DORA metrics in-process on an interval, and exposes them on `/metrics` — Prometheus scrapes that endpoint (job `dora-api`).
 
 ---
 
@@ -386,7 +383,7 @@ This lab walks you through:
 - [ ] C) Deploy separate DORA stack
 - [ ] D) Configure in Grafana UI
 
-**Explanation**: Run `make up-dora` to start the stack with DORA profile (dora-api, dora-compute, pushgateway).
+**Explanation**: Run `make up-dora` to start the stack with the DORA profile — core observability plus **dora-api**, which computes the DORA metrics in-process (self-contained, SQLite).
 
 ---
 
@@ -445,7 +442,7 @@ This lab walks you through:
 ### What You Learned
 
 ✅ **You now know**:
-- How uFawkesObs implements all five DORA metrics via dora-api/dora-compute
+- How uFawkesObs computes all five DORA metrics in-process in dora-api, served on /metrics
 - How to enable DORA profile (`make up-dora`)
 - How to send deployment events and query DORA metrics
 - How to build Grafana dashboards for all five metrics

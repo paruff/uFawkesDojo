@@ -44,7 +44,7 @@ under Release = "Dojo compose", not in this file.
 
    **Module 14 lab migration** (PR #71): Brown Belt Module 14 migrated to
    uFawkesObs v1.0.0 — implements DORA metrics deep dive via uFawkesObs DORA
-   profile (dora-api, dora-compute, pushgateway). Lab demonstrates DORA profile
+   profile (dora-api with in-process metric computation). Lab demonstrates DORA profile
    enablement, event ingestion via dora-api, PromQL querying for all 5 DORA metrics,
    Grafana dashboard construction, failure/recovery testing, and DORA alerting.
    Lab instructions and validation script added in

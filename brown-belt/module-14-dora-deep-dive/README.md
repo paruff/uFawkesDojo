@@ -26,7 +26,7 @@ By the end of this module, you will be able to:
 | Section       | Time   | Description                                         |
 | ------------- | ------ | --------------------------------------------------- |
 | Theory        | 25 min | DORA metrics refresher, uFawkesObs DORA architecture |
-| Architecture  | 15 min | dora-api, dora-compute, pushgateway, event flow    |
+| Architecture  | 15 min | dora-api in-process compute, event flow, scrape    |
 | Calculations  | 15 min | How each metric is computed in uFawkesObs          |
 | Lab 01        | 60 min | Deploy DORA profile, send events, build dashboard   |
 | Quiz          | 10 min | 10-question knowledge check                        |
@@ -59,7 +59,7 @@ By the end of this module, you will be able to:
 │  └──────────────┘         │                               │               │
 │                           ▼                               │               │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                    dora-compute                                  │   │
+│  │        dora-api — in-process compute loop                        │   │
 │  │              (Aggregates events → DORA metrics)                 │   │
 │  │                            │                                    │   │
 │  │                            ▼                                    │   │
@@ -81,12 +81,9 @@ By the end of this module, you will be able to:
 
 | Component | Role in DORA |
 |-----------|--------------|
-| **dora-api** | Receives deployment events via HTTP, stores in SQLite |
-| **dora-compute** | Aggregates events → DORA metrics, exposes Prometheus metrics |
-| **pushgateway** | Receives metrics from short-lived jobs |
-| **Prometheus** | Stores time-series metrics, PromQL queries |
+| **dora-api** | Receives deployment events via HTTP, stores in SQLite, computes DORA metrics in-process, exposes them on `/metrics` |
+| **Prometheus** | Scrapes `dora-api:8088/metrics`, stores time-series metrics, PromQL queries |
 | **Grafana** | Dashboards, visualization, alerting UI |
-| **Pushgateway** | Receives metrics from short-lived jobs |
 
 ---
 

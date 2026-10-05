@@ -234,7 +234,7 @@ This lab walks you through:
 - [ ] C) Deploy separate DORA stack
 - [ ] D) Configure in Grafana UI
 
-**Explanation**: Run **`make up-dora`** to start the stack with the DORA profile (includes dora-api, dora-compute, pushgateway).
+**Explanation**: Run **`make up-dora`** to start the stack with the DORA profile — the core observability stack plus **dora-api**, which receives events and computes the DORA metrics in-process (self-contained, SQLite).
 
 ---
 
@@ -299,7 +299,7 @@ This lab walks you through:
 - [ ] C) Deploy separate DORA stack
 - [ ] D) Configure in Grafana
 
-**Explanation**: Run **`make up-dora`** to start the stack with the DORA profile (includes dora-api, dora-compute, pushgateway, all using SQLite).
+**Explanation**: Run **`make up-dora`** to start the stack with the DORA profile — the core stack plus **dora-api** (self-contained, SQLite-only), which receives events and computes the DORA metrics in-process.
 
 ---
 
