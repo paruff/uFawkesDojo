@@ -5,7 +5,7 @@
 # Previously each suite was invoked ad hoc, and three of the four were wired
 # to nothing at all.
 #
-# All four suites are offline and dependency-free: they stub `gh`, bind an
+# All five suites are offline and dependency-free: they stub `gh`, bind an
 # ephemeral loopback port, and use vendored fixtures. That is what makes them
 # safe to run on every commit — a test that needs the network or a pip install
 # is a test whose result depends on the machine, not the code.
@@ -20,6 +20,7 @@ SUITES=(
   scripts/test-emit-dora-event.sh
   scripts/test-artifact-chain.sh
   scripts/test-dojo-feedback-intent.sh
+  scripts/test-doc-dora-freshness.sh
 )
 
 failed=0
