@@ -14,16 +14,22 @@ Learners progress through five belt levels (White → Yellow → Green → Brown
 Black), each covering a slice of the 24 DORA capabilities, each with hands-on
 labs and a certification assessment.
 
-## Direction (as of 2026-09-27)
+## Direction (as of 2026-10-05)
 
-The curriculum today is built mostly against `fawkes` (Kubernetes,
-ArgoCD, and Jenkins historically — Fawkes has since dropped Jenkins for
-Tekton). The exception is Module 2's DORA lab, which already runs on
-uFawkesObs (#10). The Kubernetes assumption starts at Module 1 —
-`white-belt/module-01-what-is-idp/lab-01/instructions.md` opens with
-`kubectl rollout status`. That's a real, working lab, but it assumes a
-Kubernetes cluster is already available, which is a high barrier for
-Module 1 of a beginner track.
+The curriculum is transitioning to the Compose-tier uFawkes stacks first,
+with Fawkes/Kubernetes as a later "graduation" belt (Green Belt onward).
+This means a lower barrier to entry, faster lab setup, and no cluster
+required. Labs follow the suite's release order, each pinned to a
+released stack version:
+
+1. uFawkesObs content after its v1.0.0 (Module 2 complete)
+2. uFawkesPipe → Yellow Belt after its v2.0.0
+3. uFawkesDevX → White Belt after its v0.1.0 (Module 1 complete as of 2026-10-05)
+
+Module 1's lab now runs on uFawkesDevX v1.0.1 (Docker Compose), using
+the golden path Cookiecutter template to scaffold a service and register
+it in Backstage. Module 2's lab runs on uFawkesObs. Modules 3-4 remain
+Kubernetes-based for now (transitional).
 
 Since this repo's earlier content was written, three more uFawkes stacks
 have shipped as Docker Compose ("zero to running in 60 seconds," per their
@@ -62,8 +68,9 @@ been run, for real").
 - The 20 belt module docs under `modules/<belt>/`. They are mostly
   Fawkes/Kubernetes-based; see Direction above for why that's changing.
 - Two runnable labs, each run for real:
-  - `white-belt/module-01-what-is-idp/lab-01/` — kubectl steps against a
-    real cluster.
+  - `white-belt/module-01-what-is-idp/lab-01/` — runs on uFawkesDevX v1.0.1
+    (Compose). Scaffolds a service via golden path Cookiecutter template,
+    registers in Backstage, validates via Score service.
   - `white-belt/module-02-dora-metrics/lab-01/` — runs on uFawkesObs
     (Compose). It clones `main` unpinned; the pin comes after v1.0.0.
 

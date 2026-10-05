@@ -4,156 +4,20 @@
 
 # =============================================================================
 
-# This file contains all Kubernetes manifests needed for White Belt labs
-
-# Each lab is separated by comments and can be extracted as needed
-
-# =============================================================================
-
-# MODULE 1 - LAB 1: First Deployment
-
-# Directory: labs/module-01/
+# This file contains reference manifests for White Belt labs.
+# Module 1 now uses uFawkesDevX (Docker Compose) - no Kubernetes manifests needed.
+# Modules 2-4 remain Kubernetes-based (for now).
 
 # =============================================================================
 
----
-
-# labs/module-01/namespace.yaml
-
-apiVersion: v1
-kind: Namespace
-metadata:
-name: lab-module-1
-labels:
-fawkes.io/module: "1"
-fawkes.io/belt: "white"
-fawkes.io/lab: "first-deployment"
-
----
-
-# labs/module-01/sample-app-deployment.yaml
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-name: my-first-app
-namespace: lab-module-1
-labels:
-app: my-first-app
-fawkes.io/module: "1"
-spec:
-replicas: 1 # Students will change this to 3
-selector:
-matchLabels:
-app: my-first-app
-template:
-metadata:
-labels:
-app: my-first-app
-spec:
-containers: - name: app
-image: nginxdemos/hello:latest # Simple app that shows hostname
-ports: - containerPort: 80
-resources:
-requests:
-memory: "64Mi"
-cpu: "100m"
-limits:
-memory: "128Mi"
-cpu: "200m"
-livenessProbe:
-httpGet:
-path: /
-port: 80
-initialDelaySeconds: 5
-periodSeconds: 10
-readinessProbe:
-httpGet:
-path: /
-port: 80
-initialDelaySeconds: 5
-periodSeconds: 5
-
----
-
-# labs/module-01/sample-app-service.yaml
-
-apiVersion: v1
-kind: Service
-metadata:
-name: my-first-app
-namespace: lab-module-1
-labels:
-app: my-first-app
-spec:
-type: ClusterIP
-selector:
-app: my-first-app
-ports:
-
-- port: 80
-  targetPort: 80
-  protocol: TCP
-  name: http
-
----
-
-# labs/module-01/sample-app-ingress.yaml
-
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-name: my-first-app
-namespace: lab-module-1
-annotations:
-nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-ingressClassName: nginx
-rules:
-
-- host: my-first-app-lab1.fawkes.local
-  http:
-  paths:
-  - path: /
-    pathType: Prefix
-    backend:
-    service:
-    name: my-first-app
-    port:
-    number: 80
-
----
-
-# labs/module-01/lab-instructions.yaml
-
-# ConfigMap with lab instructions
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-name: lab-instructions
-namespace: lab-module-1
-data:
-instructions.md: | # Module 1 Lab: Your First Deployment
-
-    ## Objectives
-    1. Clone the sample application repository
-    2. Modify the deployment to use 3 replicas
-    3. Deploy using kubectl or GitOps
-    4. Verify all pods are running
-    5. Access the application
-
-    ## Steps
-    1. Review the deployment manifest in this namespace
-    2. Edit deployment to set replicas: 3
-    3. Apply changes: `kubectl apply -f deployment.yaml`
-    4. Check status: `kubectl get pods -n lab-module-1`
-    5. Access app: http://my-first-app-lab1.fawkes.local
-
-    ## Validation
-    Run: `fawkes lab validate --lab white-belt-lab1`
-
----
+# MODULE 1 - LAB 1: Scaffold Service via Golden Path (uFawkesDevX)
+#
+# This lab runs against uFawkesDevX v1.0.1 (Docker Compose), not Kubernetes.
+# See: white-belt/module-01-what-is-idp/lab-01/instructions.md
+# The golden path template is provided by uFawkesDevX:
+# https://github.com/paruff/uFawkesDevX/tree/v1.0.1/templates/python-flask-app
+#
+# No Kubernetes manifests are required for Module 1 Lab 1.
 
 # =============================================================================
 
@@ -170,10 +34,10 @@ instructions.md: | # Module 1 Lab: Your First Deployment
 apiVersion: v1
 kind: Namespace
 metadata:
-name: lab-module-2-dev
-labels:
-fawkes.io/module: "2"
-fawkes.io/environment: "dev"
+  name: lab-module-2-dev
+  labels:
+    fawkes.io/module: "2"
+    fawkes.io/environment: "dev"
 
 ---
 
@@ -182,10 +46,10 @@ fawkes.io/environment: "dev"
 apiVersion: v1
 kind: Namespace
 metadata:
-name: lab-module-2-prod
-labels:
-fawkes.io/module: "2"
-fawkes.io/environment: "prod"
+  name: lab-module-2-prod
+  labels:
+    fawkes.io/module: "2"
+    fawkes.io/environment: "prod"
 
 ---
 
@@ -202,7 +66,7 @@ resources:
 - service.yaml
 
 commonLabels:
-app: my-first-app
+  app: my-first-app
 
 ---
 
@@ -211,20 +75,20 @@ app: my-first-app
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: my-first-app
+  name: my-first-app
 spec:
-replicas: 1 # Base configuration
-selector:
-matchLabels:
-app: my-first-app
-template:
-metadata:
-labels:
-app: my-first-app
-spec:
-containers: - name: app
-image: nginxdemos/hello:latest
-ports: - containerPort: 80
+  replicas: 1 # Base configuration
+  selector:
+    matchLabels:
+      app: my-first-app
+  template:
+    metadata:
+      labels:
+        app: my-first-app
+    spec:
+      containers: - name: app
+        image: nginxdemos/hello:latest
+        ports: - containerPort: 80
 
 ---
 
@@ -233,12 +97,12 @@ ports: - containerPort: 80
 apiVersion: v1
 kind: Service
 metadata:
-name: my-first-app
+  name: my-first-app
 spec:
-type: ClusterIP
-selector:
-app: my-first-app
-ports:
+  type: ClusterIP
+  selector:
+    app: my-first-app
+  ports:
 
 - port: 80
   targetPort: 80
@@ -267,7 +131,7 @@ patches:
     name: my-first-app
 
 commonLabels:
-environment: dev
+  environment: dev
 
 ---
 
@@ -306,7 +170,7 @@ patches:
     name: my-first-app
 
 commonLabels:
-environment: prod
+  environment: prod
 
 ---
 
@@ -315,22 +179,22 @@ environment: prod
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-name: my-first-app-dev
-namespace: argocd
+  name: my-first-app-dev
+  namespace: argocd
 spec:
-project: default
-source:
-repoURL: https://github.com/student/my-first-app
-targetRevision: main
-path: k8s/overlays/dev
-destination:
-server: https://kubernetes.default.svc
-namespace: lab-module-2-dev
-syncPolicy:
-automated:
-prune: true
-selfHeal: true
-syncOptions: - CreateNamespace=true
+  project: default
+  source:
+    repoURL: https://github.com/student/my-first-app
+    targetRevision: main
+    path: k8s/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: lab-module-2-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions: - CreateNamespace=true
 
 ---
 
@@ -339,22 +203,22 @@ syncOptions: - CreateNamespace=true
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-name: my-first-app-prod
-namespace: argocd
+  name: my-first-app-prod
+  namespace: argocd
 spec:
-project: default
-source:
-repoURL: https://github.com/student/my-first-app
-targetRevision: main
-path: k8s/overlays/prod
-destination:
-server: https://kubernetes.default.svc
-namespace: lab-module-2-prod
-syncPolicy:
-automated:
-prune: true
-selfHeal: true
-syncOptions: - CreateNamespace=true
+  project: default
+  source:
+    repoURL: https://github.com/student/my-first-app
+    targetRevision: main
+    path: k8s/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: lab-module-2-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions: - CreateNamespace=true
 
 ---
 
@@ -373,9 +237,9 @@ syncOptions: - CreateNamespace=true
 apiVersion: v1
 kind: Namespace
 metadata:
-name: lab-module-3
-labels:
-fawkes.io/module: "3"
+  name: lab-module-3
+  labels:
+    fawkes.io/module: "3"
 
 ---
 
@@ -384,40 +248,40 @@ fawkes.io/module: "3"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: dora-exporter
-namespace: monitoring
-labels:
-app: dora-exporter
+  name: dora-exporter
+  namespace: monitoring
+  labels:
+    app: dora-exporter
 spec:
-replicas: 1
-selector:
-matchLabels:
-app: dora-exporter
-template:
-metadata:
-labels:
-app: dora-exporter
-annotations:
-prometheus.io/scrape: "true"
-prometheus.io/port: "8080"
-prometheus.io/path: "/metrics"
-spec:
-serviceAccountName: dora-exporter
-containers: - name: exporter
-image: fawkes/dora-exporter:v1.0.0
-ports: - containerPort: 8080
-name: metrics
-env: - name: KUBERNETES_NAMESPACE
-valueFrom:
-fieldRef:
-fieldPath: metadata.namespace
-resources:
-requests:
-memory: "64Mi"
-cpu: "100m"
-limits:
-memory: "128Mi"
-cpu: "200m"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dora-exporter
+  template:
+    metadata:
+      labels:
+        app: dora-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: dora-exporter
+      containers: - name: exporter
+        image: fawkes/dora-exporter:v1.0.0
+        ports: - containerPort: 8080
+        name: metrics
+        env: - name: KUBERNETES_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
 
 ---
 
@@ -426,15 +290,15 @@ cpu: "200m"
 apiVersion: v1
 kind: Service
 metadata:
-name: dora-exporter
-namespace: monitoring
-labels:
-app: dora-exporter
+  name: dora-exporter
+  namespace: monitoring
+  labels:
+    app: dora-exporter
 spec:
-type: ClusterIP
-selector:
-app: dora-exporter
-ports:
+  type: ClusterIP
+  selector:
+    app: dora-exporter
+  ports:
 
 - port: 8080
   targetPort: 8080
@@ -447,15 +311,15 @@ ports:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-name: dora-exporter
-namespace: monitoring
-labels:
-app: dora-exporter
+  name: dora-exporter
+  namespace: monitoring
+  labels:
+    app: dora-exporter
 spec:
-selector:
-matchLabels:
-app: dora-exporter
-endpoints:
+  selector:
+    matchLabels:
+      app: dora-exporter
+  endpoints:
 
 - port: metrics
   interval: 30s
@@ -465,18 +329,20 @@ endpoints:
 
 # labs/module-03/dora-exporter-rbac.yaml
 
+# labs/module-03/dora-exporter-rbac.yaml
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-name: dora-exporter
-namespace: monitoring
+  name: dora-exporter
+  namespace: monitoring
 
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-name: dora-exporter
+  name: dora-exporter
 rules:
 
 - apiGroups: ["apps"]
@@ -494,11 +360,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-name: dora-exporter
+  name: dora-exporter
 roleRef:
-apiGroup: rbac.authorization.k8s.io
-kind: ClusterRole
-name: dora-exporter
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dora-exporter
 subjects:
 
 - kind: ServiceAccount
@@ -512,51 +378,51 @@ subjects:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-name: dora-dashboard
-namespace: monitoring
-labels:
-grafana_dashboard: "1"
-data:
-dora-metrics.json: |
-{
-"dashboard": {
-"title": "DORA Metrics",
-"panels": [
-{
-"title": "Deployment Frequency",
-"targets": [
-{
-"expr": "rate(deployments_total[7d])"
-}
-]
-},
-{
-"title": "Lead Time for Changes",
-"targets": [
-{
-"expr": "histogram_quantile(0.95, rate(lead_time_seconds_bucket[1d]))"
-}
-]
-},
-{
-"title": "Mean Time to Recovery",
-"targets": [
-{
-"expr": "histogram_quantile(0.95, rate(mttr_seconds_bucket[1d]))"
-}
-]
-},
-{
-"title": "Change Failure Rate",
-"targets": [
-{
-"expr": "(rate(deployments_failed_total[7d]) / rate(deployments_total[7d])) \* 100"
-}
-]
-}
-]
-}
-}
+  name: dora-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  data:
+    dora-metrics.json: |
+    {
+    "dashboard": {
+    "title": "DORA Metrics",
+    "panels": [
+    {
+    "title": "Deployment Frequency",
+    "targets": [
+    {
+    "expr": "rate(deployments_total[7d])"
+    }
+    ]
+    },
+    {
+    "title": "Lead Time for Changes",
+    "targets": [
+    {
+    "expr": "histogram_quantile(0.95, rate(lead_time_seconds_bucket[1d]))"
+    }
+    ]
+    },
+    {
+    "title": "Mean Time to Recovery",
+    "targets": [
+    {
+    "expr": "histogram_quantile(0.95, rate(mttr_seconds_bucket[1d]))"
+    }
+    ]
+    },
+    {
+    "title": "Change Failure Rate",
+    "targets": [
+    {
+    "expr": "(rate(deployments_failed_total[7d]) / rate(deployments_total[7d])) * 100"
+    }
+    ]
+    }
+    ]
+    }
+    }
 
 ---
 
@@ -567,29 +433,29 @@ dora-metrics.json: |
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: my-first-app
-namespace: lab-module-3
-annotations:
-fawkes.io/dora-tracking: "true"
+  name: my-first-app
+  namespace: lab-module-3
+  annotations:
+    fawkes.io/dora-tracking: "true"
 spec:
-replicas: 3
-selector:
-matchLabels:
-app: my-first-app
-template:
-metadata:
-labels:
-app: my-first-app
-annotations:
-prometheus.io/scrape: "true"
-prometheus.io/port: "8080"
-prometheus.io/path: "/metrics"
-spec:
-containers: - name: app
-image: nginxdemos/hello:latest
-ports: - containerPort: 80
-name: http - containerPort: 8080
-name: metrics
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-first-app
+  template:
+    metadata:
+      labels:
+        app: my-first-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers: - name: app
+        image: nginxdemos/hello:latest
+        ports: - containerPort: 80
+        name: http - containerPort: 8080
+        name: metrics
 
 ---
 
@@ -608,10 +474,10 @@ name: metrics
 apiVersion: v1
 kind: Namespace
 metadata:
-name: lab-module-4
-labels:
-fawkes.io/module: "4"
-fawkes.io/belt: "white"
+  name: lab-module-4
+  labels:
+    fawkes.io/module: "4"
+    fawkes.io/belt: "white"
 
 ---
 
@@ -622,21 +488,21 @@ fawkes.io/belt: "white"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: TODO # Student fills this in
-namespace: lab-module-4
+  name: TODO # Student fills this in
+  namespace: lab-module-4
 spec:
-replicas: TODO # Student sets this
-selector:
-matchLabels:
-app: TODO # Student sets this
-template:
-metadata:
-labels:
-app: TODO # Student sets this
-spec:
-containers: - name: app
-image: nginxdemos/hello:latest
-ports: - containerPort: 80
+  replicas: TODO # Student sets this
+  selector:
+    matchLabels:
+      app: TODO # Student sets this
+  template:
+    metadata:
+      labels:
+        app: TODO # Student sets this
+    spec:
+      containers: - name: app
+        image: nginxdemos/hello:latest
+        ports: - containerPort: 80
 
 ---
 
@@ -647,44 +513,44 @@ ports: - containerPort: 80
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: my-app
-namespace: lab-module-4
-labels:
-app: my-app
-fawkes.io/lab: "module-4"
+  name: my-app
+  namespace: lab-module-4
+  labels:
+    app: my-app
+    fawkes.io/lab: "module-4"
 spec:
-replicas: 2
-selector:
-matchLabels:
-app: my-app
-template:
-metadata:
-labels:
-app: my-app
-spec:
-containers: - name: app
-image: nginxdemos/hello:latest
-ports: - containerPort: 80
-resources:
-requests:
-memory: "64Mi"
-cpu: "100m"
-limits:
-memory: "128Mi"
-cpu: "200m"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers: - name: app
+        image: nginxdemos/hello:latest
+        ports: - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-name: my-app
-namespace: lab-module-4
+  name: my-app
+  namespace: lab-module-4
 spec:
-type: ClusterIP
-selector:
-app: my-app
-ports:
+  type: ClusterIP
+  selector:
+    app: my-app
+  ports:
 
 - port: 80
   targetPort: 80
@@ -708,16 +574,16 @@ ports:
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-name: lab-quota
+  name: lab-quota
 spec:
-hard:
-requests.cpu: "2"
-requests.memory: "4Gi"
-limits.cpu: "4"
-limits.memory: "8Gi"
-persistentvolumeclaims: "5"
-pods: "20"
-services: "10"
+  hard:
+    requests.cpu: "2"
+    requests.memory: "4Gi"
+    limits.cpu: "4"
+    limits.memory: "8Gi"
+    persistentvolumeclaims: "5"
+    pods: "20"
+    services: "10"
 
 ---
 
@@ -728,28 +594,28 @@ services: "10"
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-name: lab-isolation
+  name: lab-isolation
 spec:
-podSelector: {}
-policyTypes:
+  podSelector: {}
+  policyTypes:
 
 - Ingress
 - Egress
   ingress:
 - from:
   - namespaceSelector:
-    matchLabels:
-    fawkes.io/type: lab
-    egress:
+      matchLabels:
+      fawkes.io/type: lab
+      egress:
 - to:
   - namespaceSelector:
-    matchLabels:
-    fawkes.io/type: lab
+      matchLabels:
+      fawkes.io/type: lab
 - to: # Allow DNS
   - namespaceSelector:
-    matchLabels:
-    name: kube-system
-    ports:
+      matchLabels:
+      name: kube-system
+      ports:
   - protocol: UDP
     port: 53
 
@@ -762,7 +628,7 @@ policyTypes:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-name: lab-user
+  name: lab-user
 rules:
 
 - apiGroups: ["", "apps", "networking.k8s.io"]
@@ -777,11 +643,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-name: lab-user-binding
+  name: lab-user-binding
 roleRef:
-apiGroup: rbac.authorization.k8s.io
-kind: Role
-name: lab-user
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: lab-user
 subjects:
 
 - kind: Group
