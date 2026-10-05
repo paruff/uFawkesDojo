@@ -55,7 +55,7 @@ under Release = "Dojo compose", not in this file.
    measurement. Lab instructions and validation script added in
    `yellow-belt/module-06-golden-path/lab-01/`.
 
-   **Module 7 lab migration** (this PR): Yellow Belt Module 7 migrated to
+   **Module 7 lab migration** (PR #71): Yellow Belt Module 7 migrated to
    uFawkesPipe v2.0.0 — implements security scanning & quality gates via
    uFawkesPipe security stages (secrets-scan, vuln-scan-fs, vuln-scan-image,
    sast, dependency_scan, image_scan, dast, defectdojo). Lab demonstrates
@@ -63,6 +63,15 @@ under Release = "Dojo compose", not in this file.
    secret detection (Gitleaks), quality gates, and DefectDojo integration.
    Lab instructions and validation script added in
    `yellow-belt/module-07-security-scanning/lab-01/`.
+
+   **Module 8 lab migration** (this PR): Yellow Belt Module 8 migrated to
+   uFawkesPipe v2.0.0 — implements artifact lifecycle management via
+   uFawkesPipe stages (build, image_scan, push, deploy) with CNB builder,
+   Trivy image scanning, configurable retention policies, and deployment
+   promotion. Lab demonstrates artifact build, image scanning, retention
+   configuration, promotion configuration, and artifact lifecycle verification.
+   Lab instructions and validation script added in
+   `yellow-belt/module-08-artifact-management/lab-01/`.
 
 ## Phase 0.2.4 — uFawkesDevX → White Belt (after uFawkesDevX v0.1.0 + AC-004, Dojo 0.5)
 
