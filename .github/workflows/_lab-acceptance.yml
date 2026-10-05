@@ -76,17 +76,17 @@ jobs:
 
     steps:
       - name: Check out uFawkesDojo
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check out uFawkesObs (default branch — the ref the labs clone)
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: paruff/uFawkesObs
           path: uFawkesObs
 
       - name: Check out uFawkesAI
         if: inputs.needs_ai
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: paruff/uFawkesAI
           path: uFawkesAI
@@ -109,7 +109,12 @@ jobs:
 
       - name: Start the stack (make ${{ inputs.make_target }})
         working-directory: uFawkesObs
-        run: make ${{ inputs.make_target }}
+        env:
+          # Inputs reach the shell via env vars, never interpolated into the
+          # script text itself — semgrep's run-shell-injection rule blocks
+          # `${{ }}` inside run: blocks.
+          MAKE_TARGET: ${{ inputs.make_target }}
+        run: make "$MAKE_TARGET"
 
       - name: Wait for the stack to become healthy
         run: |
@@ -151,13 +156,16 @@ jobs:
 
       - name: Run ${{ inputs.lab_name }} self-check
         shell: bash
+        env:
+          RUN_FROM: ${{ inputs.run_from }}
+          VALIDATE_PATH: ${{ inputs.validate_path }}
         run: |
           run_dir="."
-          if [ "${{ inputs.run_from }}" = "stack" ]; then
+          if [ "$RUN_FROM" = "stack" ]; then
             run_dir="uFawkesObs"
           fi
           cd "$run_dir"
-          bash "${GITHUB_WORKSPACE}/${{ inputs.validate_path }}" 2>&1 \
+          bash "${GITHUB_WORKSPACE}/${VALIDATE_PATH}" 2>&1 \
             | tee "${GITHUB_WORKSPACE}/lab-validate.log"
 
       - name: Collect stack logs
@@ -178,7 +186,7 @@ jobs:
 
       - name: Upload run evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ${{ inputs.artifact_name }}
           path: |
