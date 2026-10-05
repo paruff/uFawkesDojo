@@ -1,859 +1,380 @@
-# Fawkes Dojo Module 6: Building Golden Path Pipelines
+# Module 6: Golden Path Pipelines with uFawkesPipe
 
-> ⚠️ **This module teaches Jenkins Shared Libraries and pipeline templates, which are replaced in Dojo 0.4 by uFawkesPipe (Woodpecker CI and the `.fawkespipe.yml` contract).**
-> The Yellow Belt CI/CD content is being migrated to Woodpecker.
-> See [uFawkesPipe](https://github.com/paruff/uFawkesPipe) and the [Dojo 0.4 release plan](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/plan.md#phase-4--ufawkespipe-v200--dojo-04-gate-ac-pipe-01).
-
-## 🎯 Module Overview
-
-**Belt Level**: 🟡 Yellow Belt - CI/CD Mastery
-**Module**: 2 of 4 (Yellow Belt)
+**Belt Level**: 🟡 Yellow Belt
 **Duration**: 60 minutes
-**Difficulty**: Intermediate
-**Prerequisites**:
-
-- Module 5: CI Fundamentals complete
-- Basic Groovy syntax understanding
-- Experience with at least one programming language
-- Jenkins pipeline creation experience
+**Prerequisites**: Module 5 (CI Fundamentals) complete, uFawkesPipe v2.0.0 running
+**DORA Capabilities**: Continuous Integration (CD3, CD4), Deployment Pipeline
 
 ---
 
-## 📚 Learning Objectives
+## 1. Learning Objectives (3 minutes)
 
-By the end of this module, you will:
+### What You'll Learn
 
-1. ✅ Understand the concept of "Golden Path" in platform engineering
-2. ✅ Create reusable Jenkins Shared Libraries
-3. ✅ Build pipeline templates for multiple languages (Java, Python, Node.js)
-4. ✅ Implement pipeline optimization techniques
-5. ✅ Configure build caching for faster builds
-6. ✅ Use parallel execution to reduce build time
-7. ✅ Measure and improve pipeline performance
+By the end of this module, you will be able to:
 
-**DORA Capabilities Addressed**:
+- ✅ Understand the "Golden Path" concept and how uFawkesPipe implements it via `.fawkespipe.yml` templates
+- ✅ Create and customize `.fawkespipe.yml` pipeline contracts for different application types
+- ✅ Configure pipeline stages (lint, test, security, build) with language-specific commands
+- ✅ Implement pipeline optimization: parallel execution, build caching, incremental builds
+- ✅ Configure resource optimization and build time measurement
+- ✅ Measure and improve pipeline performance using Woodpecker UI and metrics
+- ✅ Use golden path templates for Java, Python, Node.js, and Go applications
 
-- ✓ CD1: Version control for all production artifacts
-- ✓ CD4: Trunk-based development
-- ✓ Continuous Integration (advanced)
-- ✓ Code Review
+### Why It Matters
 
----
+**The Problem: Pipeline Proliferation**
 
-## 📖 Part 1: What is a Golden Path?
-
-### The Problem: Pipeline Proliferation
-
-**Without Golden Paths**:
+Without Golden Paths:
 
 ```
-Team A: Creates Java pipeline (500 lines)
-Team B: Creates Java pipeline (480 lines, slightly different)
-Team C: Creates Java pipeline (520 lines, more differences)
-Team D: Creates Python pipeline from scratch
+Team A: Creates Python pipeline (50 lines)
+Team B: Creates Python pipeline (48 lines, slightly different)
+Team C: Creates Python pipeline (52 lines, more differences)
+Team D: Creates Java pipeline from scratch
 Team E: Copies Team A's pipeline, modifies it
 
 Result:
-- 50 similar but different pipelines
+- 50 similar but different pipeline configs
 - Security update needed → Update 50 pipelines manually
 - New best practice → Adoption takes months
 - No consistency across teams
 - High maintenance burden
 ```
 
-### Golden Path Solution
+**The Golden Path Solution**
 
 > **"The easiest path should also be the best path"**
 
 ```
-Golden Path Template (Java)
+Golden Path Template (Python)
       ↓
-   Maintained by Platform Team
+Maintained by Platform Team
       ↓
-   Used by 50 teams
+Used by 50 teams
       ↓
-   Update once → All teams benefit
+Update once → All teams benefit
       ↓
-   Consistency + Best Practices Built-In
+Consistency + Best Practices Built-In
 ```
 
-**Golden Path Characteristics**:
+**Golden Path Characteristics in uFawkesPipe**:
 
-1. **Opinionated**: Embeds best practices by default
-2. **Easy to Use**: 5-10 lines to get started
+1. **Opinionated**: Embeds best practices by default via `.fawkespipe.yml`
+2. **Easy to Use**: 10-20 lines to get started with a template
 3. **Batteries Included**: Security, testing, quality gates built-in
-4. **Customizable**: Escape hatches for edge cases
-5. **Self-Service**: Teams can use without platform team help
-6. **Maintained**: Platform team keeps it updated
+4. **Customizable**: Escape hatches for edge cases via `advanced` config
+5. **Self-Service**: Teams use templates without platform team help
+6. **Maintained**: Platform team keeps templates updated
 
-### Golden Path in Practice
+### Success Criteria
 
-**Instead of this** (200-line Jenkinsfile):
+You've mastered this module when you can:
 
-```groovy
-pipeline {
-    agent { kubernetes { yaml '''...''' } }
-    stages {
-        stage('Checkout') { ... }
-        stage('Build') { ... }
-        stage('Test') { ... }
-        stage('Security Scan') { ... }
-        stage('Quality Gate') { ... }
-        stage('Package') { ... }
-        stage('Publish') { ... }
-    }
-    post { ... }
-}
-```
-
-**Teams write this** (10-line Jenkinsfile):
-
-```groovy
-@Library('fawkes-pipelines') _
-
-goldenPathJava {
-    gitRepo = 'https://github.com/myteam/myapp.git'
-    javaVersion = '17'
-    skipTests = false
-}
-```
-
-**Result**: 95% less boilerplate, 100% best practices
+- Explain the Golden Path concept and how uFawkesPipe implements it
+- Create a `.fawkespipe.yml` from a template for any application type
+- Configure pipeline stages with language-specific commands
+- Implement optimization: parallel stages, caching, resource tuning
+- Measure and improve pipeline performance
+- Use golden path templates for Java, Python, Node.js, and Go
 
 ---
 
-## 🏗️ Part 2: Jenkins Shared Libraries
+## 2. Theory & Concepts (20 minutes)
 
-### What are Shared Libraries?
+### 📺 Video: Golden Paths in uFawkesPipe (8 minutes) — *not produced yet*
 
-Jenkins Shared Libraries are reusable Groovy code that can be imported into any Jenkinsfile.
+> **[VIDEO PLACEHOLDER]** > **Script Summary** *(video not produced)*:
+>
+> - Opening: Show the problem with pipeline proliferation (50 different configs)
+> - Golden Path definition: Opinionated templates with best practices built-in
+> - uFawkesPipe tour: `.fawkespipe.yml` contract, templates, Woodpecker stages
+> - Demo: Create `.fawkespipe.yml` from template → customize → pipeline runs
+> - Show optimization: parallel stages, caching, resource tuning
+> - Closing: "From 200-line Jenkinsfile to 20-line contract"
 
-**Benefits**:
+### What is a Golden Path in uFawkesPipe?
 
-- 🎯 **DRY Principle**: Don't Repeat Yourself
-- 🔒 **Security**: Centralized credential management
-- 📦 **Versioning**: Tag releases, rollback if needed
-- 🧪 **Testable**: Unit test your pipeline logic
-- 📚 **Documentation**: Single source of truth
+A **Golden Path** in uFawkesPipe is a pre-configured `.fawkespipe.yml` template that embeds platform best practices. Teams customize a template instead of writing pipeline configuration from scratch.
 
-### Shared Library Structure
+**Traditional (Write from Scratch)**:
 
+```yaml
+# 100+ lines of Woodpecker pipeline YAML
+steps:
+  - name: lint-yaml
+    image: alpine:3.20
+    commands:
+      - yamllint .
+  - name: lint-shell
+    image: alpine:3.20
+    commands:
+      - shellcheck scripts/*.sh
+  - name: unit-tests
+    image: python:3.11
+    commands:
+      - pytest tests/
+  # ... 50 more lines
 ```
-fawkes-pipeline-library/
-├── vars/                          # Global variables (pipeline steps)
-│   ├── goldenPathJava.groovy     # Java pipeline template
-│   ├── goldenPathPython.groovy   # Python pipeline template
-│   ├── goldenPathNode.groovy     # Node.js pipeline template
-│   └── notifySlack.groovy        # Slack notification helper
-├── src/                           # Shared classes and utilities
-│   └── com/
-│       └── fawkes/
-│           └── pipeline/
-│               ├── Docker.groovy
-│               ├── Maven.groovy
-│               └── Security.groovy
-├── resources/                     # Non-Groovy resources
-│   ├── pod-templates/
-│   │   ├── java-agent.yaml
-│   │   ├── python-agent.yaml
-│   │   └── node-agent.yaml
-│   └── scripts/
-│       └── docker-build.sh
-└── README.md
+
+**Golden Path (Use Template)**:
+
+```yaml
+# 20 lines - customize and go!
+app:
+  name: my-app
+  type: service
+  language: python
+  version: 1.0.0
+
+build:
+  builder: cnb
+  cnb:
+    builder: paketobuildpacks/builder:base
+  image:
+    registry: docker.io
+    namespace: myorg
+    name: my-app
+    tags: ["${GIT_COMMIT_SHORT}", "latest"]
+
+stages:
+  lint:
+    enabled: true
+    commands:
+      - language: python
+        cmd: ruff check src/ && black --check src/
+
+  test:
+    enabled: true
+    commands:
+      - language: python
+        cmd: pytest tests/ --cov=src --cov-report=xml
+    coverage:
+      threshold: 75
+
+  sast:
+    enabled: true
+    sonarqube:
+      qualityGate: true
+    trivy:
+      enabled: true
+
+  dependency_scan:
+    enabled: true
+    tools: [trivy]
+    fail_on: HIGH
+
+  build:
+    enabled: true
+
+  image_scan:
+    enabled: true
+    severity: CRITICAL
+    fail_on: CRITICAL
+
+  push:
+    enabled: true
+
+advanced:
+  timeout: 30
+  parallel:
+    enabled: true
+  artifacts:
+    retention: 30
 ```
+
+**Result**: 90% less boilerplate, 100% best practices
+
+### How uFawkesPipe Implements Golden Paths
+
+uFawkesPipe provides Golden Paths through:
+
+1. **Template Repository**: Pre-built `.fawkespipe.yml` examples in `examples/`
+2. **Contract Validation**: `scripts/generate_woodpecker_yml.py` validates and generates pipeline
+3. **Standard Stages**: All templates use the same stage structure
+4. **Language Detection**: Templates for Python, Java, Node.js, Go
+5. **Extensibility**: `advanced` section for customization without forking
 
 ---
 
-## 🛠️ Part 3: Hands-On Lab - Create Your First Shared Library — *not built yet*
+## 3. uFawkesPipe Pipeline Architecture (10 minutes)
 
-### Step 1: Set Up Shared Library Repository
+### Standard Pipeline Stages
 
-```bash
-# Create new Git repository
-mkdir fawkes-pipeline-library
-cd fawkes-pipeline-library
+Every pipeline in uFawkesPipe follows standardized stages (from `.fawkespipe.yml`):
 
-# Create directory structure
-mkdir -p vars
-mkdir -p src/com/fawkes/pipeline
-mkdir -p resources/pod-templates
+| # | Stage | Steps | Parallel | Branch Gate |
+|---|-------|-------|----------|-------------|
+| 1 | **validate** | `init` → `lint-yaml` + `lint-shell` | Yes (lint) | None |
+| 2 | **test** | `unit-tests` + `integration-tests` + `contract-tests` | Yes | None |
+| 3 | **security** | `secrets-scan` → `vuln-scan-fs` → `vuln-scan-image` | Sequential | `vuln-scan-image`: main only |
+| 4 | **build** | `build-image` | — | main only |
+| 5 | **publish** | `upload-defectdojo` | — | main only |
+| 6 | **deploy** | `notify-obs` | — | main only |
 
-# Initialize Git
-git init
+### The `.fawkespipe.yml` Contract
+
+Applications define their pipeline behavior via `.fawkespipe.yml` at the repo root:
+
+```yaml
+app:
+  name: my-app
+  type: service
+  language: python
+  version: 1.0.0
+
+build:
+  builder: cnb
+  cnb:
+    builder: paketobuildpacks/builder:base
+    env:
+      BP_CPYTHON_VERSION: "3.11"
+  image:
+    registry: docker.io
+    namespace: myorg
+    name: my-app
+    tags: ["${GIT_COMMIT_SHORT}", "latest"]
+
+stages:
+  lint:
+    enabled: true
+    commands:
+      - language: python
+        cmd: ruff check src/ && black --check src/
+
+  test:
+    enabled: true
+    commands:
+      - language: python
+        cmd: pytest tests/ --cov=src --cov-report=xml
+    coverage:
+      enabled: true
+      threshold: 75
+
+  sast:
+    enabled: true
+    sonarqube:
+      enabled: true
+      qualityGate: true
+    trivy:
+      enabled: true
+
+  dependency_scan:
+    enabled: true
+    tools:
+      - trivy
+    fail_on: HIGH
+
+  build:
+    enabled: true
+
+  image_scan:
+    enabled: true
+    severity: CRITICAL
+    fail_on: CRITICAL
+
+  push:
+    enabled: true
+
+advanced:
+  timeout: 30
+  parallel:
+    enabled: true
+  artifacts:
+    retention: 30
+  workspace:
+    cleanup: true
 ```
 
-### Step 2: Create Java Golden Path
+The `scripts/generate_woodpecker_yml.py` script translates `.fawkespipe.yml` into Woodpecker's native `.woodpecker.yml`.
 
-Create `vars/goldenPathJava.groovy`:
+### Golden Path Templates
 
-```groovy
-#!/usr/bin/env groovy
+uFawkesPipe provides Golden Paths through templates in `examples/`:
 
-def call(Map config = [:]) {
-    // Default configuration
-    def defaults = [
-        gitRepo: '',
-        gitBranch: 'main',
-        gitCredentials: 'github-credentials',
-        javaVersion: '17',
-        mavenVersion: '3.8',
-        skipTests: false,
-        runSecurityScan: true,
-        dockerRegistry: 'harbor.fawkes.internal',
-        slackChannel: '#builds'
-    ]
+| Template | Language | Framework |
+|----------|----------|-----------|
+| `.fawkespipe-python-flask.yml` | Python 3.11 | Flask |
+| `.fawkespipe-java-maven.yml` | Java 17 | Spring Boot |
+| `.fawkespipe-nodejs-express.yml` | Node.js 20 | Express |
+| `.fawkespipe-go.yml` | Go 1.22 | net/http |
 
-    // Merge user config with defaults
-    config = defaults + config
-
-    // Validate required parameters
-    if (!config.gitRepo) {
-        error("gitRepo is required")
-    }
-
-    pipeline {
-        agent {
-            kubernetes {
-                yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    jenkins: agent
-    app: ${env.JOB_NAME}
-spec:
-  containers:
-  - name: maven
-    image: maven:${config.mavenVersion}-openjdk-${config.javaVersion}
-    command: ['sleep']
-    args: ['infinity']
-    resources:
-      requests:
-        memory: "2Gi"
-        cpu: "1000m"
-      limits:
-        memory: "4Gi"
-        cpu: "2000m"
-  - name: docker
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['sleep']
-    args: ['infinity']
-"""
-            }
-        }
-
-        options {
-            timestamps()
-            timeout(time: 15, unit: 'MINUTES')
-            buildDiscarder(logRotator(numToKeepStr: '10'))
-        }
-
-        environment {
-            APP_NAME = "${env.JOB_NAME}".split('/')[0]
-            BUILD_VERSION = "${env.BUILD_NUMBER}"
-            GIT_COMMIT_SHORT = sh(
-                script: "git rev-parse --short HEAD",
-                returnStdout: true
-            ).trim()
-        }
-
-        stages {
-            stage('Checkout') {
-                steps {
-                    script {
-                        echo "🔄 Checking out ${config.gitRepo}..."
-                        git branch: config.gitBranch,
-                            url: config.gitRepo,
-                            credentialsId: config.gitCredentials
-                    }
-                }
-            }
-
-            stage('Build') {
-                steps {
-                    container('maven') {
-                        script {
-                            echo "🔨 Building application..."
-                            sh """
-                                mvn clean compile \
-                                    -DskipTests \
-                                    -B \
-                                    --batch-mode \
-                                    --no-transfer-progress
-                            """
-                        }
-                    }
-                }
-            }
-
-            stage('Test') {
-                when {
-                    expression { !config.skipTests }
-                }
-                steps {
-                    container('maven') {
-                        script {
-                            echo "🧪 Running tests..."
-                            sh """
-                                mvn test \
-                                    -B \
-                                    --batch-mode \
-                                    --no-transfer-progress
-                            """
-                        }
-                    }
-                }
-                post {
-                    always {
-                        junit 'target/surefire-reports/**/*.xml'
-                    }
-                }
-            }
-
-            stage('Security Scan') {
-                when {
-                    expression { config.runSecurityScan }
-                }
-                steps {
-                    container('maven') {
-                        script {
-                            echo "🔒 Running security scan..."
-                            sh """
-                                mvn dependency-check:check \
-                                    -DfailBuildOnCVSS=7
-                            """
-                        }
-                    }
-                }
-            }
-
-            stage('Package') {
-                steps {
-                    container('maven') {
-                        script {
-                            echo "📦 Packaging application..."
-                            sh """
-                                mvn package \
-                                    -DskipTests \
-                                    -B \
-                                    --batch-mode \
-                                    --no-transfer-progress
-                            """
-                        }
-                    }
-                }
-            }
-
-            stage('Docker Build') {
-                steps {
-                    container('docker') {
-                        script {
-                            echo "🐳 Building Docker image..."
-                            def imageName = "${config.dockerRegistry}/${env.APP_NAME}"
-                            def imageTag = "${env.BUILD_VERSION}-${env.GIT_COMMIT_SHORT}"
-
-                            sh """
-                                docker build \
-                                    -t ${imageName}:${imageTag} \
-                                    -t ${imageName}:latest \
-                                    .
-                            """
-
-                            // Store for later stages
-                            env.DOCKER_IMAGE = "${imageName}:${imageTag}"
-                        }
-                    }
-                }
-            }
-
-            stage('Publish') {
-                steps {
-                    container('docker') {
-                        script {
-                            echo "📤 Publishing Docker image..."
-                            withCredentials([
-                                usernamePassword(
-                                    credentialsId: 'harbor-credentials',
-                                    usernameVariable: 'DOCKER_USER',
-                                    passwordVariable: 'DOCKER_PASS'
-                                )
-                            ]) {
-                                sh """
-                                    echo \$DOCKER_PASS | docker login ${config.dockerRegistry} -u \$DOCKER_USER --password-stdin
-                                    docker push ${env.DOCKER_IMAGE}
-                                    docker push ${config.dockerRegistry}/${env.APP_NAME}:latest
-                                """
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        post {
-            success {
-                script {
-                    notifySlack(
-                        channel: config.slackChannel,
-                        color: 'good',
-                        message: "✅ Build #${env.BUILD_NUMBER} succeeded\n📦 Image: ${env.DOCKER_IMAGE}"
-                    )
-                }
-            }
-
-            failure {
-                script {
-                    notifySlack(
-                        channel: config.slackChannel,
-                        color: 'danger',
-                        message: "❌ Build #${env.BUILD_NUMBER} failed\n🔗 ${env.BUILD_URL}"
-                    )
-                }
-            }
-
-            always {
-                cleanWs()
-            }
-        }
-    }
-}
-```
-
-### Step 3: Create Helper Functions
-
-Create `vars/notifySlack.groovy`:
-
-```groovy
-#!/usr/bin/env groovy
-
-def call(Map config = [:]) {
-    if (!config.channel || !config.message) {
-        error("channel and message are required")
-    }
-
-    def color = config.color ?: 'warning'
-
-    try {
-        slackSend(
-            channel: config.channel,
-            color: color,
-            message: config.message,
-            tokenCredentialId: 'slack-token'
-        )
-    } catch (Exception e) {
-        echo "Warning: Failed to send Slack notification: ${e.message}"
-        // Don't fail build if notification fails
-    }
-}
-```
-
-### Step 4: Configure in Jenkins
-
-**Add Shared Library to Jenkins**:
-
-1. Go to Jenkins → Manage Jenkins → Configure System
-2. Scroll to "Global Pipeline Libraries"
-3. Click "Add"
-4. Configure:
-   - Name: `fawkes-pipelines`
-   - Default version: `main`
-   - Retrieval method: "Modern SCM"
-   - Source Code Management: Git
-   - Project Repository: `https://github.com/fawkes/pipeline-library.git`
-   - Credentials: (if private repo)
-5. ✅ Check "Load implicitly" (makes it available to all pipelines)
-6. Save
-
-### Step 5: Use Golden Path in Your Project
-
-Create `Jenkinsfile` in your application repository:
-
-```groovy
-@Library('fawkes-pipelines') _
-
-goldenPathJava {
-    gitRepo = 'https://github.com/myteam/my-spring-boot-app.git'
-    javaVersion = '17'
-    skipTests = false
-    runSecurityScan = true
-    slackChannel = '#my-team'
-}
-```
-
-**That's it!** 6 lines instead of 200+.
+Each template includes:
+- **App metadata** (name, type, language, version)
+- **Build config** (CNB builder, image registry, tags)
+- **Standard stages** (lint, test, sast, dependency_scan, build, image_scan, push)
+- **Language-specific commands** for each stage
+- **Optimization config** (parallel, caching, timeout)
 
 ---
 
-## 📊 Part 4: Creating Templates for Multiple Languages
-
-### Python Golden Path
-
-Create `vars/goldenPathPython.groovy`:
-
-```groovy
-#!/usr/bin/env groovy
-
-def call(Map config = [:]) {
-    def defaults = [
-        gitRepo: '',
-        gitBranch: 'main',
-        pythonVersion: '3.11',
-        skipTests: false,
-        runLinting: true,
-        dockerRegistry: 'harbor.fawkes.internal'
-    ]
-
-    config = defaults + config
-
-    if (!config.gitRepo) {
-        error("gitRepo is required")
-    }
-
-    pipeline {
-        agent {
-            kubernetes {
-                yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: python
-    image: python:${config.pythonVersion}-slim
-    command: ['sleep']
-    args: ['infinity']
-  - name: docker
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['sleep']
-    args: ['infinity']
-"""
-            }
-        }
-
-        options {
-            timestamps()
-            timeout(time: 15, unit: 'MINUTES')
-        }
-
-        stages {
-            stage('Checkout') {
-                steps {
-                    git branch: config.gitBranch,
-                        url: config.gitRepo
-                }
-            }
-
-            stage('Setup') {
-                steps {
-                    container('python') {
-                        sh '''
-                            python -m pip install --upgrade pip
-                            pip install -r requirements.txt
-                        '''
-                    }
-                }
-            }
-
-            stage('Lint') {
-                when {
-                    expression { config.runLinting }
-                }
-                steps {
-                    container('python') {
-                        sh '''
-                            pip install flake8 black
-                            flake8 . --max-line-length=88
-                            black --check .
-                        '''
-                    }
-                }
-            }
-
-            stage('Test') {
-                when {
-                    expression { !config.skipTests }
-                }
-                steps {
-                    container('python') {
-                        sh '''
-                            pip install pytest pytest-cov
-                            pytest --cov=. --cov-report=xml --cov-report=html
-                        '''
-                    }
-                }
-                post {
-                    always {
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: true,
-                            reportDir: 'htmlcov',
-                            reportFiles: 'index.html',
-                            reportName: 'Coverage Report'
-                        ])
-                    }
-                }
-            }
-
-            stage('Docker Build & Push') {
-                steps {
-                    container('docker') {
-                        script {
-                            def imageName = "${config.dockerRegistry}/${env.JOB_NAME}"
-                            def imageTag = "${env.BUILD_NUMBER}"
-
-                            sh """
-                                docker build -t ${imageName}:${imageTag} .
-                                docker push ${imageName}:${imageTag}
-                            """
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-```
-
-### Node.js Golden Path
-
-Create `vars/goldenPathNode.groovy`:
-
-```groovy
-#!/usr/bin/env groovy
-
-def call(Map config = [:]) {
-    def defaults = [
-        gitRepo: '',
-        gitBranch: 'main',
-        nodeVersion: '20',
-        skipTests: false,
-        runLinting: true,
-        packageManager: 'npm'  // or 'yarn', 'pnpm'
-    ]
-
-    config = defaults + config
-
-    pipeline {
-        agent {
-            kubernetes {
-                yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: node
-    image: node:${config.nodeVersion}-alpine
-    command: ['sleep']
-    args: ['infinity']
-  - name: docker
-    image: docker:24-dind
-    securityContext:
-      privileged: true
-    command: ['sleep']
-    args: ['infinity']
-"""
-            }
-        }
-
-        stages {
-            stage('Checkout') {
-                steps {
-                    git branch: config.gitBranch,
-                        url: config.gitRepo
-                }
-            }
-
-            stage('Install Dependencies') {
-                steps {
-                    container('node') {
-                        script {
-                            def installCmd = config.packageManager == 'npm' ? 'npm ci' :
-                                           config.packageManager == 'yarn' ? 'yarn install --frozen-lockfile' :
-                                           'pnpm install --frozen-lockfile'
-                            sh installCmd
-                        }
-                    }
-                }
-            }
-
-            stage('Lint') {
-                when {
-                    expression { config.runLinting }
-                }
-                steps {
-                    container('node') {
-                        sh "${config.packageManager} run lint"
-                    }
-                }
-            }
-
-            stage('Test') {
-                when {
-                    expression { !config.skipTests }
-                }
-                steps {
-                    container('node') {
-                        sh "${config.packageManager} test"
-                    }
-                }
-            }
-
-            stage('Build') {
-                steps {
-                    container('node') {
-                        sh "${config.packageManager} run build"
-                    }
-                }
-            }
-
-            stage('Docker Build & Push') {
-                steps {
-                    container('docker') {
-                        script {
-                            def imageName = "${env.JOB_NAME}"
-                            sh """
-                                docker build -t ${imageName}:${env.BUILD_NUMBER} .
-                                docker push ${imageName}:${env.BUILD_NUMBER}
-                            """
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-```
-
----
-
-## ⚡ Part 5: Pipeline Optimization Techniques
+## 4. Pipeline Optimization in uFawkesPipe (10 minutes)
 
 ### Technique 1: Parallel Execution
 
 Run independent stages simultaneously:
 
-```groovy
-stage('Parallel Quality Checks') {
-    parallel {
-        stage('Unit Tests') {
-            steps {
-                container('maven') {
-                    sh 'mvn test'
-                }
-            }
-        }
-        stage('Linting') {
-            steps {
-                container('maven') {
-                    sh 'mvn checkstyle:check'
-                }
-            }
-        }
-        stage('Security Scan') {
-            steps {
-                container('maven') {
-                    sh 'mvn dependency-check:check'
-                }
-            }
-        }
-    }
-}
+```yaml
+advanced:
+  parallel:
+    enabled: true
 ```
 
-**Before**: 6 minutes (2min + 2min + 2min sequential)
-**After**: 2 minutes (all run in parallel)
+This enables parallel execution for stages that support it (lint steps, test steps).
+
+**Example - Parallel Linting**:
+
+```yaml
+stages:
+  lint:
+    enabled: true
+    commands:
+      - language: python
+        cmd: ruff check src/
+      - language: python
+        cmd: black --check src/
+      - language: dockerfile
+        cmd: hadolint Dockerfile
+```
+
+**Before**: 3 minutes (sequential)
+**After**: 1 minute (parallel)
 **Improvement**: 3x faster ⚡
 
 ### Technique 2: Build Caching
 
-Cache Maven dependencies between builds:
+Cache dependencies between builds using CNB build cache:
 
-```groovy
-pipeline {
-    agent {
-        kubernetes {
-            yaml '''
-spec:
-  containers:
-  - name: maven
-    image: maven:3.8-openjdk-17
-    volumeMounts:
-    - name: maven-cache
-      mountPath: /root/.m2
-  volumes:
-  - name: maven-cache
-    persistentVolumeClaim:
-      claimName: maven-cache-pvc
-'''
-        }
-    }
-}
+```yaml
+advanced:
+  timeout: 30
+  # CNB builder automatically caches layers
+  # CNB buildpack layers cached between builds
 ```
 
-**Before**: 3 minutes downloading dependencies every build
+**How it works**:
+- CNB builder caches buildpack layers between builds
+- Dependencies downloaded once, reused across builds
+- Cache invalidated only when lockfiles change
+
+**Before**: 2 minutes downloading dependencies every build
 **After**: 10 seconds (cached)
-**Improvement**: 18x faster on dependencies ⚡
+**Improvement**: 12x faster on dependencies ⚡
 
-### Technique 3: Incremental Builds
+### Technique 3: Resource Optimization
 
-Only rebuild what changed:
+Right-size your build containers:
 
-```groovy
-stage('Incremental Build') {
-    steps {
-        script {
-            def changedFiles = sh(
-                script: "git diff --name-only HEAD~1",
-                returnStdout: true
-            ).trim()
-
-            if (changedFiles.contains('src/')) {
-                echo "Source changed, full build"
-                sh 'mvn clean package'
-            } else if (changedFiles.contains('pom.xml')) {
-                echo "Dependencies changed, rebuild"
-                sh 'mvn clean package'
-            } else {
-                echo "Only docs changed, skip build"
-                currentBuild.result = 'SUCCESS'
-                return
-            }
-        }
-    }
-}
+```yaml
+advanced:
+  timeout: 30
+  # Resource limits applied to build containers
 ```
 
-### Technique 4: Smarter Test Execution
+**Resource Profiles**:
 
-Run only affected tests:
-
-```groovy
-stage('Smart Testing') {
-    steps {
-        script {
-            // Use tools like Laika or Maven Test Selection
-            sh '''
-                mvn test \
-                    -Dtest=$(git diff --name-only HEAD~1 | \
-                             grep 'src/test' | \
-                             sed 's/.*\\/\\(.*\\)\\.java/\\1/' | \
-                             tr '\\n' ',')
-            '''
-        }
-    }
-}
-```
-
-### Technique 5: Resource Optimization
-
-Right-size your build agents:
-
-```groovy
-// Small builds
+```yaml
+# Small builds (Python, Node.js)
 resources:
   requests:
     memory: "512Mi"
@@ -862,7 +383,7 @@ resources:
     memory: "1Gi"
     cpu: "1000m"
 
-// Medium builds
+# Medium builds (Java, Go)
 resources:
   requests:
     memory: "2Gi"
@@ -871,7 +392,7 @@ resources:
     memory: "4Gi"
     cpu: "2000m"
 
-// Large builds
+# Large builds
 resources:
   requests:
     memory: "8Gi"
@@ -883,933 +404,644 @@ resources:
 
 **Benefit**: Faster scheduling, lower costs, better resource utilization
 
+### Technique 4: Incremental Builds (Advanced)
+
+Configure stages to only run when needed:
+
+```yaml
+stages:
+  test:
+    enabled: true
+    commands:
+      - language: python
+        cmd: pytest tests/ --cov=src --cov-report=xml
+    # Only run on code changes (configured in Woodpecker)
+```
+
+Woodpecker supports conditional execution via `when` conditions in the generated `.woodpecker.yml`.
+
 ---
 
-## 📈 Part 6: Measuring Pipeline Performance
+## 5. Golden Path Templates by Language (10 minutes)
+
+### Python Flask Template
+
+```yaml
+# .fawkespipe.yml for Python Flask
+app:
+  name: flask-api
+  type: service
+  language: python
+  version: 1.0.0
+
+build:
+  builder: cnb
+  cnb:
+    builder: paketobuildpacks/builder:base
+    env:
+      BP_CPYTHON_VERSION: "3.11"
+  image:
+    registry: docker.io
+    namespace: myorg
+    name: flask-api
+    tags:
+      - "${GIT_COMMIT_SHORT}"
+      - "latest"
+
+stages:
+  lint:
+    enabled: true
+    commands:
+      - language: python
+        cmd: |
+          pip install pylint black flake8
+          pylint src/ --fail-under=8.0
+          black --check src/
+          flake8 src/
+
+  test:
+    enabled: true
+    commands:
+      - language: python
+        cmd: |
+          pip install pytest pytest-cov
+          pytest tests/ --cov=src --cov-report=xml --cov-report=html
+    coverage:
+      enabled: true
+      threshold: 75
+      report: coverage.xml
+
+  sast:
+    enabled: true
+    sonarqube:
+      enabled: true
+      projectKey: flask-api
+      sources: src/
+      qualityGate: true
+    trivy:
+      enabled: true
+
+  dependency_scan:
+    enabled: true
+    tools:
+      - trivy
+    fail_on: HIGH
+
+  build:
+    enabled: true
+
+  image_scan:
+    enabled: true
+    severity: CRITICAL
+    fail_on: CRITICAL
+
+  push:
+    enabled: true
+
+advanced:
+  timeout: 30
+  parallel:
+    enabled: true
+  workspace:
+    cleanup: true
+```
+
+### Java Spring Boot Template
+
+```yaml
+# .fawkespipe.yml for Java Spring Boot
+app:
+  name: spring-boot-api
+  type: service
+  language: java
+  version: 1.0.0
+
+build:
+  builder: cnb
+  cnb:
+    builder: paketobuildpacks/builder:base
+    env:
+      BP_JVM_VERSION: "17"
+      BP_MAVEN_BUILD_ARGUMENTS: "-DskipTests=true -Dmaven.javadoc.skip=true"
+  image:
+    registry: docker.io
+    namespace: myorg
+    name: spring-boot-api
+    tags:
+      - "${GIT_COMMIT_SHORT}"
+      - "${GIT_BRANCH}"
+      - "latest"
+
+stages:
+  lint:
+    enabled: true
+    commands:
+      - language: java
+        cmd: mvn checkstyle:check
+    dockerfile:
+      enabled: true
+
+  test:
+    enabled: true
+    commands:
+      - language: java
+        cmd: mvn test
+    coverage:
+      enabled: true
+      threshold: 80
+      report: target/site/jacoco/jacoco.xml
+
+  sast:
+    enabled: true
+    sonarqube:
+      enabled: true
+      projectKey: spring-boot-api
+      sources: src/main/java
+      exclusions: "**/test/**"
+      qualityGate: true
+
+  dependency_scan:
+    enabled: true
+    tools:
+      - owasp-dependency-check
+      - trivy
+    fail_on: CRITICAL
+
+  build:
+    enabled: true
+
+  image_scan:
+    enabled: true
+    severity: HIGH,CRITICAL
+    fail_on: CRITICAL
+
+  push:
+    enabled: true
+
+kubernetes:
+  enabled: false
+  namespace: production
+  manifests:
+    path: k8s/
+    files:
+      - deployment.yaml
+      - service.yaml
+
+advanced:
+  timeout: 45
+  workspace:
+    cleanup: true
+  artifacts:
+    paths:
+      - target/*.jar
+    retention: 30
+```
+
+### Node.js Express Template
+
+```yaml
+# .fawkespipe.yml for Node.js Express
+app:
+  name: node-api
+  type: service
+  language: nodejs
+  version: 1.0.0
+
+build:
+  builder: cnb
+  cnb:
+    builder: paketobuildpacks/builder:base
+    env:
+      BP_NODE_VERSION: "20"
+  image:
+    registry: docker.io
+    namespace: myorg
+    name: node-api
+    tags:
+      - "${GIT_COMMIT_SHORT}"
+      - "latest"
+
+stages:
+  lint:
+    enabled: true
+    commands:
+      - language: nodejs
+        cmd: npm run lint
+
+  test:
+    enabled: true
+    commands:
+      - language: nodejs
+        cmd: npm test -- --coverage
+    coverage:
+      enabled: true
+      threshold: 80
+      report: coverage/lcov.info
+
+  sast:
+    enabled: true
+    sonarqube:
+      enabled: true
+      projectKey: node-api
+      sources: src/
+      qualityGate: true
+
+  dependency_scan:
+    enabled: true
+    tools:
+      - trivy
+    fail_on: HIGH
+
+  build:
+    enabled: true
+
+  image_scan:
+    enabled: true
+    severity: CRITICAL
+    fail_on: CRITICAL
+
+  push:
+    enabled: true
+
+advanced:
+  timeout: 30
+  parallel:
+    enabled: true
+```
+
+### Go Template
+
+```yaml
+# .fawkespipe.yml for Go HTTP service
+app:
+  name: go-api
+  type: service
+  language: go
+  version: 1.0.0
+
+build:
+  builder: cnb
+  cnb:
+    builder: paketobuildpacks/builder:base
+    env:
+      BP_GO_VERSION: "1.22"
+  image:
+    registry: docker.io
+    namespace: myorg
+    name: go-api
+    tags:
+      - "${GIT_COMMIT_SHORT}"
+      - "latest"
+
+stages:
+  lint:
+    enabled: true
+    commands:
+      - language: go
+        cmd: golangci-lint run
+
+  test:
+    enabled: true
+    commands:
+      - language: go
+        cmd: go test -v -cover ./...
+    coverage:
+      enabled: true
+      threshold: 75
+      report: coverage.xml
+
+  sast:
+    enabled: true
+    trivy:
+      enabled: true
+
+  dependency_scan:
+    enabled: true
+    tools:
+      - trivy
+    fail_on: HIGH
+
+  build:
+    enabled: true
+
+  image_scan:
+    enabled: true
+    severity: CRITICAL
+    fail_on: CRITICAL
+
+  push:
+    enabled: true
+
+advanced:
+  timeout: 30
+  parallel:
+    enabled: true
+```
+
+---
+
+## 6. Measuring Pipeline Performance (5 minutes)
 
 ### Build Time Metrics
 
-Track and visualize build performance:
-
-```groovy
-post {
-    always {
-        script {
-            // Calculate stage durations
-            def stageDurations = [:]
-            currentBuild.rawBuild.getActions(FlowExecutionAction).each { action ->
-                action.getNodes().each { node ->
-                    if (node.displayName != null) {
-                        def duration = node.getDurationMillis() / 1000
-                        stageDurations[node.displayName] = duration
-                    }
-                }
-            }
-
-            // Send to Prometheus
-            stageDurations.each { stage, duration ->
-                sh """
-                    curl -X POST http://prometheus-pushgateway:9091/metrics/job/jenkins/stage/${stage} \\
-                        --data-binary @- <<EOF
-# TYPE jenkins_stage_duration_seconds gauge
-jenkins_stage_duration_seconds{job="${env.JOB_NAME}",stage="${stage}"} ${duration}
-EOF
-                """
-            }
-        }
-    }
-}
-```
+Track and visualize build performance in Woodpecker UI and Grafana:
 
 ### Key Metrics to Track
 
 ```promql
 # Average build time
-avg(jenkins_build_duration_seconds{job="my-app"})
+avg(woodpecker_build_duration_seconds{job="my-app"})
 
 # Build success rate
-sum(rate(jenkins_build_result{result="SUCCESS"}[7d])) /
-sum(rate(jenkins_build_result[7d])) * 100
+sum(rate(woodpecker_build_result{result="success"}[7d])) /
+sum(rate(woodpecker_build_result[7d])) * 100
 
 # Slowest pipeline stages
-topk(5, avg(jenkins_stage_duration_seconds) by (stage))
+topk(5, avg(woodpecker_stage_duration_seconds) by (stage))
 
 # Build time trend
-rate(jenkins_build_duration_seconds[1d])
+rate(woodpecker_build_duration_seconds[1d])
+
+# Cache hit rate (CNB)
+rate(cnb_cache_hit_total[5m]) / rate(cnb_cache_request_total[5m])
 ```
 
-### Create Grafana Dashboard
+### Woodpecker UI Metrics
 
-```json
-{
-  "dashboard": {
-    "title": "Pipeline Performance",
-    "panels": [
-      {
-        "title": "Average Build Time",
-        "targets": [
-          {
-            "expr": "avg(jenkins_build_duration_seconds) by (job)"
-          }
-        ]
-      },
-      {
-        "title": "Build Success Rate",
-        "targets": [
-          {
-            "expr": "sum(rate(jenkins_build_result{result='SUCCESS'}[7d])) / sum(rate(jenkins_build_result[7d])) * 100"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+In Woodpecker UI, you can view:
+- Build duration per stage
+- Success/failure rate per repository
+- Stage-level timing
+- Artifact sizes
 
 ---
 
-## 💪 Part 7: Practical Exercise
+## 7. Hands-On Lab (20 minutes)
 
-### Exercise: Create a Multi-Language Golden Path
+### Lab Overview
 
-**Objective**: Build a shared library that supports Java, Python, and Node.js
+You'll use the running uFawkesPipe stack to:
+1. Explore built-in golden path templates
+2. Create a customized `.fawkespipe.yml` for a Python Flask application
+3. Configure pipeline stages with optimization settings
+4. Push to Git, activate in Woodpecker, watch pipeline execute
+5. Practice optimization: enable parallel, observe build time
+6. Practice optimization: observe caching effect
 
-**Requirements**:
+**Time Estimate**: 20 minutes
+**Difficulty**: Intermediate (Module 5 complete required)
+**Auto-Graded**: Yes
+**Points**: 100
 
-1. Create `vars/goldenPath.groovy` that auto-detects language
-2. Support configuration for each language
-3. Include parallel testing and linting
-4. Implement build caching
-5. Add performance metrics
-6. Create comprehensive documentation
+### Lab Environment
 
-**Starter Template**:
+**Prerequisites**: uFawkesPipe v2.0.0 running locally
+- ✅ Woodpecker CI at http://localhost:8000
+- ✅ SonarQube at http://localhost:9000
+- ✅ Portainer CE at https://localhost:9443
 
-```groovy
-// vars/goldenPath.groovy
-def call(Map config = [:]) {
-    // Auto-detect language
-    def language = detectLanguage()
+➡️ **[Lab 01: Build Your Golden Path Pipeline](yellow-belt/module-06-golden-path/lab-01/instructions.md)**
 
-    echo "🔍 Detected language: ${language}"
+This lab walks you through customizing a golden path template, configuring pipeline optimization, and measuring performance.
 
-    switch(language) {
-        case 'java':
-            goldenPathJava(config)
-            break
-        case 'python':
-            goldenPathPython(config)
-            break
-        case 'node':
-            goldenPathNode(config)
-            break
-        default:
-            error("Unsupported language: ${language}")
-    }
-}
-
-def detectLanguage() {
-    // TODO: Implement language detection
-    // Check for pom.xml, requirements.txt, package.json
-}
-```
-
-**Validation Criteria**:
-
-- [ ] Auto-detects language correctly
-- [ ] All three language templates work
-- [ ] Build time <8 minutes for sample apps
-- [ ] Caching reduces build time by 50%+
-- [ ] Metrics sent to Prometheus
-- [ ] Documentation includes usage examples
+**Validation**: `bash yellow-belt/module-06-golden-path/lab-01/validate.sh`
 
 ---
 
-## 🎓 Part 8: Knowledge Check
+## 7. Knowledge Check (5 minutes)
 
-### Quiz Questions
+### Quiz: Golden Path Pipelines with uFawkesPipe
 
-1. **What is a "Golden Path" in platform engineering?**
+**Instructions**: Answer all 10 questions. You need 8/10 (80%) to pass. Unlimited attempts allowed.
 
-   - [ ] The fastest build configuration
-   - [x] An opinionated, easy-to-use template with best practices built-in
-   - [ ] A deployment strategy
-   - [ ] A security scanning tool
+#### Question 1
 
-2. **Where do you put reusable pipeline steps in a Shared Library?**
+**What is a "Golden Path" in uFawkesPipe?**
 
-   - [ ] src/ directory
-   - [x] vars/ directory
-   - [ ] resources/ directory
-   - [ ] lib/ directory
+- [ ] A) The fastest build configuration
+- [x] B) An opinionated, easy-to-use template with best practices built-in
+- [ ] C) A deployment strategy
+- [ ] D) A security scanning tool
 
-3. **What is the benefit of parallel execution in pipelines?**
-
-   - [ ] Uses less resources
-   - [ ] More reliable
-   - [x] Reduces total build time
-   - [ ] Easier to debug
-
-4. **How can you cache Maven dependencies between builds?**
-
-   - [ ] Use a faster Maven mirror
-   - [x] Mount a persistent volume to /root/.m2
-   - [ ] Download dependencies manually
-   - [ ] Skip dependency resolution
-
-5. **What should you do with build performance metrics?**
-
-   - [ ] Ignore them
-   - [ ] Only check when builds are slow
-   - [x] Send to Prometheus and visualize in Grafana
-   - [ ] Store in Jenkins only
-
-6. **What's the recommended maximum build time?**
-
-   - [ ] 30 minutes
-   - [x] 10 minutes
-   - [ ] 1 hour
-   - [ ] 5 minutes
-
-7. **Which stage can typically be parallelized?**
-
-   - [ ] Checkout
-   - [ ] Build
-   - [x] Tests and linting
-   - [ ] Docker push
-
-8. **What's the main benefit of Pipeline as Code?**
-   - [x] Version controlled, code reviewed, consistent
-   - [ ] Faster builds
-   - [ ] Less disk space
-   - [ ] Better UI
-
-**Answers**: 1-B, 2-B, 3-C, 4-B, 5-C, 6-B, 7-C, 8-A
+**Explanation**: A **Golden Path** is an opinionated template that makes the easy path also the best path — best practices built-in.
 
 ---
 
-## 🎯 Part 9: Module Summary & Next Steps
+#### Question 2
+
+**In uFawkesPipe, what file defines the pipeline contract?**
+
+- [ ] A) Jenkinsfile
+- [ ] B) .woodpecker.yml
+- [x] C) .fawkespipe.yml
+- [ ] D) pipeline.yaml
+
+**Explanation**: The **`.fawkespipe.yml`** is the standard pipeline contract. It's translated to `.woodpecker.yml` by `scripts/generate_woodpecker_yml.py`.
+
+---
+
+#### Question 3
+
+**How does uFawkesPipe enable parallel execution?**
+
+- [ ] A) Run all stages in parallel
+- [x] B) Set `advanced.parallel.enabled: true` in `.fawkespipe.yml`
+- [ ] C) Use Jenkins parallel syntax
+- [ ] D) Run multiple pipelines simultaneously
+
+**Explanation**: Setting **`advanced.parallel.enabled: true`** enables parallel execution for compatible stages (lint steps, test steps).
+
+---
+
+#### Question 4
+
+**How does uFawkesPipe cache dependencies between builds?**
+
+- [ ] A) Uses a faster Maven mirror
+- [x] B) CNB buildpack layers are cached between builds
+- [ ] C) Downloads dependencies manually
+- [ ] D) Skips dependency resolution
+
+**Explanation**: **Cloud Native Buildpacks (CNB)** caches buildpack layers between builds. Dependencies downloaded once, reused across builds.
+
+---
+
+#### Question 5
+
+**What does the `advanced.timeout` setting control?**
+
+- [ ] A) Git clone timeout
+- [x] B) Pipeline timeout in minutes
+- [ ] C) Test timeout
+- [ ] D) Docker pull timeout
+
+**Explanation**: **`advanced.timeout`** sets the maximum pipeline runtime in minutes (default: 60).
+
+---
+
+#### Question 6
+
+**Which stage in uFawkesPipe runs security scanning?**
+
+- [ ] A) validate
+- [ ] B) test
+- [x] C) security
+- [ ] D) build
+
+**Explanation**: The **security** stage runs `secrets-scan` (Gitleaks), `vuln-scan-fs` (Trivy filesystem), and `vuln-scan-image` (Trivy image scan).
+
+---
+
+#### Question 7
+
+**How do you customize a Golden Path template for your application?**
+
+- [ ] A) Fork the template repository
+- [x] B) Copy template, modify `.fawkespipe.yml` with your app details
+- [ ] C) Write a new Jenkins Shared Library
+- [ ] D) Create a new Woodpecker plugin
+
+**Explanation**: Copy a template from `examples/`, customize `app`, `build`, `stages`, and `advanced` sections for your application.
+
+---
+
+#### Question 8
+
+**What does `stages.test.coverage.threshold` control?**
+
+- [ ] A) Number of tests to run
+- [x] B) Minimum code coverage percentage required
+- [ ] C) Test timeout
+- [ ] D) Test parallelism
+
+**Explanation**: **`coverage.threshold`** sets the minimum code coverage percentage (e.g., 80%). Pipeline fails if coverage is below threshold.
+
+---
+
+#### Question 9
+
+**Which uFawkesPipe component builds container images?**
+
+- [ ] A) Woodpecker Server
+- [ ] B) SonarQube
+- [x] C) CNB Builder (Cloud Native Buildpacks)
+- [ ] D) Portainer
+
+**Explanation**: **CNB Builder** (Cloud Native Buildpacks) builds OCI-compliant container images without Dockerfiles, using buildpacks.
+
+---
+
+#### Question 10
+
+**How do you measure pipeline performance in uFawkesPipe?**
+
+- [ ] A) Only check Woodpecker UI
+- [x] B) Track build duration, success rate, stage timing in Woodpecker UI and Prometheus/Grafana
+- [ ] C) Manually time each build
+- [ ] D) Only measure total pipeline time
+
+**Explanation**: Track **build duration, success rate, stage timing** in Woodpecker UI, and export metrics to Prometheus/Grafana for visualization.
+
+---
+
+### Quiz Results
+
+**Score: X / 10**
+
+- ✅ **Passed** (8+): Excellent! You understand Golden Paths with uFawkesPipe.
+- ❌ **Not Yet** (<8): Review the theory section and try again.
+
+**Incorrect answers?** Each question links back to the relevant section for review.
+
+---
+
+## 8. Reflection & Next Steps (5 minutes)
 
 ### What You Learned
 
-✅ **Golden Paths**: Opinionated templates that make easy = best
-✅ **Shared Libraries**: Reusable pipeline code in `vars/` and `src/`
-✅ **Multi-Language Support**: Java, Python, Node.js templates
-✅ **Optimization**: Parallel execution, caching, incremental builds
-✅ **Performance Metrics**: Track and improve build times
-✅ **Best Practices**: DRY, testable, maintainable pipelines
+✅ **You now know**:
+- The Golden Path concept and how uFawkesPipe implements it via `.fawkespipe.yml`
+- How to create and customize pipeline contracts for different languages
+- How to configure pipeline stages with language-specific commands
+- How to implement optimization: parallel execution, build caching, resource tuning
+- How to measure and improve pipeline performance
 
-### DORA Capabilities Achieved
+✅ **You can now**:
+- Create a `.fawkespipe.yml` from a template for any application
+- Configure pipeline stages with language-specific commands
+- Implement optimization: parallel stages, caching, resource tuning
+- Measure and improve pipeline performance using Woodpecker UI and metrics
 
-- ✅ **CD1**: Version control for production artifacts (advanced)
-- ✅ **CD4**: Trunk-based development support
-- ✅ **Code Review**: Pipeline changes reviewed like code
+### How This Connects to Your Work
 
-### Key Takeaways
+**For Developers**:
+- You can now set up optimized CI for any project in minutes
+- No more "works on my machine" — consistent containerized builds
+- Immediate feedback on every commit with fast pipelines
 
-1. **Golden Paths reduce toil** - Write once, use everywhere
-2. **Shared Libraries enable reuse** - Don't copy-paste pipelines
-3. **Optimization matters** - 10-minute builds vs 30-minute builds = happier developers
-4. **Measure everything** - Can't improve what you don't measure
-5. **Maintainability > Brevity** - Readable pipelines are better than clever pipelines
+**For Platform Engineers**:
+- You understand how to maintain and evolve Golden Path templates
+- You can help teams optimize their pipelines
+- You see how standardization reduces maintenance burden
 
-### Real-World Impact
+**For Leaders**:
+- You understand how Golden Paths reduce maintenance by 90%+
+- You see how optimization directly improves DORA metrics
+- You can articulate the business value of pipeline standardization
 
-"After implementing Golden Path pipelines:
+### Reflection Questions
 
-- **Pipeline creation time**: 2 days → 10 minutes
-- **Average build time**: 25 minutes → 7 minutes
-- **Pipelines maintained**: 50 → 3 templates
-- **Security update rollout**: 2 weeks → 1 day
+1. **What surprised you most about Golden Paths in uFawkesPipe?**
+2. **How does your current pipeline configuration compare?**
+3. **What optimization would have the biggest impact on your team?**
+4. **Who on your team should go through this module?**
 
-Our developers now spend time building features, not maintaining pipelines."
+### Preview: Module 7
 
-- *Platform Engineering Team, Tech Company*
+**Next Up: Security Scanning & Quality Gates**
 
----
+In Module 7, you'll learn:
+- Deep dive into SAST with SonarQube
+- Dependency scanning with Trivy and OSV-Scanner
+- Container image scanning
+- DAST with OWASP ZAP
+- DefectDojo integration for findings management
+- Building security into every pipeline stage
 
-## 📚 Additional Resources
-
-### Documentation
-
-- [Jenkins Shared Libraries](https://www.jenkins.io/doc/book/pipeline/shared-libraries/)
-- [Pipeline Best Practices](https://www.jenkins.io/doc/book/pipeline/pipeline-best-practices/)
-- [Kubernetes Plugin Guide](https://plugins.jenkins.io/kubernetes/)
-
-### Examples
-
-- [Fabric8 Pipeline Library](https://github.com/fabric8io/fabric8-pipeline-library)
-- [CloudBees Pipeline Template Catalog](https://github.com/cloudbees/pipeline-model-definition-plugin/wiki/Defining-Declarative-Pipelines)
-
-### Community
-
-- [Jenkins Community Forums](https://community.jenkins.io/)
-- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-yellow-belt` category
+**Time**: 60 minutes
+**Prerequisites**: Module 6 complete ✅
 
 ---
 
-## 🏅 Module Completion
+## Module Completion
 
-### Assessment Checklist
+### ✅ You've Completed Module 6
 
-- [ ] **Conceptual Understanding**
+**Next Steps**:
 
-  - [ ] Explain Golden Path philosophy
-  - [ ] Describe Shared Library structure
-  - [ ] Understand pipeline optimization techniques
+1. ✅ Mark this module complete in your Backstage profile
+2. 📊 View your progress on the Dojo dashboard
+3. 💬 Share your completion in `#dojo-achievements` (optional!)
+4. ➡️ **Continue to Module 7** when ready
 
-- [ ] **Practical Skills**
-
-  - [ ] Create a Shared Library repository
-  - [ ] Build Golden Path template for at least one language
-  - [ ] Implement parallel execution
-  - [ ] Configure build caching
-  - [ ] Add performance metrics collection
-
-- [ ] **Hands-On Lab**
-
-  - [ ] Create reusable pipeline template
-  - [ ] Reduce build time by 50%+ through optimization
-  - [ ] Successfully use template in 3 different projects
-
-- [ ] **Quiz**
-  - [ ] Score 80% or higher (6/8 questions)
-
-### Certification Credit
-
-Upon completion, you earn:
-
-- **5 points** toward Yellow Belt certification (50% complete)
-- **Badge**: "Golden Path Architect"
-- **Skill Unlocked**: Shared Library Development
+**Time Investment**: 60 minutes
+**Skills Gained**: Golden Path templates, pipeline optimization, performance measurement
+**Progress**: 2 of 4 modules toward Yellow Belt (50% complete)
 
 ---
 
-## 🎖️ Yellow Belt Progress
+**Questions or Issues?**
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-yellow-belt`
+- 📧 Email: dojo@ufawkes.dev
+- 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 
-```
-Yellow Belt: CI/CD Mastery
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Module 5: CI Fundamentals        ████████░░░░ 25% ✓
-Module 6: Golden Path Pipelines  ████████░░░░ 50% ✓
-Module 7: Security & Quality     ░░░░░░░░░░░░  0%
-Module 8: Artifact Management    ░░░░░░░░░░░░  0%
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-**Halfway to Yellow Belt!** 🎉
-
-**Next Module Preview**: Module 7 - Security Scanning & Quality Gates (SonarQube, Trivy, dependency scanning)
+**Feedback?**
+- Rate this module (takes 30 seconds)
+- Suggest improvements
+- Help us make the dojo better!
 
 ---
 
-## 📖 Appendix A: Complete Shared Library Example
-
-### Full Repository Structure
-
-```
-fawkes-pipeline-library/
-├── vars/
-│   ├── goldenPathJava.groovy
-│   ├── goldenPathPython.groovy
-│   ├── goldenPathNode.groovy
-│   ├── goldenPath.groovy           # Auto-detect wrapper
-│   ├── notifySlack.groovy
-│   ├── runSecurityScan.groovy
-│   └── deployToKubernetes.groovy
-├── src/
-│   └── com/
-│       └── fawkes/
-│           └── pipeline/
-│               ├── Docker.groovy
-│               ├── Git.groovy
-│               ├── Maven.groovy
-│               ├── Kubernetes.groovy
-│               └── Security.groovy
-├── resources/
-│   ├── pod-templates/
-│   │   ├── java-17.yaml
-│   │   ├── python-311.yaml
-│   │   ├── node-20.yaml
-│   │   └── docker-dind.yaml
-│   ├── scripts/
-│   │   ├── docker-build.sh
-│   │   ├── security-scan.sh
-│   │   └── promote-artifact.sh
-│   └── config/
-│       ├── sonarqube.properties
-│       └── checkstyle.xml
-├── test/
-│   └── groovy/
-│       └── com/
-│           └── fawkes/
-│               └── pipeline/
-│                   └── DockerTest.groovy
-├── docs/
-│   ├── README.md
-│   ├── CONTRIBUTING.md
-│   └── examples/
-│       ├── java-example.md
-│       ├── python-example.md
-│       └── node-example.md
-├── Jenkinsfile                     # For testing the library itself
-└── VERSION
-```
-
-### Example: Advanced Docker Helper Class
-
-Create `src/com/fawkes/pipeline/Docker.groovy`:
-
-```groovy
-package com.fawkes.pipeline
-
-class Docker implements Serializable {
-    def script
-
-    Docker(script) {
-        this.script = script
-    }
-
-    def build(Map config) {
-        def imageName = config.imageName ?: script.env.JOB_NAME
-        def imageTag = config.imageTag ?: script.env.BUILD_NUMBER
-        def dockerfile = config.dockerfile ?: 'Dockerfile'
-        def context = config.context ?: '.'
-        def buildArgs = config.buildArgs ?: [:]
-
-        script.echo "🐳 Building Docker image: ${imageName}:${imageTag}"
-
-        def buildArgsStr = buildArgs.collect { k, v -> "--build-arg ${k}=${v}" }.join(' ')
-
-        script.sh """
-            docker build \
-                -f ${dockerfile} \
-                -t ${imageName}:${imageTag} \
-                ${buildArgsStr} \
-                ${context}
-        """
-
-        return "${imageName}:${imageTag}"
-    }
-
-    def push(String image, Map config = [:]) {
-        def registry = config.registry ?: 'harbor.fawkes.internal'
-        def credentialsId = config.credentialsId ?: 'harbor-credentials'
-
-        script.echo "📤 Pushing image: ${image}"
-
-        script.withCredentials([
-            script.usernamePassword(
-                credentialsId: credentialsId,
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )
-        ]) {
-            script.sh """
-                echo \$DOCKER_PASS | docker login ${registry} -u \$DOCKER_USER --password-stdin
-                docker push ${image}
-            """
-        }
-    }
-
-    def scan(String image, Map config = [:]) {
-        def severity = config.severity ?: 'HIGH,CRITICAL'
-        def exitCode = config.exitCode ?: 1
-
-        script.echo "🔒 Scanning image for vulnerabilities: ${image}"
-
-        script.sh """
-            trivy image \
-                --severity ${severity} \
-                --exit-code ${exitCode} \
-                --no-progress \
-                ${image}
-        """
-    }
-
-    def tag(String sourceImage, String targetTag) {
-        script.echo "🏷️ Tagging image: ${sourceImage} → ${targetTag}"
-        script.sh "docker tag ${sourceImage} ${targetTag}"
-    }
-}
-```
-
-### Using the Helper Class
-
-In `vars/goldenPathJava.groovy`:
-
-```groovy
-@Library('fawkes-pipelines') _
-import com.fawkes.pipeline.Docker
-
-def call(Map config = [:]) {
-    pipeline {
-        agent { kubernetes { yaml '...' } }
-
-        stages {
-            // ... build stages ...
-
-            stage('Docker Operations') {
-                steps {
-                    container('docker') {
-                        script {
-                            def docker = new Docker(this)
-
-                            // Build
-                            def image = docker.build(
-                                imageName: "${config.dockerRegistry}/${env.APP_NAME}",
-                                imageTag: "${env.BUILD_NUMBER}",
-                                buildArgs: [
-                                    'BUILD_DATE': new Date().format('yyyy-MM-dd'),
-                                    'VCS_REF': env.GIT_COMMIT
-                                ]
-                            )
-
-                            // Scan
-                            docker.scan(image, severity: 'CRITICAL')
-
-                            // Tag
-                            docker.tag(image, "${config.dockerRegistry}/${env.APP_NAME}:latest")
-
-                            // Push
-                            docker.push(image)
-                            docker.push("${config.dockerRegistry}/${env.APP_NAME}:latest")
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-```
-
----
-
-## 📖 Appendix B: Testing Shared Libraries
-
-### Unit Testing with Spock
-
-Create `test/groovy/com/fawkes/pipeline/DockerTest.groovy`:
-
-```groovy
-package com.fawkes.pipeline
-
-import spock.lang.Specification
-
-class DockerTest extends Specification {
-
-    def script = Mock()
-    Docker docker = new Docker(script)
-
-    def "build should construct correct docker command"() {
-        given:
-        def config = [
-            imageName: 'myapp',
-            imageTag: 'v1.0',
-            buildArgs: [APP_VERSION: '1.0.0']
-        ]
-
-        when:
-        docker.build(config)
-
-        then:
-        1 * script.sh(_ as String) >> { String cmd ->
-            assert cmd.contains('docker build')
-            assert cmd.contains('-t myapp:v1.0')
-            assert cmd.contains('--build-arg APP_VERSION=1.0.0')
-        }
-    }
-
-    def "scan should fail on critical vulnerabilities"() {
-        given:
-        def image = 'myapp:v1.0'
-
-        when:
-        docker.scan(image)
-
-        then:
-        1 * script.sh(_ as String) >> { String cmd ->
-            assert cmd.contains('trivy image')
-            assert cmd.contains('--severity HIGH,CRITICAL')
-            assert cmd.contains('--exit-code 1')
-        }
-    }
-}
-```
-
-### Integration Testing
-
-Create `Jenkinsfile` in library root:
-
-```groovy
-// Test the shared library itself
-@Library('fawkes-pipelines@development') _
-
-pipeline {
-    agent any
-
-    stages {
-        stage('Test Java Template') {
-            steps {
-                script {
-                    goldenPathJava {
-                        gitRepo = 'https://github.com/fawkes/sample-java-app.git'
-                        skipTests = true
-                    }
-                }
-            }
-        }
-
-        stage('Test Python Template') {
-            steps {
-                script {
-                    goldenPathPython {
-                        gitRepo = 'https://github.com/fawkes/sample-python-app.git'
-                        skipTests = true
-                    }
-                }
-            }
-        }
-
-        stage('Test Node Template') {
-            steps {
-                script {
-                    goldenPathNode {
-                        gitRepo = 'https://github.com/fawkes/sample-node-app.git'
-                        skipTests = true
-                    }
-                }
-            }
-        }
-    }
-}
-```
-
----
-
-## 📖 Appendix C: Advanced Optimization Patterns
-
-### Pattern 1: Build Matrix
-
-Run builds for multiple versions in parallel:
-
-```groovy
-def call(Map config = [:]) {
-    def javaVersions = config.javaVersions ?: ['11', '17', '21']
-
-    pipeline {
-        agent none
-
-        stages {
-            stage('Build Matrix') {
-                matrix {
-                    axes {
-                        axis {
-                            name 'JAVA_VERSION'
-                            values javaVersions
-                        }
-                    }
-
-                    agent {
-                        kubernetes {
-                            yaml """
-spec:
-  containers:
-  - name: maven
-    image: maven:3.8-openjdk-\${JAVA_VERSION}
-"""
-                        }
-                    }
-
-                    stages {
-                        stage('Build') {
-                            steps {
-                                container('maven') {
-                                    sh """
-                                        echo "Building with Java \${JAVA_VERSION}"
-                                        mvn clean package
-                                    """
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-```
-
-### Pattern 2: Conditional Stages
-
-Skip stages based on branch or file changes:
-
-```groovy
-stage('Deploy to Production') {
-    when {
-        allOf {
-            branch 'main'
-            not { changeRequest() }
-            expression {
-                def changedFiles = sh(
-                    script: "git diff --name-only HEAD~1",
-                    returnStdout: true
-                ).trim()
-                return changedFiles.contains('src/')
-            }
-        }
-    }
-    steps {
-        echo "Deploying to production..."
-    }
-}
-```
-
-### Pattern 3: Dynamic Stage Generation
-
-Generate stages based on configuration:
-
-```groovy
-def generateTestStages(List<String> testSuites) {
-    def parallelStages = [:]
-
-    testSuites.each { suite ->
-        parallelStages["Test ${suite}"] = {
-            stage("Test ${suite}") {
-                sh "mvn test -Dtest=${suite}Test"
-            }
-        }
-    }
-
-    return parallelStages
-}
-
-pipeline {
-    stages {
-        stage('Parallel Tests') {
-            steps {
-                script {
-                    parallel generateTestStages(['Unit', 'Integration', 'E2E'])
-                }
-            }
-        }
-    }
-}
-```
-
-### Pattern 4: Build Artifact Promotion
-
-Progressive promotion through environments:
-
-```groovy
-def promote(String artifact, String fromEnv, String toEnv) {
-    echo "Promoting ${artifact} from ${fromEnv} to ${toEnv}"
-
-    // Tag artifact
-    sh """
-        docker pull ${artifact}:${fromEnv}
-        docker tag ${artifact}:${fromEnv} ${artifact}:${toEnv}
-        docker push ${artifact}:${toEnv}
-    """
-
-    // Update manifest
-    sh """
-        git clone https://github.com/org/gitops-manifests.git
-        cd gitops-manifests
-        sed -i 's|${artifact}:.*|${artifact}:${toEnv}|' ${toEnv}/deployment.yaml
-        git add .
-        git commit -m "Promote ${artifact} to ${toEnv}"
-        git push
-    """
-}
-
-// Usage
-stage('Promote to Production') {
-    steps {
-        script {
-            promote(env.DOCKER_IMAGE, 'staging', 'production')
-        }
-    }
-}
-```
-
----
-
-## 📖 Appendix D: Troubleshooting Guide
-
-### Issue: Shared Library Not Found
-
-**Error**:
-
-```
-ERROR: Library fawkes-pipelines not found
-```
-
-**Solutions**:
-
-1. Check library name matches in Jenkins global config
-2. Verify repository URL is correct
-3. Check branch/tag specified exists
-4. If using credentials, verify they're configured
-
-```groovy
-// Use specific version
-@Library('fawkes-pipelines@v1.2.3') _
-
-// Use branch
-@Library('fawkes-pipelines@develop') _
-
-// Use commit SHA
-@Library('fawkes-pipelines@abc1234') _
-```
-
-### Issue: Class Not Found in src/
-
-**Error**:
-
-```
-unable to resolve class com.fawkes.pipeline.Docker
-```
-
-**Solutions**:
-
-1. Check package path matches directory structure
-2. Ensure class is Serializable
-3. Import correctly in calling code
-
-```groovy
-// Correct import
-import com.fawkes.pipeline.Docker
-
-// File must be: src/com/fawkes/pipeline/Docker.groovy
-// Class must implement Serializable
-```
-
-### Issue: Variable Not Found in vars/
-
-**Error**:
-
-```
-No such DSL method 'goldenPathJava' found
-```
-
-**Solutions**:
-
-1. Check file is in vars/ directory
-2. Filename must match function name
-3. Library must be imported
-
-```groovy
-// vars/goldenPathJava.groovy defines goldenPathJava()
-@Library('fawkes-pipelines') _
-goldenPathJava { ... }
-```
-
-### Issue: Slow Library Loading
-
-**Problem**: Pipeline takes 2+ minutes to start
-
-**Solutions**:
-
-1. Enable library caching
-2. Use specific version (not HEAD)
-3. Reduce library size
-
-In Jenkins global config:
-
-```
-☑ Cache fetched versions on controller for quick retrieval
-```
-
-### Issue: Cannot Modify Immutable Objects
-
-**Error**:
-
-```
-Scripts not permitted to use method groovy.lang.GroovyObject
-```
-
-**Solutions**:
-
-1. Approve script in Jenkins → Manage Jenkins → In-process Script Approval
-2. Use `@NonCPS` annotation for methods that manipulate complex objects
-
-```groovy
-@NonCPS
-def parseJson(String json) {
-    def slurper = new JsonSlurper()
-    return slurper.parseText(json)
-}
-```
-
----
-
-## 🎉 Congratulations
-
-You've completed **Module 6: Building Golden Path Pipelines**!
-
-### Key Achievements
-
-✅ Created reusable Shared Libraries
-✅ Built Golden Path templates for Java, Python, Node.js
-✅ Optimized pipelines with parallel execution and caching
-✅ Implemented performance monitoring
-✅ Reduced pipeline maintenance by 90%+
-
-### Your Golden Path Journey
-
-```
-Before Module 6:
-👤 Writing 200+ line Jenkinsfiles for each project
-🔄 Copy-pasting pipeline code
-🐌 30-minute builds
-😰 Fear of changing pipelines
-
-After Module 6:
-👥 10-line Jenkinsfiles using Golden Paths
-♻️ Reusable components in Shared Libraries
-⚡ 8-minute builds with optimization
-😎 Confident pipeline changes, tested in library
-```
-
-### Impact on DORA Metrics
-
-- **Deployment Frequency**: ⬆️ Easier pipelines = more deploys
-- **Lead Time**: ⬇️ Faster builds = faster feedback
-- **Change Failure Rate**: ⬇️ Tested templates = fewer failures
-- **MTTR**: ⬇️ Consistent pipelines = easier debugging
-
----
-
-## 📅 What's Next?
-
-**Continue Your Journey:**
-
-1. ✅ Complete Module 7: Security Scanning & Quality Gates
-2. ✅ Complete Module 8: Artifact Management
-3. 🎓 Take Yellow Belt Certification Exam
-4. 🚀 Advance to Green Belt (GitOps & Deployment)
-
-**Practice:**
-
-- Implement Golden Paths for your team
-- Measure build time improvements
-- Share templates with community
-
-**Community:**
-
-- Share your Shared Library in #show-and-tell
-- Help others in #yellow-belt channel
-- Write a blog post about your experience
-
----
-
-**Ready for Module 7?** 🔒
-
-Next up: **Security Scanning & Quality Gates** - where you'll learn SonarQube, Trivy, dependency scanning, and building security into every pipeline!
-
----
-
-*Fawkes Dojo - Where Platform Engineers Are Forged*
-*Version 1.0 | Last Updated: October 2025*
-*License: MIT | https://github.com/paruff/fawkes*
+**Module Author**: Fawkes Learning Team
+**Last Updated**: October 2026
+**Version**: 2.0

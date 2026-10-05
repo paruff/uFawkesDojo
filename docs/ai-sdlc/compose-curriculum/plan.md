@@ -38,7 +38,7 @@ under Release = "Dojo compose", not in this file.
 2. Give the GitHub OAuth app registration its own worked example, timed
    from a real first run.
 
-   **Module 5 lab migration** (this PR): Yellow Belt Module 5 migrated to
+   **Module 5 lab migration** (PR #71): Yellow Belt Module 5 migrated to
    uFawkesPipe v2.0.0 — implements CI fundamentals via Woodpecker CI
    (pipeline stages: validate, test, security, build), `.fawkespipe.yml`
    contract, security scanning (Gitleaks, Trivy, SonarQube), and DefectDojo
@@ -46,6 +46,14 @@ under Release = "Dojo compose", not in this file.
    creation, pipeline execution, security scan examination, and failure/recovery
    cycle. Lab instructions and validation script added in
    `yellow-belt/module-05-ci-fundamentals/lab-01/`.
+
+   **Module 6 lab migration** (this PR): Yellow Belt Module 6 migrated to
+   uFawkesPipe v2.0.0 — implements Golden Path pipelines via `.fawkespipe.yml`
+   contract, Golden Path templates (Python, Java, Node.js, Go), pipeline
+   optimization (parallel stages, CNB caching, resource tuning). Lab demonstrates
+   template customization, parallel execution, CNB caching, and build performance
+   measurement. Lab instructions and validation script added in
+   `yellow-belt/module-06-golden-path/lab-01/`.
 
 ## Phase 0.2.4 — uFawkesDevX → White Belt (after uFawkesDevX v0.1.0 + AC-004, Dojo 0.5)
 
