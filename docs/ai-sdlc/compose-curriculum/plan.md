@@ -45,7 +45,7 @@ under Release = "Dojo compose", not in this file.
    Lab instructions and validation script added in
    `brown-belt/module-14-dora-deep-dive/lab-01/`.
 
-   **Module 15 lab migration** (this PR): Brown Belt Module 15 migrated to
+   **Module 15 lab migration** (PR #71): Brown Belt Module 15 migrated to
    uFawkesObs v1.0.0 — implements SLI/SLO/Error Budget management via
    uFawkesObs Prometheus recording rules (SLI/SLO/Error Budget), Alertmanager
    burn rate alerts, and Grafana SLO dashboards. Lab demonstrates SLI/SLO
@@ -53,6 +53,15 @@ under Release = "Dojo compose", not in this file.
    SLO dashboard construction, and SLO-driven deployment decision practice.
    Lab instructions and validation script added in
    `brown-belt/module-15-slis-slos/lab-01/`.
+
+   **Module 16 lab migration** (this PR): Brown Belt Module 16 migrated to
+   uFawkesObs v1.0.0 — implements advanced incident management via uFawkesObs
+   observability stack (Prometheus, Grafana, Loki, Tempo, Alertmanager, Alloy,
+   OTel Collector). Lab demonstrates full incident lifecycle: detection via
+   Alertmanager, investigation via Loki/Tempo/Prometheus, mitigation via
+   Docker Compose, resolution verification, and blameless postmortem with
+   uFawkesObs data. Lab instructions and validation script added in
+   `brown-belt/module-16-incident-management/lab-01/`.
 
 ## Phase 0.2.3 — uFawkesPipe → Yellow Belt (after uFawkesPipe v2.0.0, Dojo 0.4)
 
