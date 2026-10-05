@@ -263,7 +263,7 @@ In Grafana, click **Explore** → select **Loki** datasource
 2. Explore the **Trace timeline** — see spans, duration, parent/child relationships
 3. Click a span → see **Span details**: attributes, events, links
 
-### 5.3 TraceQL Query (Advanced)
+### 5.4 TraceQL Query (Advanced)
 
 In Tempo Explore, switch to **TraceQL** mode:
 

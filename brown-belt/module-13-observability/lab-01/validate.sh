@@ -272,7 +272,7 @@ check_dora_profile() {
     if [ "$http_code" = "200" ]; then
       record_test "DORA Profile" "PASS" "DORA services running and API healthy"
     else
-      record_test "DORA Profile" "PASS" "DORA services running (API check deferred)"
+      record_test "DORA Profile" "WARN" "DORA services running but API health check failed (HTTP $http_code)"
     fi
   else
     record_test "DORA Profile" "FAIL" "DORA services not running — enable with 'make up-dora'"

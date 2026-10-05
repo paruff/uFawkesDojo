@@ -30,6 +30,21 @@ under Release = "Dojo compose", not in this file.
 3. Add the Brown Belt graduation-delta lab: what changes on Fawkes. Source
    it from `uFawkesObs/docs/fawkes-migration.md`.
 
+   **Module 13 lab migration** (PR #70): Brown Belt Module 13 migrated to
+   uFawkesObs v1.0.0 — implements observability via Prometheus, Grafana, Loki,
+   Tempo, Alertmanager, Alloy, OTel Collector. Lab demonstrates stack deployment,
+   datasource exploration, PromQL/LogQL/TraceQL queries, alerting configuration,
+   and DORA profile enablement. Lab instructions and validation script added in
+   `brown-belt/module-13-observability/lab-01/`.
+
+   **Module 14 lab migration** (this PR): Brown Belt Module 14 migrated to
+   uFawkesObs v1.0.0 — implements DORA metrics deep dive via uFawkesObs DORA
+   profile (dora-api, dora-compute, pushgateway). Lab demonstrates DORA profile
+   enablement, event ingestion via dora-api, PromQL querying for all 5 DORA metrics,
+   Grafana dashboard construction, failure/recovery testing, and DORA alerting.
+   Lab instructions and validation script added in
+   `brown-belt/module-14-dora-deep-dive/lab-01/`.
+
 ## Phase 0.2.3 — uFawkesPipe → Yellow Belt (after uFawkesPipe v2.0.0, Dojo 0.4)
 
 1. Modules 5–8 → uFawkesPipe (Woodpecker, the `.fawkespipe.yml`

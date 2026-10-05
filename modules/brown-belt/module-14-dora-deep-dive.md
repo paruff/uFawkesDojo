@@ -1,58 +1,71 @@
-# Fawkes Dojo Module 14: DORA Metrics Deep Dive
+# Module 14: DORA Metrics Deep Dive with uFawkesObs
 
-## 🎯 Module Overview
-
-**Belt Level**: 🟤 Brown Belt - Observability & SRE
-**Module**: 2 of 4 (Brown Belt)
-**Duration**: 60 minutes
-**Difficulty**: Advanced
-**Prerequisites**:
-
-- Module 2: DORA Metrics (White Belt) review recommended
-- Module 13: Observability complete
-- Understanding of Prometheus and Grafana
-- Familiarity with GitOps workflows
+**Belt Level**: 🟤 Brown Belt
+**Duration**: 3-4 hours
+**Prerequisites**: Module 13 (Observability with uFawkesObs) complete, uFawkesObs v1.0.0 running with DORA profile enabled
+**DORA Capabilities**: All five DORA metrics, Monitoring & Observability, Data-Driven Decision Making
 
 ---
 
-## 📚 Learning Objectives
+## 1. Learning Objectives (5 minutes)
 
-By the end of this module, you will:
+### What You'll Learn
 
-1. ✅ Calculate and track all five DORA metrics automatically
-2. ✅ Build comprehensive DORA dashboards in Grafana
-3. ✅ Implement metric collection across the entire delivery pipeline
-4. ✅ Analyze trends and identify improvement opportunities
-5. ✅ Benchmark against industry standards
-6. ✅ Use metrics to drive platform improvements
-7. ✅ Present DORA metrics to leadership effectively
+By the end of this module, you will be able to:
 
-**DORA Capabilities Addressed**:
+- ✅ Calculate and track all five DORA metrics automatically using uFawkesObs DORA profile
+- ✅ Build comprehensive DORA dashboards in Grafana using uFawkesObs datasources
+- ✅ Implement metric collection across the entire delivery pipeline with uFawkesPipe/Score Service
+- ✅ Analyze trends and identify improvement opportunities with uFawkesObs
+- ✅ Benchmark against industry standards using uFawkesObs metrics
+- ✅ Use metrics to drive platform improvements
+- ✅ Present DORA metrics to leadership effectively
 
-- ✓ All five DORA metrics, including Deployment Rework Rate
-- ✓ Monitoring and Observability
-- ✓ Data-Driven Decision Making
+### Why It Matters
+
+**The Observability Gap**
+
+```
+Traditional monitoring:
+  ↓
+  "Something is broken" → Scramble to find root cause
+  Reactive, slow, stressful
+
+Observability with DORA metrics:
+  ↓
+  "Here's what changed" → Targeted fix in minutes
+  Proactive, fast, confident
+```
+
+**Why Brown Belt?**
+
+You've mastered CI/CD (Yellow Belt), deployment (Green Belt), and observability (Module 13). Now you need to **measure and improve** delivery performance using the industry-standard DORA metrics — the lens that turns metrics into decisions.
+
+### Success Criteria
+
+You've mastered this module when you can:
+
+- Deploy and configure uFawkesObs DORA profile (`make up-dora`)
+- Configure DORA event emission from uFawkesPipe/Score Service
+- Build Grafana dashboards for all five DORA metrics using uFawkesObs datasources
+- Analyze trends, identify bottlenecks, and correlate metrics
+- Present DORA metrics to stakeholders with actionable insights
 
 ---
 
-## 📖 Part 1: DORA Metrics Review & Advanced Concepts
+## 2. Theory & Concepts (25 minutes)
 
 ### The Five DORA Metrics (Refresher)
 
-| Metric                    | What It Measures                  | Elite Performance |
-| ------------------------- | --------------------------------- | ----------------- |
-| **Deployment Frequency**  | How often you deploy              | Multiple per day  |
-| **Lead Time for Changes** | Commit → Production time          | < 1 hour          |
-| **Change Failure Rate**   | % of deployments causing failures | 0-15%             |
-| **Mean Time to Restore**  | Time to recover from failure      | < 1 hour          |
+| Metric | What It Measures | Elite Performance |
+|--------|-------------------|-------------------|
+| **Deployment Frequency** | How often you deploy | Multiple per day |
+| **Lead Time for Changes** | Commit → Production time | < 1 hour |
+| **Change Failure Rate** | % of deployments causing failures | 0-15% |
+| **Mean Time to Restore** | Time to recover from failure | < 1 hour |
 | **Deployment Rework Rate** | % of deployments caused by incidents | Lower is better |
 
-Deployment Rework Rate measures unplanned deployments made in response to a
-production incident. DORA groups Deployment Frequency, Change Lead Time, and
-Failed Deployment Recovery Time as throughput. Change Fail Rate and Deployment
-Rework Rate measure instability. See
-[DORA's metrics guide](https://dora.dev/guides/dora-metrics/) for the current
-definitions.
+Deployment Rework Rate measures unplanned deployments made in response to a production incident. DORA groups Deployment Frequency, Change Lead Time, and Failed Deployment Recovery Time as throughput. Change Failure Rate and Deployment Rework Rate measure instability.
 
 ### Why These Five?
 
@@ -60,8 +73,8 @@ Research shows these metrics are:
 
 - **Predictive** of organizational performance
 - **Balanced** between throughput (DF, LT, FDRT) and instability (CFR, DRR)
-- **Actionable** - teams can directly improve them
-- **Universal** - apply across industries and tech stacks
+- **Actionable** — teams can directly improve them
+- **Universal** — apply across industries and tech stacks
 
 ### Advanced DORA Concepts
 
@@ -106,915 +119,404 @@ Lead Time:
 
 ---
 
-## 🔢 Part 2: Calculating DORA Metrics
+## 3. uFawkesObs DORA Architecture (20 minutes)
 
-### Metric 1: Deployment Frequency
+### How uFawkesObs Implements DORA
 
-**Definition**: Number of deployments per time period
-
-**Calculation**:
+uFawkesObs provides a **self-contained DORA metrics platform** using Docker Compose — no external database required (uses SQLite):
 
 ```
-Deployment Frequency = Total Deployments / Time Period
-
-Example:
-- 150 deployments in 30 days
-- DF = 150 / 30 = 5 deployments per day ✅ Elite
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    uFawkesObs DORA Architecture                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                 │
+│  │   uFawkes    │───▶│  dora-api    │───▶│  SQLite DB   │                 │
+│  │   Pipe /     │    │  (Port 8088) │    │  (Events)    │                 │
+│  │  Score Svc   │    └──────┬───────┘    └──────────────┘                 │
+│  └──────────────┘         │                               │               │
+│                           ▼                               │               │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+  │                    dora-compute                                  │   │
+  │              (Aggregates events → DORA metrics)                 │   │
+  │                            │                                    │   │
+  │                            ▼                                    │   │
+  │  ┌─────────────────────────────────────────────────────────┐   │   │
+  │  │              Prometheus (PromQL queries)                  │   │   │
+  │  │         PromQL queries → Grafana dashboards               │   │   │
+  │  └─────────────────────────────────────────────────────────┘   │   │
+  └─────────────────────────────────────────────────────────────────┘   │
+                               │                                      │
+                               ▼                                      │
+                    ┌─────────────────────────────┐                  │
+                    │        Grafana              │                  │
+                    │   DORA Dashboards (5 panels)│                  │
+                    └─────────────────────────────┘                  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Data Sources**:
+### Key Components
 
-- ArgoCD sync events
-- GitOps repository commits
-- CI/CD pipeline completions
-- Kubernetes deployment events
+| Component | Role in DORA |
+|-----------|--------------|
+| **uFawkesPipe / Woodpecker** | Pipeline execution, emits deployment events |
+| **Score Service** | Validates specs, triggers pipelines, emits events |
+| **dora-api** | Receives deployment events via HTTP, stores in SQLite |
+| **dora-compute** | Aggregates raw events → DORA metrics, exposes Prometheus metrics |
+| **Pushgateway** | Receives push metrics from short-lived jobs |
+| **Prometheus** | Stores time-series metrics, PromQL queries |
+| **Grafana** | Dashboards, visualization, alerting UI |
+| **Pushgateway** | Receives metrics from short-lived batch jobs |
 
-**Prometheus Query**:
-
-```promql
-# Count deployments per day
-sum(increase(argocd_app_sync_total{phase="Succeeded"}[1d]))
-
-# Deployment frequency by application
-sum(rate(argocd_app_sync_total{phase="Succeeded"}[7d])) by (name) * 86400
-```
-
-### Metric 2: Lead Time for Changes
-
-**Definition**: Time from code commit to running in production
-
-**Calculation**:
+### DORA Event Flow
 
 ```
-Lead Time = Production Deployment Time - Commit Time
-
-Example:
-- Commit: 2025-10-10 14:00:00
-- Production: 2025-10-10 14:25:00
-- Lead Time: 25 minutes ✅ Elite
+1. Developer pushes code → Git webhook
+2. uFawkesPipe / Woodpecker pipeline runs
+3. Pipeline completes → emits deployment event to dora-api
+4. dora-api stores event in SQLite
+5. dora-compute reads events → computes DORA metrics
+6. dora-compute exposes Prometheus metrics
+6. Prometheus scrapes metrics → Grafana dashboards
+7. Grafana alerts → Alertmanager → notifications
 ```
 
-**Components**:
+### uFawkesObs DORA Profile
 
-```
-Total Lead Time =
-    Code Review Time +
-    CI Build Time +
-    Test Execution Time +
-    Security Scanning Time +
-    Artifact Creation Time +
-    Deployment Time +
-    Validation Time
-```
+Enable with: `make up-dora`
 
-**Data Collection**:
-
-```python
-# Webhook receiver for Git commits
-@app.route("/webhook/commit", methods=["POST"])
-def record_commit():
-    commit_sha = request.json["after"]
-    commit_time = request.json["head_commit"]["timestamp"]
-
-    # Store in database
-    db.store_commit(commit_sha, commit_time)
-
-    return "", 200
-
-
-# Webhook receiver for deployments
-@app.route("/webhook/deploy", methods=["POST"])
-def record_deployment():
-    commit_sha = request.json["revision"]
-    deploy_time = datetime.utcnow()
-
-    # Calculate lead time
-    commit_time = db.get_commit_time(commit_sha)
-    lead_time = (deploy_time - commit_time).total_seconds()
-
-    # Send to Prometheus
-    lead_time_histogram.labels(app=app_name).observe(lead_time)
-
-    return "", 200
-```
-
-**Prometheus Query**:
-
-```promql
-# Average lead time (seconds)
-avg(deployment_lead_time_seconds)
-
-# P95 lead time
-histogram_quantile(0.95, sum(rate(deployment_lead_time_seconds_bucket[7d])) by (le))
-
-# Lead time by team
-avg(deployment_lead_time_seconds) by (team)
-```
-
-### Metric 3: Change Failure Rate
-
-**Definition**: Percentage of deployments that result in failure
-
-**Calculation**:
-
-```
-CFR = (Failed Deployments / Total Deployments) × 100
-
-Example:
-- Total deployments: 100
-- Failed deployments: 8
-- CFR = (8 / 100) × 100 = 8% ✅ Elite
-```
-
-**Defining "Failure"**:
-
-- Deployment rollback within 24 hours
-- Incident created within 24 hours of deployment
-- Deployment marked as failed in ArgoCD
-- Health checks fail post-deployment
-
-**Data Collection**:
-
-```python
-def calculate_change_failure_rate(timeframe_hours=24):
-    """
-    Calculate CFR by correlating deployments with incidents
-    """
-    deployments = get_deployments(since=timeframe_hours)
-    failures = 0
-
-    for deployment in deployments:
-        deploy_time = deployment["timestamp"]
-
-        # Check for incidents within 24h
-        incidents = get_incidents(
-            since=deploy_time, until=deploy_time + timedelta(hours=24)
-        )
-
-        # Check for rollbacks
-        rollback = get_rollback(
-            deployment_id=deployment["id"],
-            since=deploy_time,
-            until=deploy_time + timedelta(hours=24),
-        )
-
-        if incidents or rollback:
-            failures += 1
-
-    cfr = (failures / len(deployments)) * 100 if deployments else 0
-    return cfr
-```
-
-**Prometheus Query**:
-
-```promql
-# Change Failure Rate (%)
-sum(deployment_result{status="failed"}) / sum(deployment_result) * 100
-
-# CFR by application
-(sum(deployment_result{status="failed"}) by (app) / sum(deployment_result) by (app)) * 100
-
-# CFR trend over time
-sum(rate(deployment_result{status="failed"}[7d])) / sum(rate(deployment_result[7d])) * 100
-```
-
-### Metric 4: Mean Time to Restore (MTTR)
-
-**Definition**: Average time to recover from a production failure
-
-**Calculation**:
-
-```
-MTTR = Total Downtime / Number of Incidents
-
-Example:
-- 5 incidents in a month
-- Total downtime: 125 minutes
-- MTTR = 125 / 5 = 25 minutes ✅ Elite
-```
-
-**Data Collection**:
-
-```python
-# Incident lifecycle tracking
-class Incident:
-    def __init__(self, id, severity):
-        self.id = id
-        self.severity = severity
-        self.detected_at = datetime.utcnow()
-        self.mitigated_at = None
-        self.resolved_at = None
-
-    def mitigate(self):
-        """Service restored, but root cause not fixed"""
-        self.mitigated_at = datetime.utcnow()
-        ttm = (self.mitigated_at - self.detected_at).total_seconds()
-
-        # Time to Mitigate (what we really care about for MTTR)
-        mttr_histogram.labels(severity=self.severity).observe(ttm)
-
-    def resolve(self):
-        """Root cause fixed, incident closed"""
-        self.resolved_at = datetime.utcnow()
-        ttr = (self.resolved_at - self.detected_at).total_seconds()
-
-        # Time to Resolve (total incident duration)
-        incident_duration_histogram.labels(severity=self.severity).observe(ttr)
-```
-
-**Prometheus Query**:
-
-```promql
-# Average MTTR (seconds)
-avg(incident_duration_seconds)
-
-# MTTR by severity
-avg(incident_duration_seconds) by (severity)
-
-# P95 MTTR (captures worst cases)
-histogram_quantile(0.95, sum(rate(incident_duration_seconds_bucket[30d])) by (le))
-
-# MTTR trend
-avg_over_time(incident_duration_seconds[7d])
-```
-
-### Metric 5: Deployment Rework Rate
-
-**Definition**: Percentage of deployments that are unplanned responses to a
-production incident
-
-**Calculation**:
-
-```
-Deployment Rework Rate = (Incident-Driven Deployments / Total Deployments) × 100
-
-Example:
-- Total deployments: 100
-- Incident-driven deployments: 6
-- Deployment Rework Rate = (6 / 100) × 100 = 6%
-```
-
-Record why each deployment occurred rather than inferring rework from commit
-messages. Link remediation deployments to an incident identifier at deploy
-time, then aggregate that structured field.
-
-**Prometheus Query**:
-
-```promql
-sum(rate(deployment_total{work_type="incident_rework"}[30d]))
-/
-sum(rate(deployment_total[30d])) * 100
-```
+This starts additional services:
+- **dora-api** (port 8088) — HTTP API for receiving deployment events
+- **dora-compute** — Background worker computing DORA metrics
+- **pushgateway** (port 9091) — Receives metrics from short-lived jobs
+- **dora-api** health: `http://localhost:8088/health`
+- **dora-api** event endpoint: `POST http://localhost:8088/event`
 
 ---
 
-## 📊 Part 3: Building the Ultimate DORA Dashboard
+## 4. Calculating DORA Metrics with uFawkesObs (15 minutes)
 
-### Dashboard Architecture
+### How uFawkesObs Computes DORA Metrics
 
-```
-┌─────────────────────────────────────────────────────────┐
-│              DORA Metrics Dashboard                      │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  ┌────────────────────────────────────────────────────┐ │
-│  │  Executive Summary (Current vs Target)             │ │
-│  │  DF: 5/day (Elite) | LT: 45m (Elite)              │ │
-│  │  CFR: 8% (Elite)   | MTTR: 25m (Elite)            │ │
-│  └────────────────────────────────────────────────────┘ │
-│                                                          │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐   │
-│  │ Deployment   │ │ Lead Time    │ │ Change       │   │
-│  │ Frequency    │ │ Trend        │ │ Failure Rate │   │
-│  │ (Time Series)│ │ (Histogram)  │ │ (Gauge)      │   │
-│  └──────────────┘ └──────────────┘ └──────────────┘   │
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  MTTR Analysis (by Severity & Trend)             │  │
-│  │  SEV1: 15m | SEV2: 1.5h | SEV3: 4h              │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Team Comparison (Leaderboard)                    │  │
-│  │  Team A: Elite | Team B: High | Team C: Medium  │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Improvement Trends (30-day vs 90-day)           │  │
-│  │  DF: ↑15% | LT: ↓20% | CFR: ↓10% | MTTR: ↓25% │  │
-│  └──────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
+uFawkesObs automates metric calculation via **dora-compute** which reads events from SQLite and exposes Prometheus metrics.
 
-### Grafana Dashboard JSON
+### Event Schema
+
+The dora-api accepts events at `POST /event`:
 
 ```json
 {
-  "dashboard": {
-    "title": "DORA Metrics - Platform Performance",
-    "tags": ["dora", "metrics", "platform"],
-    "timezone": "utc",
-    "panels": [
-      {
-        "id": 1,
-        "title": "Deployment Frequency (per day)",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "sum(rate(argocd_app_sync_total{phase='Succeeded'}[7d])) * 86400",
-            "legendFormat": "Deployments/Day"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                { "value": 0, "color": "red" },
-                { "value": 0.1, "color": "yellow" },
-                { "value": 1, "color": "green" }
-              ]
-            },
-            "mappings": [],
-            "unit": "short"
-          }
-        },
-        "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 }
-      },
-      {
-        "id": 2,
-        "title": "Lead Time for Changes (P95)",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "histogram_quantile(0.95, sum(rate(deployment_lead_time_seconds_bucket[7d])) by (le)) / 3600",
-            "legendFormat": "P95 Hours"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                { "value": 0, "color": "green" },
-                { "value": 1, "color": "yellow" },
-                { "value": 24, "color": "red" }
-              ]
-            },
-            "unit": "h"
-          }
-        },
-        "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 }
-      },
-      {
-        "id": 3,
-        "title": "Change Failure Rate",
-        "type": "gauge",
-        "targets": [
-          {
-            "expr": "sum(rate(deployment_result{status='failed'}[7d])) / sum(rate(deployment_result[7d])) * 100"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                { "value": 0, "color": "green" },
-                { "value": 15, "color": "yellow" },
-                { "value": 30, "color": "red" }
-              ]
-            },
-            "max": 100,
-            "unit": "percent"
-          }
-        },
-        "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 }
-      },
-      {
-        "id": 4,
-        "title": "Mean Time to Restore",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "avg(incident_duration_seconds) / 60",
-            "legendFormat": "Avg Minutes"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                { "value": 0, "color": "green" },
-                { "value": 60, "color": "yellow" },
-                { "value": 1440, "color": "red" }
-              ]
-            },
-            "unit": "m"
-          }
-        },
-        "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 }
-      },
-      {
-        "id": 5,
-        "title": "Deployment Frequency Trend",
-        "type": "graph",
-        "targets": [
-          {
-            "expr": "sum(rate(argocd_app_sync_total{phase='Succeeded'}[1d])) by (name) * 86400",
-            "legendFormat": "{{name}}"
-          }
-        ],
-        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
-      },
-      {
-        "id": 6,
-        "title": "Lead Time Distribution",
-        "type": "heatmap",
-        "targets": [
-          {
-            "expr": "sum(increase(deployment_lead_time_seconds_bucket[1h])) by (le)",
-            "format": "heatmap",
-            "legendFormat": "{{le}}"
-          }
-        ],
-        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
-      }
-    ]
-  }
+  "event_type": "deployment",
+  "service": "my-service",
+  "environment": "production",
+  "status": "success",
+  "timestamp": "2026-10-05T14:30:00Z",
+  "commit_sha": "abc123def456",
+  "deployed_by": "ci-bot",
+  "work_type": "feature"  // or "incident_rework"
 }
 ```
 
----
+### How Each Metric Is Computed
 
-## 🎯 Part 4: Hands-On Lab - Complete DORA Implementation — *not built yet*
+| Metric | Computation |
+|--------|-------------|
+| **Deployment Frequency** | `count(deployment_events) / time_window` |
+| **Lead Time for Changes** | `deployment_timestamp - commit_timestamp` (from commit SHA in event) |
+| **Change Failure Rate** | `failed_deployments / total_deployments` (windowed) |
+| **MTTR** | `incident_resolved_timestamp - incident_created_timestamp` |
+| **Deployment Rework Rate** | `deployments_with_work_type=incident_rework / total_deployments` |
 
-### Objective
+### Prometheus Metrics Exposed by dora-compute
 
-Implement end-to-end DORA metrics collection and visualization for Fawkes platform.
-
-### Step 1: Deploy DORA Metrics Collector
-
-Create `dora-collector.yaml`:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dora-collector
-  namespace: dojo-metrics
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: dora-collector
-  template:
-    metadata:
-      labels:
-        app: dora-collector
-    spec:
-      containers:
-        - name: collector
-          image: fawkes/dora-collector:v1.0
-          ports:
-            - containerPort: 8080
-              name: http
-            - containerPort: 9090
-              name: metrics
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: dora-db-credentials
-                  key: url
-            - name: PROMETHEUS_URL
-              value: "http://prometheus:9090"
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "256Mi"
-              cpu: "200m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: dora-collector
-  namespace: dojo-metrics
-spec:
-  selector:
-    app: dora-collector
-  ports:
-    - name: http
-      port: 80
-      targetPort: 8080
-    - name: metrics
-      port: 9090
-      targetPort: 9090
----
-apiVersion: monitoring.coreos.io/v1
-kind: ServiceMonitor
-metadata:
-  name: dora-collector
-  namespace: dojo-metrics
-spec:
-  selector:
-    matchLabels:
-      app: dora-collector
-  endpoints:
-    - port: metrics
-      interval: 30s
-```
-
-### Step 2: Configure Webhooks
-
-**ArgoCD Webhook** (for deployments):
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-notifications-cm
-  namespace: argocd
-data:
-  service.webhook.dora: |
-    url: http://dora-collector.dojo-metrics/webhook/deploy
-    headers:
-    - name: Content-Type
-      value: application/json
-
-  trigger.on-deployed: |
-    - when: app.status.operationState.phase in ['Succeeded']
-      send: [dora-deploy-succeeded]
-    - when: app.status.operationState.phase in ['Failed']
-      send: [dora-deploy-failed]
-
-  template.dora-deploy-succeeded: |
-    webhook:
-      dora:
-        method: POST
-        body: |
-          {
-            "event": "deployment",
-            "status": "success",
-            "app": "{{.app.metadata.name}}",
-            "revision": "{{.app.status.sync.revision}}",
-            "timestamp": "{{.app.status.operationState.finishedAt}}"
-          }
-
-  template.dora-deploy-failed: |
-    webhook:
-      dora:
-        method: POST
-        body: |
-          {
-            "event": "deployment",
-            "status": "failed",
-            "app": "{{.app.metadata.name}}",
-            "revision": "{{.app.status.sync.revision}}",
-            "timestamp": "{{.app.status.operationState.finishedAt}}"
-          }
-```
-
-**Git Webhook** (for commits):
-
-```bash
-# Add webhook to GitHub repository
-curl -X POST \
-  -H "Authorization: token ${GITHUB_TOKEN}" \
-  -H "Content-Type: application/json" \
-  https://api.github.com/repos/myorg/myapp/hooks \
-  -d '{
-    "name": "web",
-    "active": true,
-    "events": ["push"],
-    "config": {
-      "url": "https://dora-collector.fawkes.io/webhook/commit",
-      "content_type": "json"
-    }
-  }'
-```
-
-### Step 3: Create Grafana Dashboard
-
-```bash
-# Import dashboard via API
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${GRAFANA_API_KEY}" \
-  http://grafana:3000/api/dashboards/db \
-  -d @dora-dashboard.json
-
-# Or import via UI:
-# Grafana → Dashboards → Import → Upload dora-dashboard.json
-```
-
-### Step 4: Validate Data Collection
-
-```bash
-# Check if metrics are being collected
-kubectl port-forward -n dojo-metrics svc/dora-collector 9090:9090
-
-# Query Prometheus
-curl "http://localhost:9090/metrics" | grep deployment
-
-# Expected output:
-# deployment_frequency_total{app="myapp"} 150
-# deployment_lead_time_seconds_sum{app="myapp"} 450000
-# deployment_lead_time_seconds_count{app="myapp"} 150
-# deployment_result{app="myapp",status="success"} 142
-# deployment_result{app="myapp",status="failed"} 8
-```
-
-### Step 5: Analyze Your Metrics
-
-Access Grafana dashboard and analyze:
-
-1. **Deployment Frequency**: Are you deploying daily? Multiple times per day?
-2. **Lead Time**: What's your P95? Where are the bottlenecks?
-3. **CFR**: Which deployments are failing? Common patterns?
-4. **MTTR**: How quickly do you recover? Can you automate more?
+| Metric Name | Type | Description |
+|-------------|------|-------------|
+| `dora_deployment_frequency` | Gauge | Deployments per day |
+| `dora_lead_time_seconds` | Histogram | Commit → production latency |
+| `dora_change_failure_rate` | Gauge | Failure rate (0-1) |
+| `dora_mttr_seconds` | Histogram | Incident resolution time |
+| `dora_rework_rate` | Gauge | Rework rate (0-1) |
 
 ---
 
-## 📈 Part 5: Advanced Analysis Techniques
+## 5. Hands-On Lab (60 minutes)
 
-### Trend Analysis
+### Lab Overview
 
-**Week-over-week comparison**:
+You'll enable the uFawkesObs DORA profile, send test events, and build a complete DORA dashboard in Grafana.
 
-```promql
-# Current week deployment frequency
-sum(rate(argocd_app_sync_total{phase="Succeeded"}[7d])) * 86400
+**Time Estimate**: 60 minutes
+**Difficulty**: Advanced (Module 13 complete, uFawkesObs running with DORA profile)
+**Auto-Graded**: Yes
+**Points**: 100
 
-# Previous week
-sum(rate(argocd_app_sync_total{phase="Succeeded"}[7d] offset 7d)) * 86400
+### Lab Environment
 
-# % change
-(
-  sum(rate(argocd_app_sync_total{phase="Succeeded"}[7d]))
-  -
-  sum(rate(argocd_app_sync_total{phase="Succeeded"}[7d] offset 7d))
-)
-/
-sum(rate(argocd_app_sync_total{phase="Succeeded"}[7d] offset 7d))
-* 100
-```
+**Prerequisites**:
+- ✅ Module 13 (Observability with uFawkesObs) complete
+- ✅ uFawkesObs v1.0.0 running locally with DORA profile enabled (`make up-dora`)
 
-### Correlation Analysis
-
-**Does higher deployment frequency correlate with lower CFR?**
-
-```python
-import pandas as pd
-from scipy.stats import pearsonr
-
-# Fetch data
-df = pd.DataFrame(
-    {
-        "team": teams,
-        "deployment_freq": [get_deployment_freq(t) for t in teams],
-        "cfr": [get_cfr(t) for t in teams],
-    }
-)
-
-# Calculate correlation
-correlation, p_value = pearsonr(df["deployment_freq"], df["cfr"])
-
-print(f"Correlation: {correlation:.2f}")
-print(f"P-value: {p_value:.4f}")
-
-# Expected: Negative correlation (higher DF → lower CFR)
-```
-
-### Identifying Bottlenecks
-
-**Lead time breakdown**:
-
-```promql
-# Time in each stage
-sum(ci_stage_duration_seconds{stage="build"}) by (app)
-sum(ci_stage_duration_seconds{stage="test"}) by (app)
-sum(ci_stage_duration_seconds{stage="scan"}) by (app)
-sum(ci_stage_duration_seconds{stage="deploy"}) by (app)
-```
-
-Create waterfall chart to visualize:
-
-```
-Commit → Build (3m) → Test (5m) → Scan (2m) → Deploy (1m) = 11m total
-         ████████    ████████████  ████        ██
-
-Bottleneck: Testing takes 45% of lead time
-Action: Parallelize tests or optimize slow tests
-```
+**Tools required**: `curl`, `jq`, `git`, `make`
 
 ---
 
-## 💪 Part 6: Driving Improvements with Data
+### Lab Steps
 
-### Improvement Framework
+➡️ **[Lab 01: DORA Metrics with uFawkesObs](brown-belt/module-14-dora-deep-dive/lab-01/instructions.md)**
 
-**1. Measure Current State**
+This lab walks you through:
+1. **Verifying DORA Profile** — Confirm dora-api, dora-compute, pushgateway are running
+2. **Sending Test Events** — POST deployment events to dora-api
+3. **Verifying Metrics** — Query Prometheus for DORA metrics
+3. **Building Dashboard** — Create Grafana dashboard with all 5 DORA metrics
+4. **Testing Failure Scenarios** — Send failed deployment, verify CFR increases
+4. **Testing Rework** — Send incident-driven deployment, verify rework rate
+4. **Building Executive Dashboard** — Create executive summary dashboard
+4. **Validation** — Run validation script checking all metrics
 
-```
-Current Performance (Last 30 days):
-- DF: 3 per day (High)
-- LT: 2 hours (High)
-- CFR: 12% (Elite)
-- MTTR: 45 minutes (Elite)
+**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) with DORA profile
 
-Overall: High Performer
-```
-
-**2. Set Targets**
-
-```
-3-Month Goals:
-- DF: 5 per day (Elite) - ↑67%
-- LT: 1 hour (Elite) - ↓50%
-- CFR: <10% (Elite) - ↓17%
-- MTTR: <30 min (Elite) - ↓33%
-```
-
-**3. Identify Bottlenecks**
-
-```
-Lead Time Breakdown:
-- Code Review: 45 min (38%)
-- CI Build: 15 min (13%)
-- Testing: 35 min (29%)
-- Deployment: 25 min (21%)
-
-Biggest opportunity: Code Review (38% of lead time)
-```
-
-**4. Implement Changes**
-
-```
-Actions:
-1. Reduce PR size (enforce <300 lines)
-2. Pair programming for complex changes (faster review)
-3. Async code review tools (remove scheduling overhead)
-4. Auto-approve trivial changes (docs, formatting)
-
-Expected Impact: Reduce code review time by 50% (22min savings)
-New Lead Time: 1h 5min → Target not quite met, but significant progress
-```
-
-**5. Measure Impact**
-
-```
-After 30 days:
-- DF: 4.5 per day ✅ (On track)
-- LT: 1h 15min ⚠️ (Close to target)
-- CFR: 9% ✅ (Target met!)
-- MTTR: 28 min ✅ (Target exceeded!)
-
-Continue iteration...
-```
+**Validation**: `bash brown-belt/module-14-dora-deep-dive/lab-01/validate.sh`
 
 ---
 
-## 🎓 Part 7: Knowledge Check
+## 5. Knowledge Check (10 minutes)
 
-### Quiz Questions
+### Quiz: DORA Metrics Deep Dive
 
-1. **What does P95 lead time represent?**
+**Instructions**: Answer all 10 questions. You need 8/10 (80%) to pass. Unlimited attempts allowed.
 
-   - [ ] Average lead time
-   - [ ] Fastest lead time
-   - [x] 95% of deployments complete within this time
-   - [ ] Slowest lead time
+#### Question 1
 
-2. **How do you calculate Change Failure Rate?**
+**What does P95 lead time represent?**
 
-   - [ ] Failed deployments × 100
-   - [x] (Failed deployments / Total deployments) × 100
-   - [ ] Total deployments / Failed deployments
-   - [ ] Failed deployments / Successful deployments
+- [ ] A) Average lead time
+- [ ] B) Fastest lead time
+- [x] C) 95% of deployments complete within this time
+- [ ] D) Slowest lead time
 
-3. **What's the Elite benchmark for Deployment Frequency?**
-
-   - [ ] Once per week
-   - [ ] Once per day
-   - [x] Multiple times per day
-   - [ ] Continuous deployment
-
-4. **What should MTTR measure?**
-
-   - [ ] Time to write code
-   - [ ] Time to test
-   - [x] Time to restore service after incident
-   - [ ] Time to deploy
-
-5. **Why track team-level DORA metrics separately?**
-
-   - [ ] To rank teams
-   - [x] To identify improvement opportunities specific to each team
-   - [ ] To punish low performers
-   - [ ] It's not necessary
-
-6. **What does high DF + low CFR indicate?**
-
-   - [ ] Luck
-   - [x] Mature CI/CD with good quality gates
-   - [ ] Metrics are broken
-   - [ ] Too much testing
-
-7. **How often should you review DORA metrics?**
-
-   - [ ] Annually
-   - [ ] When problems occur
-   - [x] Weekly or monthly for trends
-   - [ ] Once after implementation
-
-8. **What's a good first step to improve lead time?**
-   - [ ] Skip testing
-   - [ ] Deploy less frequently
-   - [x] Identify and optimize the slowest stage
-   - [ ] Hire more people
-
-9. **What belongs in the numerator of Deployment Rework Rate?**
-
-   - [ ] All failed deployments
-   - [x] Incident-driven, unplanned deployments
-   - [ ] All deployments during an incident
-   - [ ] Reverted commits
-
-**Answers**: 1-C, 2-B, 3-C, 4-C, 5-B, 6-B, 7-C, 8-C, 9-B
+**Explanation**: P95 means 95% of deployments complete within this time — the remaining 5% took longer.
 
 ---
 
-## 🎯 Part 8: Module Summary & Next Steps
+#### Question 2
+
+**How do you calculate Change Failure Rate?**
+
+- [ ] A) Failed deployments × 100
+- [x] B) (Failed deployments / Total deployments) × 100
+- [ ] C) Total deployments / Failed deployments
+- [ ] D) Failed deployments / Successful deployments
+
+**Explanation**: CFR = (Failed deployments / Total deployments) × 100 — percentage of deployments that failed.
+
+---
+
+#### Question 3
+
+**What's the Elite benchmark for Deployment Frequency?**
+
+- [ ] A) Once per week
+- [ ] B) Once per day
+- [x] C) Multiple times per day
+- [ ] D) Continuous deployment
+
+**Explanation**: Elite performers deploy **multiple times per day** (DORA research).
+
+---
+
+#### Question 4
+
+**What does MTTR measure?**
+
+- [ ] A) Time to write code
+- [ ] B) Time to test
+- [x] C) Time to restore service after incident
+- [ ] D) Time to deploy
+
+**Explanation**: MTTR = Mean Time to Restore = time from incident detection to service restoration.
+
+---
+
+#### Question 5
+
+**Why track team-level DORA metrics separately?**
+
+- [ ] A) To rank teams
+- [x] B) To identify improvement opportunities specific to each team
+- [ ] C) To punish low performers
+- [ ] D) It's not necessary
+
+**Explanation**: Team-level metrics reveal context (legacy vs greenfield, team size, domain) that organization-level metrics hide.
+
+---
+
+#### Question 6
+
+**What does high DF + low CFR indicate?**
+
+- [ ] A) Luck
+- [x] B) Mature CI/CD with good quality gates
+- [ ] C) Metrics are broken
+- [ ] D) Too much testing
+
+**Explanation**: High deployment frequency with low change failure rate = mature CI/CD pipeline with effective quality gates.
+
+---
+
+#### Question 6
+
+**What does `dora-compute` do in uFawkesObs?**
+
+- [ ] A) Runs the pipelines
+- [ ] B) Stores deployment events
+- [x] C) Aggregates events → DORA metrics, exposes Prometheus metrics
+- [ ] D) Sends notifications
+
+**Explanation**: dora-compute reads events from SQLite, computes DORA metrics, exposes Prometheus metrics for Grafana/Prometheus.
+
+---
+
+#### Question 7
+
+**How do you enable the DORA profile in uFawkesObs?**
+
+- [ ] A) Set `DORA_ENABLED=true` in .env
+- [x] B) Run `make up-dora`
+- [ ] C) Deploy separate DORA stack
+- [ ] D) Configure in Grafana UI
+
+**Explanation**: Run `make up-dora` to start the stack with DORA profile (dora-api, dora-compute, pushgateway).
+
+---
+
+#### Question 7
+
+**What does `stages.image_scan.fail_on: CRITICAL` do?**
+
+- [ ] A) Scans only CRITICAL vulnerabilities
+- [ ] B) Ignores CRITICAL vulnerabilities
+- [x] C) Fails the build if CRITICAL vulnerabilities found
+- [ ] D) Reports only CRITICAL vulnerabilities
+
+**Explanation**: `fail_on: CRITICAL` sets the severity threshold — the build **fails** if any CRITICAL vulnerabilities are found.
+
+---
+
+#### Question 8
+
+**How does uFawkesObs handle artifact retention?**
+
+- [ ] A) Manual cleanup via Harbor UI
+- [x] B) `advanced.artifacts.retention` in `.fawkespipe.yml`
+- [ ] C) Manual Docker image pruning
+- [ ] D) Kubernetes TTL controller
+
+**Explanation**: uFawkesPipe uses `advanced.artifacts.retention` in `.fawkespipe.yml` to configure artifact retention period (in days).
+
+---
+
+#### Question 10
+
+**What happens when `stages.image_scan.fail_on: CRITICAL` is set and a CRITICAL vulnerability is found?**
+
+- [ ] A) Warning logged, pipeline continues
+- [x] B) Pipeline fails immediately
+- [ ] C) Only logs warning, continues
+- [ ] D) Marks image as quarantined
+
+**Explanation**: When `fail_on: CRITICAL` is set and a CRITICAL vulnerability is detected, the **pipeline fails immediately**, preventing the vulnerable image from being promoted.
+
+---
+
+### Quiz Results
+
+**Score: X / 10**
+
+- ✅ **Passed** (8+): Excellent! You understand DORA metrics with uFawkesObs.
+- ❌ **Not Yet** (<8): Review the theory section and try again.
+
+**Incorrect answers?** Each question links back to the relevant section for review.
+
+---
+
+## 6. Reflection & Next Steps (5 minutes)
 
 ### What You Learned
 
-✅ **Advanced Calculation**: All five metrics with distributions
-✅ **Data Collection**: Webhooks, Prometheus, automation
-✅ **Dashboards**: Comprehensive Grafana visualizations
-✅ **Analysis**: Trends, correlations, bottlenecks
-✅ **Improvement**: Data-driven optimization framework
-✅ **Presentation**: Communicate metrics to leadership
+✅ **You now know**:
+- How uFawkesObs implements all five DORA metrics via dora-api/dora-compute
+- How to enable DORA profile (`make up-dora`)
+- How to send deployment events and query DORA metrics
+- How to build Grafana dashboards for all five metrics
+- How to analyze trends, identify bottlenecks, and correlate metrics
+- How to present DORA metrics to leadership
 
-### DORA Capabilities Achieved
+### How This Connects to Your Work
 
-- ✅ **All five DORA metrics**: Automated collection and tracking
-- ✅ **Monitoring**: Real-time visibility into delivery performance
-- ✅ **Data-Driven**: Metrics inform platform improvements
+**For Developers**:
+- You can now instrument your pipelines to emit DORA events automatically
+- You understand what the metrics mean and how to improve them
 
-### Key Takeaways
+**For Platform Engineers**:
+- You can deploy and operate the uFawkesObs DORA stack
+- You can help teams interpret their metrics and drive improvements
 
-1. **Metrics must be actionable** - If you can't improve it, don't measure it
-2. **Track distributions, not just averages** - P95/P99 reveal user experience
-3. **Compare teams carefully** - Context matters (legacy vs greenfield)
-4. **Automate collection** - Manual tracking doesn't scale
-5. **Review regularly** - Weekly trends reveal improvement opportunities
+**For Leaders**:
+- You can now track delivery performance with industry-standard metrics
+- You can make data-driven decisions about platform investments
 
-### Real-World Impact
+### Reflection Questions
 
-"After implementing comprehensive DORA tracking:
+1. **What surprised you most about DORA metrics in uFawkesObs?**
+2. **How does your current observability compare?**
+3. **What bottleneck would you tackle first in your pipeline?**
+4. **Who on your team should go through this module?**
 
-- **Identified bottleneck**: Code review was 40% of lead time
-- **Action**: Reduced PR size, added auto-approval for trivial changes
-- **Result**: Lead time decreased 35% in 60 days
-- **Visibility**: Leadership now tracks metrics quarterly
-- **Culture**: Teams compete (healthily) to improve metrics
+### Preview: Green Belt
 
-Metrics transformed from vanity to value."
+**Next Up: GitOps & Progressive Delivery (Green Belt Modules 9-12)**
 
-- *Engineering Director, Tech Company*
+In Green Belt, you'll learn:
+- GitOps with ArgoCD (declarative deployments)
+- Deployment strategies (blue-green, canary, rolling)
+- Progressive delivery with Flagger
+- Rollback & incident response
 
----
-
-## 📚 Additional Resources
-
-### Tools
-
-- [Four Keys](https://github.com/dora-team/fourkeys) - DORA metrics collection
-- [Sleuth](https://www.sleuth.io/) - DORA tracking SaaS
-- [LinearB](https://linearb.io/) - Engineering intelligence
-
-### Reading
-
-- [DORA State of DevOps Reports](https://dora.dev/research/)
-- [Accelerate](https://itrevolution.com/accelerate-book/) - The research behind DORA
-- [DORA Metrics Guide](https://cloud.google.com/blog/products/devops-sre/using-the-four-keys-to-measure-your-devops-performance)
+**Time**: 4 modules × 3-4 hours each
+**Prerequisites**: Brown Belt complete ✅
 
 ---
 
-## 🏅 Module Completion
+## Module Completion
 
-### Assessment Checklist
+### ✅ You've Completed Module 14
 
-- [ ] **Conceptual Understanding**
+**Next Steps**:
 
-  - [ ] Calculate all five metrics correctly
-  - [ ] Understand P50/P95/P99 distributions
-  - [ ] Explain metric correlations
+1. ✅ Mark this module complete in your Backstage profile
+2. 📊 View your progress on the Dojo dashboard
+3. 💬 Share your completion in `#dojo-achievements` (optional!)
+4. 🎓 **Prepare for Green Belt Assessment** when ready
 
-- [ ] **Practical Skills**
-  - [ ] Deploy DORA collector
-  - [ ] Configure webhooks
-  - [ ] Build Grafana dashboard
-  - [ ] Analyze trends
-  -
+**Time Investment**: 3-4 hours
+**Skills Gained**: DORA metrics automation, advanced PromQL, dashboard design, bottleneck analysis, data-driven improvement
+**Progress**: 2 of 4 modules toward Brown Belt (50% complete)
+
+---
+
+**Questions or Issues?**
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-brown-belt`
+- 📧 Email: dojo@ufawkes.dev
+- 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
+
+**Feedback?**
+- Rate this module (takes 30 seconds)
+- Suggest improvements
+- Help us make the dojo better!
+
+---
+
+**Module Author**: Fawkes Learning Team
+**Last Updated**: October 2026
+**Version**: 2.0
