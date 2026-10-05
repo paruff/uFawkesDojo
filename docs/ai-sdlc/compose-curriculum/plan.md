@@ -17,9 +17,14 @@ under Release = "Dojo compose", not in this file.
    or labeled "not built yet".
 2. Extend the existing module-authoring guide (AC-DOJO-03).
 3. Build the "Start here" uFawkesAI lab and run it for real.
-4. Update `docs/ai-sdlc/compose-curriculum/plan.md` to this order, and align
+4. **Add Module 0: "From Vibe Coding to Agentic Engineering"** — White Belt
+   entry primer (≤10 min theory) citing *The AI-Native SDLC Playbook*
+   (Claxton, Anthropic, 2026). Points to "Start here" lab. Implemented in
+   `modules/white-belt/module-00-vibe-coding-to-agentic.md` and
+   `white-belt/module-00-vibe-coding-to-agentic/README.md`.
+5. Update `docs/ai-sdlc/compose-curriculum/plan.md` to this order, and align
    ufawkes.dev's learn guides (uFawkes.dev #67).
-5. Release Dojo `0.2`. Announce with uFawkesAI follow-up: "now learn it".
+6. Release Dojo `0.2`. Announce with uFawkesAI follow-up: "now learn it".
 
 ## Phase 0.2.2 — uFawkesObs content (after uFawkesObs v1.0.0, Dojo 0.3)
 

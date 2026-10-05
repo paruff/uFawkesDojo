@@ -16,7 +16,7 @@ DNS for the custom domain is confirmed — see `CNAME` and
 
 ## Belt Modules
 
-- [White Belt](modules/white-belt/module-01-what-is-idp.md) — IDP fundamentals, DORA metrics, GitOps principles, first deployment
+- [White Belt](modules/white-belt/module-00-vibe-coding-to-agentic.md) — **Module 0: From Vibe Coding to Agentic Engineering** (entry primer, ≤10 min, cites AI-Native SDLC Playbook) → [Module 1: IDP fundamentals](modules/white-belt/module-01-what-is-idp.md) → [Module 2: DORA metrics](modules/white-belt/module-02-dora-metrics.md) → [Module 3: GitOps principles](modules/white-belt/module-03-gitops-principles.md) → [Module 4: First deployment](modules/white-belt/module-04-first-deployment.md)
 - [Yellow Belt](modules/yellow-belt/module-05-ci-fundamentals.md) — CI fundamentals, golden paths, security scanning, artifact management
 - [Green Belt](modules/green-belt/module-09-gitops-argocd.md) — GitOps/ArgoCD, deployment strategies, progressive delivery, rollback
 - [Brown Belt](modules/brown-belt/module-13-observability.md) — Observability, DORA deep-dive, SLIs/SLOs, incident management
