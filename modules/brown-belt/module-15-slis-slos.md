@@ -1,44 +1,26 @@
-# Fawkes Dojo Module 15: SLIs, SLOs, and Error Budgets
+# Module 15: SLIs, SLOs, and Error Budgets with uFawkesObs
 
-## 🎯 Module Overview
-
-**Belt Level**: 🟤 Brown Belt - Observability & SRE
-**Module**: 3 of 4 (Brown Belt)
-**Duration**: 60 minutes
-**Difficulty**: Advanced
-**Prerequisites**:
-
-- Module 13: Observability complete
-- Module 14: DORA Metrics Deep Dive complete
-- Understanding of Prometheus and monitoring
-- Basic statistics knowledge (percentiles, averages)
+**Belt Level**: 🟤 Brown Belt
+**Duration**: 3-4 hours
+**Prerequisites**: Module 13 (Observability with uFawkesObs) and Module 14 (DORA Metrics Deep Dive) complete, uFawkesObs v1.0.0 running locally
+**DORA Capabilities**: Monitoring and Observability, Service Reliability, Data-Driven Decision Making, Customer Focus
 
 ---
 
-## 📚 Learning Objectives
+## 1. Learning Objectives (5 minutes)
 
-By the end of this module, you will:
+### What You'll Learn
 
-1. ✅ Define Service Level Indicators (SLIs) for your services
-2. ✅ Create meaningful Service Level Objectives (SLOs)
-3. ✅ Calculate and track error budgets
-4. ✅ Implement SLI/SLO monitoring in Prometheus
-5. ✅ Balance innovation velocity with reliability
-6. ✅ Make data-driven decisions about service reliability
-7. ✅ Communicate service health to stakeholders
+By the end of this module, you will be able to:
 
-**DORA Capabilities Addressed**:
+- ✅ Define Service Level Indicators (SLIs) for your services using uFawkesObs Prometheus
+- ✅ Create meaningful Service Level Objectives (SLOs) with uFawkesObs recording rules
+- ✅ Calculate and track error budgets using uFawkesObs Prometheus recording rules
+- ✅ Implement SLI/SLO monitoring in Prometheus with uFawkesObs stack
+- ✅ Balance innovation velocity with reliability using error budgets
+- ✅ Make data-driven decisions about service reliability with uFawkesObs Grafana dashboards
 
-- ✓ Monitoring and Observability
-- ✓ Service Reliability
-- ✓ Data-Driven Decision Making
-- ✓ Customer Focus
-
----
-
-## 📖 Part 1: The Reliability Framework
-
-### Why SLIs/SLOs Matter
+### Why It Matters
 
 **Without SLIs/SLOs**:
 
@@ -55,7 +37,7 @@ Result:
 - Team stress and conflict
 ```
 
-**With SLIs/SLOs**:
+**With SLIs/SLOs/Error Budgets**:
 
 ```
 Team: "We have 99.9% availability (SLO) and we're at 99.95%"
@@ -70,7 +52,24 @@ Result:
 - Team alignment
 ```
 
-### The SRE Hierarchy
+### Success Criteria
+
+You've mastered this module when you can:
+
+- Define SLIs for your services using uFawkesObs Prometheus
+- Create SLOs with appropriate targets and time windows using recording rules
+- Calculate and track error budgets with burn rate alerts
+- Build Grafana dashboards for SLO/error budget visualization
+- Make data-driven deployment decisions using error budgets
+- Communicate service health to stakeholders with shared terminology
+
+---
+
+## 2. Theory & Concepts (30 minutes)
+
+### The Reliability Framework
+
+**The SRE Hierarchy**
 
 ```
 ┌─────────────────────────────────────┐
@@ -93,16 +92,63 @@ Result:
 └─────────────────────────────────────┘
 ```
 
+### uFawkesObs SLI/SLO Architecture
+
+uFawkesObs provides a complete SLI/SLO platform using Docker Compose:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    uFawkesObs SLI/SLO Stack                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                 │
+│  │   Your Apps  │───▶│   Alloy      │───▶│  Prometheus  │                 │
+│  │  (Metrics)   │    │  (Logs)      │    │  (Metrics)   │                 │
+│  └──────────────┘    └──────────────┘    └──────┬───────┘                 │
+│                                                 │                           │
+│                                                 ▼                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │              Prometheus Recording Rules (SLI/SLO/Error Budget)       │   │
+│  │  ┌─────────────────────────────────────────────────────────────┐    │   │
+│  │  │  SLI Recording Rules (availability, latency, error_rate)     │    │   │
+│  │  │  SLO Recording Rules (targets, windows, thresholds)          │    │   │
+│  │  │  Error Budget Rules (remaining, burn rate, consumed)         │    │   │
+│  │  └─────────────────────────────────────────────────────────────┘    │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                 │                           │
+│                                                 ▼                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    Alertmanager (SLO Alerts)                         │   │
+│  │              Multi-window burn rate alerts                           │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                 │                           │
+│                                                 ▼                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                        Grafana                                       │   │
+│  │         SLO Dashboards, Error Budget Panels, Alerting UI            │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Components in uFawkesObs
+
+| Component | Role in SLI/SLO |
+|-----------|-----------------|
+| **Prometheus** | Stores metrics, evaluates recording rules, evaluates alerts |
+| **Grafana** | SLO dashboards, error budget visualization, alerting UI |
+| **Alertmanager** | Routes SLO breach notifications |
+| **Alloy** | Scrapes application metrics, forwards to Prometheus |
+| **Prometheus Rules** | Recording rules (SLI/SLO/Error Budget), Alert rules |
+
 ---
 
-## 🎯 Part 2: Service Level Indicators (SLIs)
+## 3. Service Level Indicators (SLIs) (20 minutes)
 
 ### What is an SLI?
 
 **SLI**: A carefully selected metric that represents user happiness
 
 **Good SLI characteristics**:
-
 - ✅ User-centric (measures what users care about)
 - ✅ Measurable (can be quantified)
 - ✅ Actionable (team can improve it)
@@ -116,7 +162,10 @@ Result:
 
 ```promql
 # Availability SLI
-sum(up{service="myapp"}) / count(up{service="myapp"}) * 100
+sum(rate(http_requests_total{service="myapp",status!~"5.."}[5m]))
+/
+sum(rate(http_requests_total{service="myapp"}[5m]))
+* 100
 
 # Example: 99.5% availability
 ```
@@ -215,7 +264,7 @@ Focus on 3-5 most critical SLIs:
 
 ---
 
-## 📊 Part 3: Service Level Objectives (SLOs)
+## 4. Service Level Objectives (SLOs) (15 minutes)
 
 ### What is an SLO?
 
@@ -224,7 +273,6 @@ Focus on 3-5 most critical SLIs:
 **Format**: `SLI ≥ Target over Time Window`
 
 **Examples**:
-
 - Availability ≥ 99.9% over 30 days
 - p95 latency ≤ 200ms over 7 days
 - Error rate < 0.5% over 30 days
@@ -237,7 +285,6 @@ Focus on 3-5 most critical SLIs:
 **Good**: "99.9% because user research shows this meets needs"
 
 **User tolerance** varies by context:
-
 - Search engine: p95 < 100ms (users expect instant)
 - Banking transfer: p95 < 2s (users tolerate some delay)
 - Batch report: p95 < 30s (users expect processing time)
@@ -258,7 +305,6 @@ Focus on 3-5 most critical SLIs:
 **Good**: 3-5 SLOs that matter most
 
 **Example**:
-
 ```
 Service: Payment API
 SLOs:
@@ -279,8 +325,10 @@ slos:
     target: 99.95
     window: 30d
     sli: |
-      sum(http_requests_total{status!~"5.."})
-      / sum(http_requests_total) * 100
+      sum(rate(http_requests_total{service="payment-api",status!~"5.."}[5m]))
+      /
+      sum(rate(http_requests_total{service="payment-api"}[5m]))
+      * 100
 
   - name: latency
     description: "95th percentile response time"
@@ -289,7 +337,7 @@ slos:
     window: 7d
     sli: |
       histogram_quantile(0.95,
-        sum(rate(http_duration_bucket[5m])) by (le)
+        sum(rate(http_request_duration_seconds_bucket{service="payment-api"}[5m])) by (le)
       )
 
   - name: error_rate
@@ -298,8 +346,10 @@ slos:
     target: 0.1
     window: 30d
     sli: |
-      sum(rate(http_requests_total{status=~"5.."}[5m]))
-      / sum(rate(http_requests_total[5m])) * 100
+      sum(rate(http_requests_total{service="payment-api",status=~"5.."}[5m]))
+      /
+      sum(rate(http_requests_total{service="payment-api"}[5m]))
+      * 100
 ```
 
 ### Multi-Window SLOs
@@ -318,13 +368,12 @@ Windows:
 ```
 
 **Benefit**: Early warning system
-
 - Hour/day violations = potential trend
 - 30-day still met = no customer impact yet
 
 ---
 
-## 💰 Part 4: Error Budgets
+## 5. Error Budgets (20 minutes)
 
 ### What is an Error Budget?
 
@@ -333,7 +382,6 @@ Windows:
 **Formula**: `Error Budget = 100% - SLO`
 
 **Example**:
-
 ```
 SLO: 99.9% availability
 Error Budget: 0.1% (100% - 99.9%)
@@ -368,7 +416,6 @@ Remaining: 5 minutes (healthy) ✅
 **Formula**: `Burn Rate = (Error Rate / Error Budget) × Time Window`
 
 **Example**:
-
 ```
 Current error rate: 0.5%
 Error budget: 0.1%
@@ -411,731 +458,276 @@ error_budget_policy:
 
 ---
 
-## 🛠️ Part 5: Hands-On Lab - Implementing SLIs/SLOs — *not built yet*
+## 6. Hands-On Lab (45 minutes)
 
-### Step 1: Define SLIs
+### Lab Overview
 
-Create `sli-definitions.yaml`:
+You'll implement a complete SLI/SLO/Error Budget system for a sample service using uFawkesObs:
 
-```yaml
-# Service: payment-api
-slis:
-  # Availability SLI
-  - name: availability
-    description: "Percentage of successful HTTP requests"
-    query: |
-      sum(rate(http_requests_total{service="payment-api",status!~"5.."}[5m]))
-      /
-      sum(rate(http_requests_total{service="payment-api"}[5m]))
-      * 100
-    unit: percent
+1. Define SLIs with Prometheus recording rules
+2. Create SLOs with recording rules and targets
+3. Implement error budget tracking with burn rate alerts
+4. Build Grafana dashboard for SLO/error budget visualization
+5. Practice SLO-driven deployment decisions
 
-  # Latency SLI (p95)
-  - name: latency_p95
-    description: "95th percentile HTTP request duration"
-    query: |
-      histogram_quantile(0.95,
-        sum(rate(http_request_duration_seconds_bucket{service="payment-api"}[5m])) by (le)
-      ) * 1000
-    unit: milliseconds
+**Time Estimate**: 45 minutes
+**Difficulty**: Advanced (Modules 13-14 complete)
+**Auto-Graded**: Yes
+**Points**: 100
 
-  # Latency SLI (p99)
-  - name: latency_p99
-    description: "99th percentile HTTP request duration"
-    query: |
-      histogram_quantile(0.99,
-        sum(rate(http_request_duration_seconds_bucket{service="payment-api"}[5m])) by (le)
-      ) * 1000
-    unit: milliseconds
+### Lab Environment
 
-  # Error Rate SLI
-  - name: error_rate
-    description: "Percentage of failed HTTP requests"
-    query: |
-      sum(rate(http_requests_total{service="payment-api",status=~"5.."}[5m]))
-      /
-      sum(rate(http_requests_total{service="payment-api"}[5m]))
-      * 100
-    unit: percent
-```
+**Prerequisites**:
+- ✅ Module 13 & 14 complete
+- ✅ uFawkesObs v1.0.0 running locally
+- ✅ Module 13 (Observability) and Module 14 (DORA) complete
 
-### Step 2: Define SLOs
+➡️ **[Lab 01: Implementing SLIs/SLOs/Error Budgets](brown-belt/module-15-slis-slos/lab-01/instructions.md)**
 
-Create `slo-definitions.yaml`:
+This lab walks you through:
+1. Creating SLI recording rules for a sample service
+2. Defining SLO recording rules with targets
+3. Implementing error budget recording rules
+4. Configuring multi-window burn rate alerts
+5. Building Grafana SLO dashboard with error budget visualization
+6. Practicing SLO-driven deployment decisions
 
-```yaml
-# Service: payment-api
-slos:
-  # Availability SLO
-  - name: availability_slo
-    sli: availability
-    objective: 99.9
-    window: 30d
-    description: "Service available 99.9% of the time over 30 days"
-    alert_threshold: 99.8 # Alert when approaching SLO breach
+**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) (Docker Compose)
 
-  # Latency SLO (p95)
-  - name: latency_p95_slo
-    sli: latency_p95
-    objective: 500 # milliseconds
-    window: 7d
-    description: "95% of requests complete within 500ms over 7 days"
-    alert_threshold: 600
-
-  # Error Rate SLO
-  - name: error_rate_slo
-    sli: error_rate
-    objective: 0.1 # 0.1% error rate
-    window: 30d
-    description: "Error rate below 0.1% over 30 days"
-    alert_threshold: 0.15
-```
-
-### Step 3: Calculate Error Budget
-
-Create `error-budget-calculator.yaml`:
-
-```yaml
-# Prometheus recording rules for error budget
-groups:
-  - name: error_budget
-    interval: 1m
-    rules:
-      # Availability error budget
-      - record: error_budget:availability:remaining_percent
-        expr: |
-          (
-            100 -
-            (
-              (100 - slo:availability:30d) -
-              (100 - sli:availability:30d)
-            ) / (100 - slo:availability:30d) * 100
-          )
-
-      # Availability error budget consumed
-      - record: error_budget:availability:consumed_percent
-        expr: |
-          100 - error_budget:availability:remaining_percent
-
-      # Availability burn rate (1 hour)
-      - record: error_budget:availability:burn_rate_1h
-        expr: |
-          (100 - sli:availability:1h) / (100 - slo:availability:30d)
-
-      # Availability burn rate (6 hours)
-      - record: error_budget:availability:burn_rate_6h
-        expr: |
-          (100 - sli:availability:6h) / (100 - slo:availability:30d)
-
-      # Error rate error budget
-      - record: error_budget:error_rate:remaining_percent
-        expr: |
-          (
-            1 - (sli:error_rate:30d / slo:error_rate:30d)
-          ) * 100
-```
-
-### Step 4: Create Prometheus Recording Rules
-
-Create `prometheus-rules.yaml`:
-
-```yaml
-groups:
-  - name: sli_recording
-    interval: 30s
-    rules:
-      # Availability SLI (real-time)
-      - record: sli:availability:current
-        expr: |
-          sum(rate(http_requests_total{service="payment-api",status!~"5.."}[1m]))
-          /
-          sum(rate(http_requests_total{service="payment-api"}[1m]))
-          * 100
-
-      # Availability SLI (1 hour)
-      - record: sli:availability:1h
-        expr: |
-          sum(rate(http_requests_total{service="payment-api",status!~"5.."}[1h]))
-          /
-          sum(rate(http_requests_total{service="payment-api"}[1h]))
-          * 100
-
-      # Availability SLI (30 days)
-      - record: sli:availability:30d
-        expr: |
-          sum(rate(http_requests_total{service="payment-api",status!~"5.."}[30d]))
-          /
-          sum(rate(http_requests_total{service="payment-api"}[30d]))
-          * 100
-
-      # Error rate SLI (30 days)
-      - record: sli:error_rate:30d
-        expr: |
-          sum(rate(http_requests_total{service="payment-api",status=~"5.."}[30d]))
-          /
-          sum(rate(http_requests_total{service="payment-api"}[30d]))
-          * 100
-
-      # Latency p95 SLI (7 days)
-      - record: sli:latency_p95:7d
-        expr: |
-          histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{service="payment-api"}[7d])) by (le)
-          ) * 1000
-```
-
-### Step 5: Implement SLO Alerts
-
-Create `slo-alerts.yaml`:
-
-```yaml
-groups:
-  - name: slo_alerts
-    rules:
-      # Fast burn alert (1 hour window)
-      - alert: ErrorBudgetBurnRateCritical
-        expr: |
-          error_budget:availability:burn_rate_1h > 14.4
-          and
-          error_budget:availability:burn_rate_6h > 6
-        for: 5m
-        labels:
-          severity: critical
-          slo: availability
-        annotations:
-          summary: "Critical burn rate - will exhaust budget in 2 days"
-          description: "Error budget burning at {{ $value }}x normal rate"
-
-      # Medium burn alert (6 hour window)
-      - alert: ErrorBudgetBurnRateHigh
-        expr: |
-          error_budget:availability:burn_rate_6h > 6
-          and
-          error_budget:availability:remaining_percent < 50
-        for: 30m
-        labels:
-          severity: warning
-          slo: availability
-        annotations:
-          summary: "High burn rate with low remaining budget"
-          description: "{{ $value }}% budget remaining, burning fast"
-
-      # Budget exhausted
-      - alert: ErrorBudgetExhausted
-        expr: |
-          error_budget:availability:remaining_percent <= 0
-        for: 5m
-        labels:
-          severity: critical
-          slo: availability
-        annotations:
-          summary: "Error budget completely exhausted"
-          description: "Deploy freeze in effect per error budget policy"
-
-      # SLO approaching breach
-      - alert: SLOApproachingBreach
-        expr: |
-          sli:availability:30d < 99.8  # 0.1% below SLO of 99.9%
-        for: 1h
-        labels:
-          severity: warning
-          slo: availability
-        annotations:
-          summary: "Availability SLO approaching breach"
-          description: "Current: {{ $value }}%, SLO: 99.9%"
-```
-
-### Step 6: Create Grafana Dashboard
-
-```json
-{
-  "dashboard": {
-    "title": "SLO Dashboard - Payment API",
-    "panels": [
-      {
-        "title": "Availability SLO Status",
-        "type": "gauge",
-        "targets": [
-          {
-            "expr": "sli:availability:30d"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                { "value": 0, "color": "red" },
-                { "value": 99.8, "color": "yellow" },
-                { "value": 99.9, "color": "green" }
-              ]
-            },
-            "min": 99,
-            "max": 100,
-            "unit": "percent"
-          }
-        }
-      },
-      {
-        "title": "Error Budget Remaining",
-        "type": "graph",
-        "targets": [
-          {
-            "expr": "error_budget:availability:remaining_percent",
-            "legendFormat": "Remaining"
-          },
-          {
-            "expr": "error_budget:availability:consumed_percent",
-            "legendFormat": "Consumed"
-          }
-        ]
-      },
-      {
-        "title": "Burn Rate (Last Hour)",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "error_budget:availability:burn_rate_1h"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                { "value": 0, "color": "green" },
-                { "value": 5, "color": "yellow" },
-                { "value": 10, "color": "red" }
-              ]
-            }
-          }
-        }
-      },
-      {
-        "title": "SLI vs SLO (30 days)",
-        "type": "timeseries",
-        "targets": [
-          {
-            "expr": "sli:availability:30d",
-            "legendFormat": "Actual"
-          },
-          {
-            "expr": "99.9",
-            "legendFormat": "SLO (99.9%)"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+**Validation**: `bash brown-belt/module-15-slis-slos/lab-01/validate.sh`
 
 ---
 
-## 📈 Part 6: Advanced Error Budget Management
+## 7. Knowledge Check (10 minutes)
 
-### Multi-Service Error Budgets
+### Quiz: SLIs, SLOs, and Error Budgets
 
-Aggregate error budgets across microservices:
+**Instructions**: Answer all 10 questions. You need 8/10 (80%) to pass. Unlimited attempts allowed.
 
-```promql
-# Overall platform error budget
-avg(error_budget:availability:remaining_percent{service=~".*-api"})
+#### Question 1
 
-# Worst performing service
-bottomk(1, error_budget:availability:remaining_percent)
-```
+**What is an SLI?**
 
-### Error Budget Attribution
+- [ ] A) A promise to users about reliability
+- [x] B) A metric that indicates user happiness
+- [ ] C) The allowed unreliability
+- [ ] D) A dashboard panel
 
-Track what consumed your budget:
-
-```yaml
-# Error budget breakdown
-error_budget_consumption:
-  total_consumed: 35%
-  breakdown:
-    - cause: "Database outage"
-      percentage: 20%
-      duration: "15 minutes"
-      date: "2025-10-01"
-
-    - cause: "Bad deployment (v2.1.0)"
-      percentage: 10%
-      duration: "8 minutes"
-      date: "2025-10-08"
-
-    - cause: "DDoS attack"
-      percentage: 5%
-      duration: "4 minutes"
-      date: "2025-10-12"
-```
-
-### Error Budget Forecasting
-
-Predict when budget will exhaust:
-
-```python
-# Simple linear forecast
-def forecast_budget_exhaustion(current_burn_rate, remaining_budget):
-    """
-    Predict days until error budget exhausted
-
-    Args:
-        current_burn_rate: Current burn rate (multiplier)
-        remaining_budget: Remaining budget (percentage)
-
-    Returns:
-        Days until exhaustion
-    """
-    if current_burn_rate <= 0:
-        return float("inf")  # Never exhausts
-
-    # Days in 30-day window
-    days_in_window = 30
-
-    # Expected daily budget consumption at 1x burn rate
-    daily_budget = 100 / days_in_window
-
-    # Actual daily consumption at current burn rate
-    actual_daily = daily_budget * current_burn_rate
-
-    # Days until exhaustion
-    days_remaining = remaining_budget / actual_daily
-
-    return days_remaining
-
-
-# Example
-burn_rate = 5  # 5x normal
-remaining = 30  # 30% budget left
-
-days = forecast_budget_exhaustion(burn_rate, remaining)
-print(f"Budget exhausted in {days:.1f} days")
-# Output: Budget exhausted in 1.8 days
-```
+**Explanation**: An **SLI** is a metric that indicates user happiness (e.g., availability, latency, error rate).
 
 ---
 
-## 💡 Part 7: SLO-Driven Decision Making
+#### Question 2
 
-### Scenario 1: Should We Deploy This Feature?
+**What is an SLO?**
 
-```
-Feature: New payment method integration
-Risk: Medium (touches critical path)
-Error Budget Remaining: 60%
+- [ ] A) A metric collection system
+- [x] B) A target value for an SLI over a time window
+- [ ] C) An error budget calculation
+- [ ] D) A monitoring tool
 
-Decision Framework:
-1. Check error budget: 60% > 25% ✅
-2. Review recent burn rate: 1.2x (normal) ✅
-3. Check deployment time: Off-peak hours ✅
-4. Rollback plan: Yes ✅
-
-Decision: DEPLOY
-Rationale: Sufficient budget, normal burn rate, low-risk timing
-```
-
-### Scenario 2: Should We Continue This Deployment?
-
-```
-Feature: UI redesign (v3.0)
-Deployed: 30 minutes ago
-Error Budget Remaining: 15% (was 40%)
-Burn Rate: 25x (critical)
-
-Decision Framework:
-1. Budget consumption: 25% in 30 min 🚨
-2. Projected exhaustion: <2 hours 🚨
-3. User impact: High (errors visible) 🚨
-4. Rollback available: Yes ✅
-
-Decision: IMMEDIATE ROLLBACK
-Rationale: Critical burn rate will exhaust budget
-```
-
-### Scenario 3: Should We Focus on Reliability?
-
-```
-Current State:
-- Error Budget: 5% remaining
-- Days left in window: 10 days
-- Recent deploys: 8 feature releases
-- Incidents: 3 in last week
-
-Decision Framework:
-1. Budget health: Critical (<10%) 🚨
-2. Trend: Worsening (3 incidents/week) 🚨
-3. Time remaining: 33% of window left
-4. Feature pressure: High demand from PM
-
-Decision: RELIABILITY SPRINT
-Actions:
-- Freeze feature deploys for 10 days
-- Focus team on reliability improvements
-- Daily review of metrics
-- Root cause analysis for incidents
-```
+**Explanation**: An **SLO** is a target value for an SLI over a time window (e.g., "99.9% availability over 30 days").
 
 ---
 
-## 🎯 Part 8: Practical Exercise
+#### Question 3
 
-### Exercise: Complete SLO Implementation
+**How is error budget calculated?**
 
-**Objective**: Implement full SLI/SLO/Error Budget system for a service
+- [ ] A) 100% - SLI
+- [x] B) 100% - SLO
+- [ ] C) SLO - SLI
+- [ ] D) SLI - SLO
 
-**Scenario**: You manage an API service that handles user authentication
-
-**Requirements**:
-
-1. **Define 3 SLIs**
-
-   - Availability
-   - Latency (p95 and p99)
-   - Error rate
-
-2. **Set SLOs**
-
-   - Based on user requirements
-   - Document reasoning
-   - Include alert thresholds
-
-3. **Calculate Error Budgets**
-
-   - Convert SLOs to error budgets
-   - Define burn rate alerts
-   - Create exhaustion policies
-
-4. **Implement Monitoring**
-
-   - Prometheus recording rules
-   - AlertManager rules
-   - Grafana dashboard
-
-5. **Document Decision Framework**
-   - When to deploy
-   - When to rollback
-   - When to freeze deploys
-
-**Starter Template**:
-
-```yaml
-# slo-config.yaml
-service: auth-api
-description: "User authentication service"
-
-slis:
-  - name: availability
-    # TODO: Define SLI query
-
-  - name: latency_p95
-    # TODO: Define SLI query
-
-  - name: error_rate
-    # TODO: Define SLI query
-
-slos:
-  - name: availability_slo
-    sli: availability
-    objective: ??? # TODO: Set target
-    window: 30d
-    reasoning: "???" # TODO: Document why
-
-  # TODO: Add latency and error rate SLOs
-
-error_budget_policy:
-  # TODO: Define policies for budget consumption
-```
-
-**Validation Criteria**:
-
-- [ ] 3 SLIs defined with Prometheus queries
-- [ ] 3 SLOs set with clear reasoning
-- [ ] Error budgets calculated correctly
-- [ ] Recording rules implemented
-- [ ] Alert rules configured
-- [ ] Dashboard created and functional
-- [ ] Decision framework documented
-- [ ] Tested with simulated incidents
+**Explanation**: Error Budget = 100% - SLO. If SLO is 99.9%, error budget = 0.1%.
 
 ---
 
-## 🎓 Part 9: Knowledge Check
+#### Question 4
 
-### Quiz Questions
+**What does a burn rate of 5x mean?**
 
-1. **What is an SLI?**
+- [ ] A) Service is 5x faster
+- [ ] B) 5 errors per minute
+- [x] C) Consuming error budget 5x faster than normal
+- [ ] D) 5% error rate
 
-   - [ ] A promise to users about reliability
-   - [x] A metric that indicates user happiness
-   - [ ] The allowed unreliability
-   - [ ] A dashboard panel
-
-2. **What is an SLO?**
-
-   - [x] A target value for an SLI over a time window
-   - [ ] A metric collection system
-   - [ ] An error budget calculation
-   - [ ] A monitoring tool
-
-3. **How is error budget calculated?**
-
-   - [ ] 100% - SLI
-   - [x] 100% - SLO
-   - [ ] SLO - SLI
-   - [ ] SLI - SLO
-
-4. **What does a burn rate of 5x mean?**
-
-   - [ ] Service is 5x faster
-   - [ ] 5 errors per minute
-   - [x] Consuming error budget 5x faster than normal
-   - [ ] 5% error rate
-
-5. **When should you freeze feature deploys?**
-
-   - [ ] Never, always ship features
-   - [ ] Only during incidents
-   - [x] When error budget is critically low (<10%)
-   - [ ] Every Friday
-
-6. **What's a good starting point for SLOs?**
-
-   - [ ] 100% (perfection)
-   - [ ] 50% (average)
-   - [x] Slightly below current performance
-   - [ ] Industry average
-
-7. **How many SLOs should a service have?**
-
-   - [ ] Exactly 1
-   - [ ] At least 10
-   - [x] 3-5 most critical metrics
-   - [ ] One per feature
-
-8. **What's the purpose of multi-window SLOs?**
-   - [ ] Confuse people with more metrics
-   - [ ] Show off monitoring capabilities
-   - [x] Provide early warning of SLO violations
-   - [ ] Meet compliance requirements
-
-**Answers**: 1-B, 2-A, 3-B, 4-C, 5-C, 6-C, 7-C, 8-C
+**Explanation**: Burn rate = (Error Rate / Error Budget) × Time Window. 5x = consuming budget 5x faster than sustainable rate.
 
 ---
 
-## 🎯 Part 10: Module Summary & Next Steps
+#### Question 5
+
+**When should you freeze feature deploys?**
+
+- [ ] A) Never, always ship features
+- [ ] B) Only during incidents
+- [x] C) When error budget is critically low (<10%)
+- [ ] D) Every Friday
+
+**Explanation**: Freeze deploys when error budget is critically low (<10% remaining) per error budget policy.
+
+---
+
+#### Question 6
+
+**What's a good starting point for SLOs?**
+
+- [ ] A) 100% (perfection)
+- [ ] B) 50% (average)
+- [x] C) Slightly below current performance
+- [ ] D) As long as it takes
+
+**Explanation**: Start slightly below current performance, then tighten as you improve. Easier to tighten than loosen.
+
+---
+
+#### Question 6
+
+**How many SLOs should a service have?**
+
+- [ ] A) Exactly 1
+- [ ] B) At least 10
+- [x] C) 3-5 most critical metrics
+- [ ] D) One per feature
+
+**Explanation**: 3-5 well-chosen SLOs beat 20 mediocre ones. Focus on what users care about.
+
+---
+
+#### Question 7
+
+**What's the purpose of multi-window SLOs?**
+
+- [ ] A) Confuse people with more metrics
+- [ ] B) Show off monitoring capabilities
+- [x] C) Provide early warning of SLO violations
+- [ ] D) Meet compliance requirements
+
+**Explanation**: Multi-window SLOs (1h, 1d, 7d, 30d) provide early warning - shorter windows detect trends before 30-day SLO is breached.
+
+---
+
+#### Question 8
+
+**What does Deployment Rework Rate measure?**
+
+- [ ] A) All failed deployments
+- [x] B) Incident-driven, unplanned deployments
+- [ ] C) All deployments during an incident
+- [ ] D) Reverted commits
+
+**Explanation**: Deployment Rework Rate = unplanned, incident-driven deployments / total deployments. Measures unplanned work due to incidents.
+
+---
+
+#### Question 10
+
+**What should you do when error budget is exhausted?**
+
+- [ ] Keep deploying and hope for the best
+- [x] Freeze feature deploys, focus on reliability
+- [ ] Blame the team and continue
+- [ ] Ignore it and keep shipping
+
+**Explanation**: Per error budget policy: budget exhausted → deploy freeze + reliability sprint.
+
+---
+
+### Quiz Results
+
+**Score: X / 10**
+
+- ✅ **Passed** (8+): Excellent! You understand SLIs/SLOs/Error Budgets with uFawkesObs.
+- ❌ **Not Yet** (<8): Review the theory section and try again.
+
+---
+
+## 6. Reflection & Next Steps (5 minutes)
 
 ### What You Learned
 
-✅ **SLIs**: User-centric metrics that indicate happiness
-✅ **SLOs**: Targets for SLIs that balance reliability and innovation
-✅ **Error Budgets**: Allowed unreliability enabling risk-taking
-✅ **Burn Rates**: Speed of error budget consumption
-✅ **SLO-Driven Decisions**: Data-driven deployment and reliability choices
-✅ **Implementation**: Prometheus, recording rules, alerts, dashboards
+✅ **You now know**:
+- How to define SLIs that measure user happiness
+- How to set SLOs that balance reliability and innovation
+- How to calculate and track error budgets with uFawkesObs
+- How to configure burn rate alerts for early warning
+- How to make SLO-driven deployment decisions
 
-### Key Takeaways
+✅ **You can now**:
+- Define SLIs for your services using uFawkesObs Prometheus
+- Set appropriate SLOs with appropriate time windows
+- Implement error budget tracking with burn rate alerts
+- Build Grafana dashboards for SLO/error budget visualization
+- Make data-driven deployment decisions using error budgets
 
-1. **SLOs create shared language** - Teams align on reliability
-2. **Error budgets enable innovation** - Spend budget on features
-3. **Measure what users care about** - SLIs should reflect user experience
-4. **Start conservative** - Easier to tighten than loosen SLOs
-5. **Fewer is better** - 3-5 well-chosen SLOs beat 20 mediocre ones
-6. **Burn rate matters** - Track how fast you're consuming budget
-7. **Use data to decide** - Deploy when budget allows, freeze when exhausted
+### How This Connects to Your Work
 
-### Real-World Impact
+**For Developers**:
+- You can now define SLIs that reflect user experience
+- You can use error budgets to justify deployment decisions
+- You have a framework for negotiating scope vs reliability
 
-"After implementing SLIs/SLOs/Error Budgets:
+**For Platform Engineers**:
+- You understand how to maintain the SLO platform
+- You can help teams set appropriate SLOs
+- You see how error budgets enable innovation
 
-- **Deployment confidence**: 70% → 95% (data-driven decisions)
-- **Reliability**: 99.5% → 99.9% (clear targets)
-- **Innovation velocity**: 30% increase (error budget enables risk)
-- **Team alignment**: Dramatically improved (shared language)
-- **Customer satisfaction**: NPS +20 points (met expectations)
-- **Incident response**: Faster (clear SLO breach alerts)
+**For Leaders**:
+- You can articulate reliability in business terms
+- You understand the trade-offs between speed and reliability
+- You can make data-driven investment decisions
 
-We transformed from arguing about reliability to managing it scientifically."
+### Reflection Questions
 
-- *Engineering Director, SaaS Platform*
+1. **What surprised you most about SLIs/SLOs/Error Budgets?**
+2. **How does your current reliability process compare?**
+3. **What would you change about your current SLOs?**
+4. **Who on your team should go through this module?**
 
----
+### Preview: Module 16
 
-## 📚 Additional Resources
+**Next Up: Incident Management Mastery**
 
-### Books
+In Module 16, you'll learn:
+- Advanced incident response procedures
+- Chaos engineering for reliability validation
+- MTTR optimization techniques
+- Postmortem culture and blameless postmortems
 
-- *Site Reliability Engineering* - Google (free online)
-- *The Site Reliability Workbook* - Google
-- *Implementing Service Level Objectives* - Alex Hidalgo
-
-### Tools
-
-- [Sloth](https://sloth.dev/) - SLO generator for Prometheus
-- [Pyrra](https://github.com/pyrra-dev/pyrra) - SLO tracking
-- [OpenSLO](https://openslo.com/) - SLO specification standard
-
-### Learning Resources
-
-- [Google SRE - SLO Chapter](https://sre.google/sre-book/service-level-objectives/)
-- [Embracing Risk](https://sre.google/sre-book/embracing-risk/)
-- [SLO Workshop](https://slo-workshop.stevesnet.com/)
+**Time**: 3-4 hours
+**Prerequisites**: Modules 13-15 complete ✅
 
 ---
 
-## 🏅 Module Completion
+## Module Completion
 
-### Assessment Checklist
+### ✅ You've Completed Module 15
 
-- [ ] **Conceptual Understanding**
+**Next Steps**:
+1. ✅ Mark this module complete in your Backstage profile
+2. 📊 View your progress on the Dojo dashboard
+3. 💬 Share your completion in `#dojo-achievements` (optional!)
+4. ➡️ **Continue to Module 16: Advanced Incident Management**
 
-  - [ ] Explain SLIs, SLOs, error budgets
-  - [ ] Calculate burn rates
-  - [ ] Understand SLO-driven decisions
-
-- [ ] **Practical Skills**
-
-  - [ ] Define SLIs for services
-  - [ ] Set appropriate SLOs
-  - [ ] Implement monitoring
-  - [ ] Create dashboards
-  - [ ] Configure alerts
-
-- [ ] **Hands-On Lab**
-
-  - [ ] Complete SLO implementation
-  - [ ] Recording rules working
-  - [ ] Alerts configured
-  - [ ] Dashboard functional
-
-- [ ] **Quiz**
-  - [ ] Score 80% or higher (6/8 questions)
-
-### Certification Credit
-
-Upon completion, you earn:
-
-- **10 points** toward Brown Belt certification (75% complete)
-- **Badge**: "SLO Architect"
-- **Skill Unlocked**: Service Reliability Engineering
+**Time Investment**: 3-4 hours
+**Skills Gained**: SLI/SLO definition, error budget management, burn rate alerting, SLO dashboards, data-driven reliability decisions
+**Progress**: 3 of 4 modules toward Brown Belt (75% complete)
 
 ---
 
-## 🎖️ Brown Belt Progress
+**Questions or Issues?**
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-brown-belt`
+- 📧 Email: dojo@ufawkes.dev
+- 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 
-```
-Brown Belt: Observability & SRE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Module 13: Observability          ████████░░░░ 25% ✓
-Module 14: DORA Metrics           ████████░░░░ 50% ✓
-Module 15: SLIs/SLOs/Budgets      ████████░░░░ 75% ✓
-Module 16: Incident Management    ░░░░░░░░░░░░  0%
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-**Next Module Preview**: Module 16 - Advanced Incident Management (Postmortems, chaos engineering, MTTR optimization)
+**Feedback?**
+- Rate this module (takes 30 seconds)
+- Suggest improvements
+- Help us make the dojo better!
 
 ---
 
-*Fawkes Dojo - Where Platform Engineers Are Forged*
-*Version 1.0 | Last Updated: October 2025*
-*License: MIT | https://github.com/paruff/fawkes*
+**Module Author**: Fawkes Learning Team
+**Last Updated**: October 2026
+**Version**: 2.0 (uFawkesObs migration)
