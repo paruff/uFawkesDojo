@@ -47,13 +47,22 @@ under Release = "Dojo compose", not in this file.
    cycle. Lab instructions and validation script added in
    `yellow-belt/module-05-ci-fundamentals/lab-01/`.
 
-   **Module 6 lab migration** (this PR): Yellow Belt Module 6 migrated to
+   **Module 6 lab migration** (PR #71): Yellow Belt Module 6 migrated to
    uFawkesPipe v2.0.0 — implements Golden Path pipelines via `.fawkespipe.yml`
    contract, Golden Path templates (Python, Java, Node.js, Go), pipeline
    optimization (parallel stages, CNB caching, resource tuning). Lab demonstrates
    template customization, parallel execution, CNB caching, and build performance
    measurement. Lab instructions and validation script added in
    `yellow-belt/module-06-golden-path/lab-01/`.
+
+   **Module 7 lab migration** (this PR): Yellow Belt Module 7 migrated to
+   uFawkesPipe v2.0.0 — implements security scanning & quality gates via
+   uFawkesPipe security stages (secrets-scan, vuln-scan-fs, vuln-scan-image,
+   sast, dependency_scan, image_scan, dast, defectdojo). Lab demonstrates
+   SAST configuration (SonarQube, Trivy, Bandit), dependency/image scanning,
+   secret detection (Gitleaks), quality gates, and DefectDojo integration.
+   Lab instructions and validation script added in
+   `yellow-belt/module-07-security-scanning/lab-01/`.
 
 ## Phase 0.2.4 — uFawkesDevX → White Belt (after uFawkesDevX v0.1.0 + AC-004, Dojo 0.5)
 
