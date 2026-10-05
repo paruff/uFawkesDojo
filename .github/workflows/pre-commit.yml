@@ -13,8 +13,12 @@ name: Pre-commit
     branches: [main]
   workflow_dispatch:
 
+# Pre-flight's job asks for pull-requests: read (to read the PR's size and
+# commits); a called workflow can't have more than its caller grants, so a
+# caller without it never starts (startup_failure).
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   pre-commit:
