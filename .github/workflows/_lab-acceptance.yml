@@ -161,14 +161,18 @@ jobs:
       - name: Collect stack logs
         if: always()
         run: |
-          {
-            if [ -d uFawkesObs ]; then
-              (cd uFawkesObs && docker compose logs --no-color) \
-                || echo "note: docker compose logs exited non-zero (stack may be down)"
-            else
-              echo "note: uFawkesObs checkout missing — no stack logs to collect"
-            fi
-          } > compose-logs.txt 2>&1
+          # --profile '*': every uFawkesObs service is profiled, so a
+          # profile-less `docker compose logs` selects none of them and the
+          # evidence file comes out silently empty (what the first nightly
+          # run did). Each branch below is explicit — this file never ends
+          # up empty without saying why.
+          if [ ! -d uFawkesObs ]; then
+            echo "note: uFawkesObs checkout missing — no stack logs to collect" > compose-logs.txt
+          elif ! (cd uFawkesObs && docker compose --profile '*' logs --no-color) > compose-logs.txt 2>&1; then
+            echo "note: docker compose logs exited non-zero (stack may be down)" >> compose-logs.txt
+          elif [ ! -s compose-logs.txt ]; then
+            echo "note: docker compose logs returned no output (unexpected — the stack should be running)" >> compose-logs.txt
+          fi
 
       - name: Upload run evidence
         if: always()
@@ -183,8 +187,15 @@ jobs:
       - name: Tear down the stack
         if: always()
         run: |
-          if [ -d uFawkesObs ]; then
-            (cd uFawkesObs && docker compose down -v --remove-orphans)
-          else
+          # Same profile gotcha as log collection: a profile-less
+          # `docker compose down` exits 0 while removing nothing (verified
+          # against a profiled test service), so it would "succeed"
+          # without stopping the stack.
+          if [ ! -d uFawkesObs ]; then
             echo "uFawkesObs checkout missing — nothing to tear down"
+          elif ! (cd uFawkesObs && docker compose --profile '*' down -v --remove-orphans); then
+            # Loud but non-fatal: the runner is ephemeral, so a failed
+            # teardown must not redden an otherwise-green lab run — it is
+            # still annotated in the run, never hidden.
+            echo "::warning::teardown of the uFawkesObs stack failed — see this step's log"
           fi
