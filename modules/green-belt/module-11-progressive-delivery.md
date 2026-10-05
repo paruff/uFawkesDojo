@@ -11,7 +11,103 @@
 - Module 9 & 10 complete
 - Understanding of canary deployments
 - Familiarity with Prometheus metrics
-- Basic knowledge of automated analysis
+- Basic Kubernetes knowledge
+
+---
+
+## 🚀 Why Kubernetes Now? (Green Belt Opening)
+
+### The Platform Engineering Imperative
+
+**Kubernetes has become the universal control plane for cloud-native infrastructure.** What started as Google's internal container orchestration system has become the de facto standard for running containerized workloads at scale. Here's why Kubernetes is now the default choice for platform engineering:
+
+### 1. Industry Standard & Ecosystem Maturity
+
+| Year | Milestone |
+|------|-----------|
+| 2014 | Kubernetes 1.0 released |
+| 2017 | CNCF graduates Kubernetes (first graduate) |
+| 2019 | Kubernetes dominates container orchestration (>85% market share) |
+| 2023 | 96% of organizations using or evaluating Kubernetes (CNCF survey) |
+| 2024 | Every major cloud provider offers managed Kubernetes (EKS, GKE, AKS) |
+
+**The ecosystem has matured**: Helm charts, Operators, CSI drivers, CNI plugins, service meshes (Istio, Linkerd), GitOps tools (ArgoCD, Flux), service meshes, and security tools (Kyverno, OPA) all center around Kubernetes.
+
+### 2. Declarative Infrastructure as Code
+
+Kubernetes' declarative API model aligns perfectly with GitOps:
+
+```
+Traditional (Imperative):  kubectl create deployment nginx --image=nginx
+GitOps (Declarative):      kubectl apply -f deployment.yaml  # desired state in Git
+```
+
+**Why this matters**: Declarative APIs enable GitOps - the desired state lives in Git, and controllers continuously reconcile actual state to desired state.
+
+### 3. Cloud-Native Ecosystem Integration
+
+| Cloud-Native Need | Kubernetes Solution |
+|-------------------|---------------------|
+| Service Discovery | CoreDNS, kube-dns |
+| Load Balancing | Services, Ingress, Gateway API |
+| Storage | CSI drivers, PVCs, StorageClasses |
+| Networking | CNI plugins (Cilium, Calico), NetworkPolicies |
+| Security | RBAC, NetworkPolicies, PodSecurity, OPA/Kyverno |
+| Observability | Prometheus, OpenTelemetry, OpenCost |
+| Supply Chain | SLSA, in-toto, Sigstore, Tekton Chains |
+
+### 4. Multi-Cloud & Hybrid Portability
+
+Kubernetes provides a **consistent abstraction layer** across:
+- **Public Cloud**: EKS (AWS), GKE (Google), AKS (Azure)
+- **On-Premises**: OpenShift, Rancher, Kubeadm, Talos
+- **Edge**: K3s, KubeEdge, KubeVirt
+- **Development**: Kind, k3d, Minikube, Docker Desktop
+
+**Write once, run anywhere** - the same manifests work across environments.
+
+### 4. GitOps & Platform Engineering Alignment
+
+GitOps is the operational model for Kubernetes:
+
+```
+Git (Source of Truth) → ArgoCD/Flux (Controller) → Kubernetes (Reconciliation)
+```
+
+This is why **ArgoCD** (Module 9) and **Argo Rollouts** (this module) are the flagship progressive delivery tools for Kubernetes.
+
+### Why Not Alternatives?
+
+| Alternative | Limitation |
+|-------------|------------|
+| **Docker Swarm** | Limited ecosystem, no GitOps native, Docker-only |
+| **Nomad** | Smaller ecosystem, HashiCorp-only tooling |
+| **ECS/Fargate** | AWS lock-in, no multi-cloud portability |
+| **VMs + Ansible** | No self-healing, no declarative reconciliation, slow scaling |
+
+### Why This Matters for Your Career
+
+- **Job Market**: 96% of organizations use Kubernetes (CNCF 2024)
+- **Skill Transferability**: Skills transfer across all major clouds
+- **Platform Engineering Foundation**: Kubernetes is the platform for platform engineering
+
+---
+
+### What This Module Covers
+
+This module teaches **Progressive Delivery** - the evolution of Continuous Delivery where deployments are gradual, metrics-driven, and automated. You'll learn:
+
+1. **Progressive Delivery** - The evolution beyond CD
+2. **Argo Rollouts** - Kubernetes controller for progressive delivery
+3. **Canary Analysis** - Automated metric analysis for promotion/rollback
+4. **Argo Rollouts** - Kubernetes controller for progressive delivery
+4. **Analysis Templates** - Metrics-driven promotion/rollback decisions
+4. **Traffic Management** - Istio, NGINX, Traefik for traffic splitting
+5. **Hands-On Lab** - Progressive canary with automated promotion/rollback
+
+---
+
+**NOTE**: This module was previously numbered as "Module 7" but has been renumbered to Module 11 to align with the Dojo Architecture where Green Belt begins at Module 9.
 
 ---
 

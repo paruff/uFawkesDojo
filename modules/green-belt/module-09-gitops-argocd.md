@@ -16,6 +16,95 @@
 
 ---
 
+## 🚀 Why Kubernetes Now? (Green Belt Opening)
+
+### The Platform Engineering Imperative
+
+**Kubernetes has become the universal control plane for cloud-native infrastructure.** What started as Google's internal container orchestration system has become the de facto standard for running containerized workloads at scale. Here's why Kubernetes is now the default choice for platform engineering:
+
+### 1. Industry Standard & Ecosystem Maturity
+
+| Year | Milestone |
+|------|-----------|
+| 2014 | Kubernetes 1.0 released |
+| 2017 | CNCF graduates Kubernetes (first graduate) |
+| 2019 | Kubernetes dominates container orchestration (>85% market share) |
+| 2023 | 96% of organizations using or evaluating Kubernetes (CNCF survey) |
+| 2024 | Every major cloud provider offers managed Kubernetes (EKS, GKE, AKS) |
+
+**The ecosystem has matured**: Helm charts, Operators, CSI drivers, CNI plugins, service meshes (Istio, Linkerd), GitOps tools (ArgoCD, Flux), service meshes, and security tools (Kyverno, OPA) all center around Kubernetes.
+
+### 2. Declarative Infrastructure as Code
+
+Kubernetes' declarative API model aligns perfectly with GitOps:
+
+```
+Traditional (Imperative):  kubectl create deployment nginx --image=nginx
+GitOps (Declarative):      kubectl apply -f deployment.yaml  # desired state in Git
+```
+
+**Why this matters**: Declarative APIs enable GitOps - the desired state lives in Git, and controllers continuously reconcile actual state to desired state.
+
+### 3. Cloud-Native Ecosystem Integration
+
+| Cloud-Native Need | Kubernetes Solution |
+|-------------------|---------------------|
+| Service Discovery | CoreDNS, kube-dns |
+| Load Balancing | Services, Ingress, Gateway API |
+| Storage | CSI drivers, PVCs, StorageClasses |
+| Networking | CNI plugins (Cilium, Calico), NetworkPolicies |
+| Security | RBAC, NetworkPolicies, PodSecurity, OPA/Kyverno |
+| Observability | Prometheus, OpenTelemetry, OpenCost |
+| Supply Chain | SLSA, in-toto, Sigstore, Tekton Chains |
+
+### 4. Multi-Cloud & Hybrid Portability
+
+Kubernetes provides a **consistent abstraction layer** across:
+- **Public Cloud**: EKS (AWS), GKE (Google), AKS (Azure)
+- **On-Premises**: OpenShift, Rancher, Kubeadm, Talos, Talos
+- **Edge**: K3s, KubeEdge, KubeVirt
+- **Development**: Kind, k3d, Minikube, Docker Desktop
+
+**Write once, run anywhere** - the same manifests work across environments.
+
+### 4. GitOps & Platform Engineering Alignment
+
+GitOps is the operational model for Kubernetes:
+
+```
+Git (Source of Truth) → ArgoCD/Flux (Controller) → Kubernetes (Reconciliation)
+```
+
+This is why **ArgoCD** (the focus of this module) is the flagship GitOps tool for Kubernetes.
+
+### 5. Why Not Alternatives?
+
+| Alternative | Limitation |
+|-------------|------------|
+| **Docker Swarm** | Limited ecosystem, no GitOps native, Docker-only |
+| **Nomad** | Smaller ecosystem, HashiCorp-only tooling |
+| **ECS/Fargate** | AWS lock-in, no multi-cloud portability |
+| **VMs + Ansible** | No self-healing, no declarative reconciliation, slow scaling |
+
+### Why This Matters for Your Career
+
+- **Job Market**: 96% of organizations use Kubernetes (CNCF 2024)
+- **Skill Transferability**: Skills transfer across all major clouds
+- **Platform Engineering Foundation**: Kubernetes is the platform for platform engineering
+
+---
+
+### What This Module Covers
+
+This module teaches **GitOps with ArgoCD** - the canonical GitOps implementation for Kubernetes. You'll learn:
+
+1. **GitOps principles** - Declarative, versioned, automated
+2. **ArgoCD Architecture** - Controller, Repo Server, API Server, CLI/UI
+3. **Hands-on Lab** - Deploy your first application with ArgoCD
+3. **GitOps & DORA** - How GitOps improves Deployment Frequency, Lead Time, CFR, MTTR
+
+---
+
 **NOTE**: This module was previously numbered as "Module 6" but has been renumbered to Module 9 to align with the Dojo Architecture where Green Belt begins at Module 9.
 
 ---
@@ -1628,25 +1717,31 @@ syncPolicy:
 
 ## 📖 Appendix D: Integration Examples
 
-### ArgoCD + Jenkins
+### ArgoCD + Tekton
 
-```groovy
-// Jenkinsfile snippet
-stage('Update Manifest') {
-    steps {
-        script {
-            sh """
+```yaml
+# Tekton PipelineRun for updating ArgoCD manifests
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: update-manifest
+  namespace: tekton-pipelines
+spec:
+  pipelineSpec:
+    tasks:
+      - name: update-manifest
+        taskSpec:
+          steps:
+            - name: update-manifest
+              image: alpine/git
+              script: |
+                #!/bin/sh
                 git clone https://github.com/org/manifests.git
                 cd manifests
                 sed -i 's|image:.*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' deployment.yaml
                 git add deployment.yaml
                 git commit -m "Update image to ${BUILD_NUMBER}"
                 git push
-            """
-            // ArgoCD will automatically sync
-        }
-    }
-}
 ```
 
 ### ArgoCD + GitHub Actions
