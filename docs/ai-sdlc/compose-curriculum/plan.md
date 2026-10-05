@@ -44,6 +44,29 @@ under Release = "Dojo compose", not in this file.
    golden path as "first deployment"). This replaces the kubectl-first
    Module 1 lab.
 
+   **Module 1 lab migration** (PR #69): White Belt Module 1 migrated to
+   uFawkesDevX v1.0.1 — scaffolds `hello-devx` via Cookiecutter
+   python-flask-app template, registers in Backstage via Score service API.
+   Lab instructions and validation script added in
+   `white-belt/module-01-what-is-idp/lab-01/`.
+
+   **Module 3 lab migration** (PR #70): White Belt Module 3 migrated to
+   uFawkesDevX v1.0.1 — implements GitOps principles via Score service
+   (spec validation, pipeline trigger), Backstage catalog (source of truth),
+   and Scaffolder (self-service). Lab demonstrates Score API registration,
+   Scaffolder template, and rollback via spec revert.
+   Lab instructions and validation script added in
+   `white-belt/module-03-gitops-principles/lab-01/`.
+
+   **Module 4 lab migration** (this PR): White Belt Module 4 migrated to
+   uFawkesDevX v1.0.1 — implements end-to-end deployment workflow via
+   Scaffolder (template), Score Service (spec validation, pipeline trigger),
+   uFawkesPipe (Woodpecker CI/CD), and Coder (devcontainer workspace).
+   Lab demonstrates Scaffolder template creation, Score spec submission,
+   pipeline execution, and Coder workspace verification.
+   Lab instructions and validation script added in
+   `white-belt/module-04-first-deployment/lab-01/`.
+
 ## Phase 0.2.5 — Green Belt graduation framing (no stack dependency, Dojo 0.6)
 
 1. Add a "why Kubernetes now" opening to Modules 9–12.
