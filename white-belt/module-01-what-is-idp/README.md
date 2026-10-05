@@ -1,8 +1,8 @@
 # Module 1: What is an Internal Delivery Platform?
 
 **Belt Level**: 🥋 White Belt
-**Estimated Time**: 60 minutes (15 min theory + 45 min hands-on lab)
-**Prerequisites**: Basic command line, Git, and Kubernetes knowledge
+**Estimated Time**: 60 minutes (15 min theory + 20 min hands-on lab + 5 min quiz + 5 min reflection + 10 min demo)
+**Prerequisites**: Basic command line, Git, and Docker knowledge
 **DORA Capability**: Continuous Delivery (introduction)
 
 ---
@@ -14,18 +14,21 @@ By the end of this module, you will be able to:
 - ✅ Define what an Internal Delivery Platform (IDP) is and explain its core components
 - ✅ Articulate why organisations need IDPs using concrete DORA metrics
 - ✅ Explain the "Platform as a Product" mindset and its benefits
-- ✅ Navigate the Fawkes platform (Backstage portal, ArgoCD, Grafana)
-- ✅ Deploy a sample service using the Fawkes golden path template
-- ✅ Verify end-to-end delivery: code → ArgoCD → Kubernetes → observability
+- ✅ Navigate the uFawkesDevX platform (Backstage portal, Coder, Score service)
+- ✅ Scaffold a new service using a golden-path Cookiecutter template
+- ✅ Register a service in the Backstage catalog and verify it
 
 ---
 
 ## Module Structure
 
-| Section | Time   | Description                                         |
-| ------- | ------ | --------------------------------------------------- |
-| Theory  | 15 min | What is an IDP, DORA metrics, Platform as a Product |
-| Lab 01  | 45 min | Deploy `hello-fawkes` via golden path template      |
+| Section   | Time   | Description                                              |
+| --------- | ------ | -------------------------------------------------------- |
+| Theory    | 15 min | What is an IDP, DORA metrics, Platform as a Product      |
+| Demo      | 10 min | uFawkesDevX platform tour (video not produced)            |
+| Lab 01    | 20 min | Start uFawkesDevX, explore catalog, scaffold service     |
+| Quiz      | 5 min  | 10-question knowledge check                              |
+| Reflection| 5 min  | Connect learnings to your work                           |
 
 ---
 
@@ -58,27 +61,31 @@ According to the 2024 State of DevOps Report, elite performers compared to low p
 An IDP is the mechanism that moves teams from low to elite performance by removing
 toil, enforcing quality gates, and providing golden paths.
 
-### The Fawkes Platform Components
+### The uFawkesDevX Platform Components
 
 | Component                | Purpose                                                             |
 | ------------------------ | ------------------------------------------------------------------- |
-| **Backstage**            | Developer portal — service catalog, TechDocs, golden path templates |
-| **ArgoCD**               | GitOps — syncs Git state to Kubernetes automatically                |
-| **Prometheus + Grafana** | Observability — metrics, dashboards, alerting                       |
-| **Vault**                | Secrets management                                                  |
-| **k3d**                  | Local Kubernetes cluster for development                            |
+| **Backstage**            | Developer portal — service catalog, TechDocs, golden path scaffolder |
+| **Coder**                | Cloud IDE — provisions ephemeral devcontainer workspaces            |
+| **Score Service**        | Workload spec validation and pipeline triggering                    |
+| **Plugin Manager**       | Platform extension and plugin management                            |
+| **API Gateway**          | Unified entry point for all platform APIs                           |
+| **Golden Path Templates**| Cookiecutter templates pre-wired with devcontainer, Score, CI/CD   |
 
 ---
 
 ## Lab
 
-➡️ **[Lab 01: Deploy a Service via Golden Path Template](lab-01/instructions.md)**
+➡️ **[Lab 01: Scaffold a Service via Golden Path Template](lab-01/instructions.md)**
 
-This lab walks you through deploying a sample service (`hello-fawkes`) using the
-Fawkes platform. You will apply Kubernetes manifests, register the service in
-Backstage, and verify the full delivery pipeline end-to-end.
+This lab walks you through starting the uFawkesDevX platform, exploring the Backstage
+catalog, and scaffolding a new service (`hello-devx`) using the Fawkes golden path
+template. You will register the service in Backstage and verify it appears in the
+catalog with TechDocs.
 
-**Validation**: `make dojo-validate BELT=white MODULE=01 LAB=01`
+**Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose), not `fawkes`/Kubernetes
+
+**Validation**: `bash white-belt/module-01-what-is-idp/lab-01/validate.sh`
 
 ---
 
@@ -87,9 +94,9 @@ Backstage, and verify the full delivery pipeline end-to-end.
 You have mastered this module when you can:
 
 - Explain to a colleague why your organisation needs a platform (in business terms)
-- Navigate the Fawkes Backstage portal and find a service's TechDocs
-- Deploy a new service using the golden path template and confirm it is healthy
-- Describe how ArgoCD keeps Git and cluster state in sync
+- Navigate the uFawkesDevX Backstage portal and find a service's TechDocs
+- Scaffold a new service using the golden path template and confirm it is registered
+- Describe how the Score service validates workload specs and triggers pipelines
 
 ---
 

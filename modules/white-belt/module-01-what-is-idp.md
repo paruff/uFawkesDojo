@@ -17,8 +17,9 @@ By the end of this module, you will be able to:
 - ✅ Articulate why organizations need IDPs using concrete business metrics
 - ✅ Explain the "Platform as a Product" mindset and its benefits
 - ✅ Identify the key stakeholders and their needs in platform engineering
-- ✅ Navigate the Fawkes platform and understand its architecture
+- ✅ Navigate the uFawkesDevX platform (Backstage portal, Coder, Score service) and understand its architecture
 - ✅ Recognize how Team Topologies concepts apply to platform teams
+- ✅ Use a golden-path Cookiecutter template to scaffold a production-ready service
 
 ### Why It Matters
 
@@ -37,9 +38,10 @@ By the end of this module, you will be able to:
 You've mastered this module when you can:
 
 - Explain to a colleague why your organization needs a platform (in business terms)
-- Navigate the Fawkes Backstage portal confidently
-- Identify which Fawkes components serve which developer needs
+- Navigate the uFawkesDevX Backstage portal confidently
+- Identify which uFawkesDevX components serve which developer needs
 - Articulate the difference between "platform" and "just some scripts"
+- Scaffold a new service using a golden-path template and register it in Backstage
 
 ---
 
@@ -53,7 +55,7 @@ You've mastered this module when you can:
 > - Definition: IDP as "self-service platform that provides golden paths"
 > - Key components: Portal, CI/CD, Observability, Infrastructure
 > - Platform as Product: treating developers as customers
-> - Fawkes tour: Show actual platform in action
+> - uFawkesDevX tour: Show actual platform in action
 > - Closing: "A platform that makes the right thing the easy thing"
 
 ### What is an Internal Delivery Platform?
@@ -159,61 +161,77 @@ With a platform:
 
 #### Real-World Example: Spotify
 
-Spotify's Backstage (which Fawkes uses!) reduced their time to:
+Spotify's Backstage (which uFawkesDevX uses!) reduced their time to:
 
 - **Provision a new service**: From 4 weeks → 5 minutes
 - **Deploy to production**: From 2 hours → 10 minutes
 - **Onboard a new developer**: From 2 weeks → 1 day
 
-### Fawkes Platform Architecture
+### uFawkesDevX Platform Architecture
 
-Fawkes provides a complete IDP built on industry-standard open-source tools:
+uFawkesDevX provides a complete IDP developer experience plane built on industry-standard open-source tools, running entirely in Docker Compose—no Kubernetes cluster required.
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│              Developer Experience Layer                  │
-│  ┌────────────────────────────────────────────────────┐ │
-│  │  Backstage Portal (Developer Portal)               │ │
-│  │  • Service Catalog  • TechDocs  • Scaffolder     │ │
-│  └────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼─────────────────────────────────┐
-│                  Core Platform Services                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │   CI/CD      │  │ GitOps       │  │ Observability│   │
-│  │  (Jenkins)   │  │ (ArgoCD)     │  │ (Prometheus) │   │
-│  └──────────────┘  └──────────────┘  └──────────────┘   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │  Artifacts   │  │  Security    │  │ Collaboration│   │
-│  │  (Harbor)    │  │  (Trivy)     │  │ (GitHub Discussions) │   │
-│  └──────────────┘  └──────────────┘  └──────────────┘   │
-└───────────────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼─────────────────────────────────┐
-│            Infrastructure & Orchestration                 │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │  Kubernetes Clusters (AWS EKS)                     │  │
-│  │  • Multi-environment (dev, staging, prod)         │  │
-│  │  • Multi-tenant namespaces                        │  │
-│  │  • Infrastructure as Code (Terraform)             │  │
-│  └────────────────────────────────────────────────────┘  │
-└───────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         uFawkesDevX (Docker Compose)                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                      Developer Experience Layer                     │   │
+│  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │   │
+│  │  │   Backstage      │  │     Coder        │  │  Score Service   │  │   │
+│  │  │   (Portal)       │  │  (Cloud IDE)     │  │  (Workload API)  │  │   │
+│  │  │  • Catalog       │  │  • Workspaces    │  │  • Validation    │  │   │
+│  │  │  • TechDocs      │  │  • Devcontainers │  │  • Pipeline      │  │   │
+│  │  │  • Scaffolder    │  │                  │  │    Triggers      │  │   │
+│  │  └──────────────────┘  └──────────────────┘  └──────────────────┘  │   │
+│  │         │                     │                      │              │   │
+│  │         └─────────────────────┼──────────────────────┘              │   │
+│  │                               ▼                                     │   │
+│  │  ┌──────────────────────────────────────────────────────────────┐  │   │
+│  │  │              API Gateway (nginx) — Unified Entry Point       │  │   │
+│  │  │              /api/score  /api/plugins  /backstage            │  │   │
+│  │  └──────────────────────────────────────────────────────────────┘  │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│  ┌─────────────────────────────────▼──────────────────────────────────┐  │
+│  │                    Core Platform Services                          │  │
+│  │  ┌──────────────────────────────────────────────────────────────┐  │  │
+│  │  │  Plugin Manager — Manages platform extensions and plugins    │  │  │
+│  │  └──────────────────────────────────────────────────────────────┘  │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                    │                                        │
+│  ┌─────────────────────────────────▼──────────────────────────────────┐  │
+│  │                 Data & Runtime Layer                               │  │
+│  │  ┌──────────────┐  ┌──────────────────────────────────────────┐  │  │
+│  │  │  PostgreSQL  │  │  Host Docker Daemon                      │  │  │
+│  │  │  (External)  │  │  (Coder provisions workspace containers) │  │  │
+│  │  │  • coder DB  │  │                                        │  │  │
+│  │  │  • backstage │  │                                        │  │  │
+│  │  │  • score DB  │  │                                        │  │  │
+│  │  └──────────────┘  └──────────────────────────────────────────┘  │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │  Golden Path      │
+                    │  Cookiecutter     │
+                    │  Templates        │
+                    │  • Python Flask   │
+                    │  • Java Spring    │
+                    │  • Node Express   │
+                    │  • Go HTTP        │
+                    └───────────────────┘
 ```
 
-#### Key Fawkes Components
+#### Key uFawkesDevX Components
 
-| Component              | Purpose                           | Technology              |
-| ---------------------- | --------------------------------- | ----------------------- |
-| **Backstage**          | Developer portal, service catalog | Backstage by Spotify    |
-| **Jenkins**            | CI/CD pipelines                   | Jenkins with K8s agents |
-| **ArgoCD**             | GitOps continuous deployment      | ArgoCD                  |
-| **Harbor**             | Container registry                | Harbor registry         |
-| **Prometheus/Grafana** | Metrics & monitoring              | Prometheus stack        |
-| **OpenSearch**         | Log aggregation & search          | OpenSearch              |
-| **Grafana Tempo**      | Distributed tracing               | Grafana Tempo           |
-| **GitHub Discussions** | Team collaboration & Q&A          | GitHub Discussions      |
-| **Focalboard**         | Project tracking                  | Focalboard              |
+| Component              | Purpose                                           | Technology                           |
+| ---------------------- | ------------------------------------------------- | ------------------------------------ |
+| **Backstage**          | Developer portal — service catalog, TechDocs, scaffolder | Backstage by Spotify (custom build) |
+| **Coder**              | Cloud IDE — provisions ephemeral devcontainer workspaces | Coder v2.34.3                        |
+| **Score Service**      | Validates Score workload specs, triggers pipelines | Custom Go service                    |
+| **Plugin Manager**     | Manages platform extensions and plugins           | Custom Node.js service               |
+| **API Gateway**        | Unified entry point for all platform APIs         | nginx 1.27-alpine                    |
+| **Golden Path Templates** | Cookiecutter templates for pre-wired services | Cookiecutter + devcontainer + Score  |
 
 ### Common Pitfalls & How to Avoid Them
 
@@ -246,42 +264,36 @@ Fawkes provides a complete IDP built on industry-standard open-source tools:
 
 ## 3. Demonstration (10 minutes)
 
-### 📺 Video: Fawkes Platform Tour (10 minutes) — *not built yet*
+### 📺 Video: uFawkesDevX Platform Tour (10 minutes) — *not built yet*
 
-> **[VIDEO PLACEHOLDER]** > **Script** *(video not produced)*: Instructor walks through Fawkes platform showing:
+> **[VIDEO PLACEHOLDER]** > **Script** *(video not produced)*: Instructor walks through uFawkesDevX platform showing:
 >
-> 1. **Backstage Home** (1 min)
+> 1. **Backstage Home** (2 min)
 >    - Overview page, quick links
 >    - Component search
-> 2. **Service Catalog** (2 min)
->    - Browse services
+> 2. **Service Catalog** (3 min)
+>    - Browse pre-populated uFawkes planes (DevX, Pipe, Obs, Sec)
 >    - View service details (APIs, docs, owner)
->    - Dependencies visualization
+>    - Score service and Plugin Manager components
 > 3. **TechDocs** (1 min)
 >    - Navigate documentation
 >    - Search functionality
-> 4. **Create New Service** (2 min)
->    - Click "Create" → choose template
->    - Fill in service details
->    - Show generated repository
-> 5. **DORA Dashboard** (2 min)
->    - View deployment frequency
->    - Lead time for changes
->    - Show live metrics
-> 6. **CI/CD View** (2 min)
->    - Jenkins integration
->    - Pipeline status
->    - Build logs
->
-> **Key Message**: "Notice how everything you need is in one place. No jumping between 12 different tools."
+> 4. **Scaffolder / Golden Paths** (2 min)
+>    - Show Cookiecutter templates available
+>    - Demonstrate scaffolding a new service
+> 5. **Coder Workspaces** (2 min)
+>    - Create workspace from scaffolded repo
+>    - Show devcontainer in action
+
+> **Key Message**: "Notice how everything you need is in one place. No jumping between 12 different tools. The golden path takes you from 'new service idea' to 'running in a devcontainer' in minutes."
 
 ### Key Takeaways from Demo
 
 1. **Single Pane of Glass**: All your tools accessible from Backstage
 2. **Self-Service**: Create new services in minutes, not weeks
 3. **Discoverability**: Find services, docs, and owners easily
-4. **Visibility**: See deployments, metrics, and health in real-time
-5. **Standardization**: Every service follows the same patterns
+4. **Standardization**: Every service follows the same patterns via golden paths
+5. **No Cluster Required**: Runs entirely in Docker Compose on your laptop
 
 ---
 
@@ -289,143 +301,29 @@ Fawkes provides a complete IDP built on industry-standard open-source tools:
 
 ### Lab Overview
 
-You'll explore the Fawkes Backstage portal, navigate the service catalog, and understand the platform architecture by completing a scavenger hunt.
+You'll start the uFawkesDevX platform, explore the Backstage catalog, scaffold a new service using a golden-path Cookiecutter template, and register it in Backstage.
 
-**Time Estimate**: 15-20 minutes
-**Difficulty**: Beginner
+**Time Estimate**: 20 minutes
+**Difficulty**: Beginner (basic Docker knowledge required)
 **Auto-Graded**: Yes
 **Points**: 50
 
 ### Lab Environment
 
-When you click "Start Lab", we'll provision:
+When you start this lab, you'll provision:
 
-- ✅ Access to Fawkes demo environment
-- ✅ Read-only access to sample services
-- ✅ Your personal lab notebook (Markdown file)
-- ✅ Credentials in your Backstage profile
+- ✅ uFawkesDevX v1.0.1 stack running locally in Docker Compose
+- ✅ Local PostgreSQL with required databases (coder, backstage, score)
+- ✅ Backstage catalog pre-populated with uFawkes plane components
+- ✅ Golden-path Cookiecutter templates ready to use
 
-**Environment will be available for 24 hours from start time.**
+**Environment will be available as long as you keep the containers running.**
 
-### Lab Instructions
+➡️ **[Lab 01: Deploy a Service via Golden Path Template](white-belt/module-01-what-is-idp/lab-01/instructions.md)**
 
-#### Part 1: Navigate Backstage (15 points)
+This lab walks you through starting the uFawkesDevX platform, exploring the Backstage catalog, and scaffolding a new service (`hello-devx`) using the Fawkes golden path template.
 
-1. **Access Backstage** (3 points)
-
-   - Click "Start Lab" button below
-   - Log in with your dojo credentials
-   - Find the "Home" page
-
-   ✅ **Validation**: We'll check that you logged in successfully
-
-2. **Explore the Catalog** (6 points)
-
-   - Click "Catalog" in the left sidebar
-   - Find a service called `sample-spring-boot-app`
-   - Open its details page
-   - Find and click "View Source" to see its GitHub repo
-
-   ✅ **Validation**: We'll check that you visited the service page
-
-3. **View Documentation** (6 points)
-
-   - While on the `sample-spring-boot-app` page, click "Docs" tab
-   - Read the "Getting Started" documentation
-   - Notice the "Edit on GitHub" link
-
-   ✅ **Validation**: We'll check that you accessed TechDocs
-
-#### Part 2: Understand Service Details (20 points)
-
-4. **Identify Service Owner** (5 points)
-
-   - On the `sample-spring-boot-app` page, find the "About" section
-   - Note the owner (person or team)
-   - Find the GitHub Discussions category for support
-
-   📝 **Submit**: Who owns this service? (Type answer in lab notebook)
-
-5. **Explore Dependencies** (5 points)
-
-   - Click the "Dependencies" tab
-   - Identify what APIs this service depends on
-
-   📝 **Submit**: How many dependencies does this service have?
-
-6. **Check CI/CD Status** (5 points)
-
-   - Click the "CI/CD" tab
-   - View the latest Jenkins pipeline run
-   - Note whether the build passed or failed
-
-   📝 **Submit**: What was the status of the last build?
-
-7. **Review DORA Metrics** (5 points)
-
-   - Navigate to "DORA Metrics" from the left sidebar
-   - Find the deployment frequency for the last 7 days
-   - Note the lead time for changes
-
-   📝 **Submit**: What is the deployment frequency? (e.g., "5 per week")
-
-#### Part 3: Platform Architecture Understanding (15 points)
-
-8. **Identify Platform Components** (10 points)
-
-   - Navigate to "Platform Services" from the left sidebar
-   - You should see tiles for Jenkins, ArgoCD, Harbor, Grafana, etc.
-   - Click on each one to see its status
-
-   📝 **Submit**: List the 5 platform services you found (comma-separated)
-
-9. **Explore a Deployment** (5 points)
-
-   - Click on "ArgoCD" tile to open ArgoCD
-   - Browse the applications
-   - Find the `sample-spring-boot-app` in the list
-
-   📝 **Submit**: What is the sync status of the sample app in ArgoCD?
-
-### Lab Submission
-
-Once you've completed all tasks:
-
-1. Open your lab notebook (automatically created in your namespace)
-2. Ensure all answers are recorded
-3. Click "Submit Lab" button in Backstage
-
-**Auto-grading will run within 1 minute.** You'll see:
-
-- ✅ Checks that passed (green)
-- ❌ Checks that failed (red) with hints
-- Final score out of 50 points
-- Option to retry if score < 40
-
-### Troubleshooting Hints
-
-**Can't log in to Backstage?**
-
-- Verify you're using your dojo username (not email)
-- Try incognito/private browsing mode
-- Check [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for support
-
-**Can't find a service?**
-
-- Use the search bar (top right)
-- Check that catalog loaded (refresh if empty)
-- Try filtering by "Kind: Component"
-
-**ArgoCD or other tools not opening?**
-
-- Some links open in new tabs (check pop-up blocker)
-- You may need to accept security warnings (self-signed certs in demo environment)
-
-**Lab not grading?**
-
-- Ensure you clicked "Submit Lab" button
-- Wait up to 60 seconds for auto-grading
-- Check that all required answers are in your lab notebook
+**Validation**: `bash white-belt/module-01-what-is-idp/lab-01/validate.sh`
 
 ---
 
@@ -489,7 +387,7 @@ Once you've completed all tasks:
 
 #### Question 5
 
-**What is Backstage in the Fawkes platform?**
+**What is Backstage in the uFawkesDevX platform?**
 
 - [ ] A) The CI/CD pipeline tool
 - [x] B) The developer portal that provides a single pane of glass
@@ -541,14 +439,14 @@ Once you've completed all tasks:
 
 #### Question 9
 
-**In Fawkes, which tool is responsible for GitOps-based deployments?**
+**In uFawkesDevX, which tool provisions cloud IDE workspaces?**
 
-- [ ] A) Jenkins
-- [x] B) ArgoCD
-- [ ] C) Harbor
-- [ ] D) Backstage
+- [ ] A) Backstage
+- [x] B) Coder
+- [ ] C) Score Service
+- [ ] D) Plugin Manager
 
-**Explanation**: **ArgoCD** manages GitOps-style continuous deployment, syncing Git repos to Kubernetes clusters.
+**Explanation**: **Coder** provisions ephemeral devcontainer workspaces on the host Docker daemon.
 
 ---
 
@@ -587,22 +485,23 @@ Congratulations! 🎉 You've completed Module 1. Let's recap:
 - What an Internal Delivery Platform is and why it matters
 - The "Platform as a Product" mindset
 - How Team Topologies applies to platform teams
-- The Fawkes platform architecture and components
+- The uFawkesDevX platform architecture and components
 - How to navigate Backstage and find information
+- How to scaffold a service using a golden-path template
 
 ✅ **You can now**:
 
 - Explain the business value of IDPs to colleagues
-- Navigate the Fawkes Backstage portal confidently
+- Navigate the uFawkesDevX Backstage portal confidently
 - Identify the core components of the platform
-- Find service owners, documentation, and dependencies
+- Scaffold a new service from a golden-path template
 
 ### How This Connects to Your Work
 
 **For Developers**:
 
 - You now understand why your company invested in a platform
-- You know where to find docs, who to ask for help, and how to deploy apps
+- You know where to find docs, who to ask for help, and how to create new services
 - You can take advantage of golden paths instead of reinventing the wheel
 
 **For Platform Engineers**:
@@ -623,18 +522,19 @@ Take 2 minutes to think about:
 
 1. **What surprised you most about IDPs?**
 
-   - Was there a concept that changed your perspective?
+    - Was there a concept that changed your perspective?
 
 2. **How does your current workflow compare?**
 
-   - Are you using a platform? Doing things manually? Somewhere in between?
+    - Are you using a platform? Doing things manually? Somewhere in between?
 
 3. **What would improve your developer experience?**
 
-   - If you could wave a magic wand, what would you change?
+    - If you could wave a magic wand, what would you change?
 
 4. **Who could benefit from this knowledge?**
-   - Think of 2-3 colleagues who should go through this module
+
+    - Think of 2-3 colleagues who should go through this module
 
 ### Additional Resources
 
@@ -665,11 +565,11 @@ In Module 2, you'll learn:
 
 - The five DORA metrics, including Deployment Rework Rate
 - Why these metrics matter to your business
-- How Fawkes automatically tracks DORA metrics
+- How uFawkesObs automatically tracks DORA metrics
 - How to interpret your team's metrics and drive improvement
 
 **Time**: 60 minutes
-**Hands-On**: Build your first DORA dashboard
+**Hands-On**: Send real events to a live DORA dashboard
 
 **Get Ready**: Think about your team's current deployment process. How long does it take? How often do you deploy? How often do deployments fail?
 
@@ -687,7 +587,7 @@ In Module 2, you'll learn:
 4. ➡️ **Continue to Module 2** when ready
 
 **Time Investment**: 60 minutes
-**Skills Gained**: Platform fundamentals, Backstage navigation
+**Skills Gained**: Platform fundamentals, Backstage navigation, golden-path scaffolding
 **Progress**: 1 of 4 modules toward White Belt (25% complete)
 
 ---
@@ -707,5 +607,5 @@ In Module 2, you'll learn:
 ---
 
 **Module Author**: Fawkes Learning Team
-**Last Updated**: October 2025
-**Version**: 1.0
+**Last Updated**: October 2026
+**Version**: 2.0
