@@ -8,14 +8,19 @@
 
 ---
 
-## What this lab replaces
+## What this lab does
 
-Lab 01 had you `curl` the `dora-api` directly. That was a workaround for
-GAP-01..03 (missing `jsonschema`, broken repo inference, no Loki proof).
-Those gaps are now fixed in `uFawkesAI/scripts/emit-dora-event.sh` and
-`verify-dora-event-in-loki.sh`. This lab uses the **real emitter** — the
-same script uFawkesPipe runs in CI — and proves the event reaches Grafana
-via Loki.
+This lab walks you through the **complete DORA event flow**:
+1. **Emit** a real deployment event using the canonical emitter
+2. **Verify** the event reaches Loki via the verification script
+3. **Visualize** the event in Grafana — the central focus of this lab
+
+This lab uses the **real emitter** (`scripts/emit-dora-event.sh`) — the same
+script uFawkesPipe runs in CI — and proves the event reaches Grafana via Loki.
+
+> **No workarounds**: The GAP-01..03 gaps (missing `jsonschema`, broken repo
+> inference, no Loki proof) are fixed in `uFawkesAI/scripts/emit-dora-event.sh`
+> and `verify-dora-event-in-loki.sh`. This lab uses the **real emitter**.
 
 ---
 
@@ -101,9 +106,10 @@ LogQL: {service_name="uFawkesAI", exporter="OTLP"} | json | line_format "{{.body
 
 ---
 
-## Step 3 — See it in Grafana (5 minutes)
+## 🎯 Step 2 — See It in Grafana (10 minutes) — **THE CENTERPIECE**
 
-Now open Grafana and watch the dashboards update.
+This is the **main event** of the lab — watching your event flow through the
+entire pipeline and land in Grafana.
 
 ```bash
 # Open Grafana
@@ -111,22 +117,37 @@ open http://localhost:3000
 # Login: admin / the password you set in uFawkesObs/.env
 ```
 
-1. **Dashboards → DORA Metrics** — refresh after 20–30 seconds
-   - **Deployment Frequency** count goes up by 1
-   - **Rework Rate** shows your new event's `ai_assisted` flag
-   - **Lead Time for Changes** appears (from PR metadata)
+### 2.1 Dashboards → DORA Metrics (watch live)
 
-2. **Dashboards → DORA Overview** — refresh
-   - The worked-example data now includes your real event
+1. Navigate to **Dashboards → DORA Metrics**
+2. Refresh after 20–30 seconds
+3. Watch these panels update with your event:
 
-3. **Explore** → select **Loki** data source → run the LogQL:
+| Panel | What to watch |
+|-------|---------------|
+| **Deployment Frequency** | Count goes up by 1 |
+| **Rework Rate** | Shows your event's `ai_assisted` flag |
+| **Lead Time for Changes** | Appears from PR metadata |
+
+### 2.2 Dashboards → DORA Overview
+
+1. Navigate to **Dashboards → DORA Overview**
+2. Refresh — the worked-example data now includes **your real event**
+
+### 2.3 Explore → Loki (deep dive)
+
+1. Click **Explore** → select **Loki** data source
+2. Run this LogQL query:
    ```logql
    {service_name="uFawkesAI", exporter="OTLP"} | json | event="deployment"
    ```
-   You'll see your `deploy-marker` event with full DORA payload:
+3. You'll see your `deploy-marker` event with the **full DORA payload**:
    `schema_version`, `event_type`, `repo`, `service`, `environment`,
    `commit_sha`, `deployed_at`, `status`, `deployment_intent`,
    `pipeline_url`, `ai_assisted`, `first_commit_at`, `pr_merged_at`.
+
+> ✅ **Checkpoint**: Your event is visible in Grafana — the full DORA
+> pipeline is working end-to-end!
 
 ---
 

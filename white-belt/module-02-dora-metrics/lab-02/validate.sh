@@ -146,14 +146,16 @@ GRAFANA_USER="admin"
 GRAFANA_PASS="${GRAFANA_ADMIN_PASSWORD:-admin}"
 if curl -fsS -u "${GRAFANA_USER}:${GRAFANA_PASS}" \
   "http://localhost:3000/api/dashboards/uid/dora-metrics" > /dev/null 2>&1; then
-  log_ok "DORA Metrics Dashboard: reachable via Grafana API"
+  record_test "Grafana Dashboard" "PASS" "DORA Metrics Dashboard reachable via Grafana API"
 else
   # Try the Overview dashboard as fallback
-  if curl -fsS -u "${GRAFANA_USER}:${GRAFANA_PASS}" \
-    "http://localhost:3000/api/dashboards/uid/dora-overview" > /dev/null 2>&1; then
-    log_ok "DORA Overview Dashboard: reachable via Grafana API (fallback)"
+  http_code=$(curl -fsS -u "admin:admin" \
+    -o /dev/null -w "%{http_code}" \
+    "http://localhost:3000/api/dashboards/uid/dora-overview" 2> /dev/null || echo "000")
+  if [ "$http_code" = "200" ]; then
+    record_test "Grafana Dashboard" "PASS" "DORA Overview Dashboard reachable (fallback)"
   else
-    log_fail "DORA Dashboards: NOT reachable via Grafana API"
+    record_test "Grafana Dashboard" "FAIL" "Grafana API returned HTTP ${http_code} at /api/dashboards/uid/dora-metrics"
   fi
 fi
 
