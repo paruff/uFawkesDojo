@@ -25,7 +25,7 @@ By the end of this module, you will be able to:
 | Section   | Time   | Description                                              |
 | --------- | ------ | -------------------------------------------------------- |
 | Theory    | 15 min | What is an IDP, DORA metrics, Platform as a Product      |
-| Demo      | 10 min | uFawkesDevX platform tour (video placeholder)            |
+| Demo      | 10 min | uFawkesDevX platform tour (video not produced)            |
 | Lab 01    | 20 min | Start uFawkesDevX, explore catalog, scaffold service     |
 | Quiz      | 5 min  | 10-question knowledge check                              |
 | Reflection| 5 min  | Connect learnings to your work                           |
