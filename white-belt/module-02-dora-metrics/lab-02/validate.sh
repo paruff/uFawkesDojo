@@ -7,7 +7,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-UFAWKESAI_ROOT="${ROOT}/../uFawkesAI"
+# Sibling checkout by default (the labs' layout); overridable so CI can point
+# at wherever it checked uFawkesAI out, like the other env-configurable vars
+# across these validate scripts.
+UFAWKESAI_ROOT="${UFAWKESAI_ROOT:-${ROOT}/../uFawkesAI}"
 
 # Colors
 RED='\033[0;31m'
@@ -68,19 +71,29 @@ check_url() {
 log_info "Starting White Belt Module 02 Lab 02 validation..."
 
 # ── Prerequisites ────────────────────────────────────────────────────────
-check_cmd docker
-check_cmd curl
-check_cmd jq
-check_cmd python3
+# Top-level checks are guarded with `|| true` so one failure can't abort the
+# run under `set -e` before the remaining checks and the summary report —
+# a partial report would hide what actually broke. The exit code still comes
+# from the fail counter at the end.
+check_cmd docker || true
+check_cmd curl || true
+check_cmd jq || true
+check_cmd python3 || true
 check_cmd gh || log_skip "gh (GitHub CLI) not installed; PR metadata will be limited"
 
 # ── uFawkesObs stack ─────────────────────────────────────────────────────
-check_container "uFawkesObs-dora-api-1"
-check_container "uFawkesObs-dora-compute-1"
-check_container "uFawkesObs-grafana-1"
+# Container names are uFawkesObs's explicit container_name values; the old
+# compose-project-prefixed names (uFawkesObs-dora-api-1, ...) no longer exist.
+check_container "ufawkesdora-ingestion" || true
 
-check_url "http://localhost:8088/health" "dora-api Health"
-check_url "http://localhost:3000/api/health" "Grafana Health"
+# dora-compute was folded into dora-api (uFawkesObs commit 2c0c84a); its
+# in-process loop publishes DORA metrics on /metrics — check that instead.
+check_url "http://localhost:8088/metrics" "dora-api DORA metrics (in-process compute)" || true
+
+check_container "grafana" || true
+
+check_url "http://localhost:8088/health" "dora-api Health" || true
+check_url "http://localhost:3000/api/health" "Grafana Health" || true
 
 # ── uFawkesAI scripts ────────────────────────────────────────────────────
 if [ -f "${UFAWKESAI_ROOT}/scripts/emit-dora-event.sh" ]; then
@@ -98,14 +111,20 @@ fi
 # ── Emit a deploy-marker event ───────────────────────────────────────────
 log_info "Emitting deploy-marker event via emit-dora-event.sh..."
 cd "${UFAWKESAI_ROOT}"
+# stderr is kept out of the captured JSON (the emitter's warnings would break
+# the jq parses below) but is never discarded silently: on failure it is
+# printed, so "the emit failed" and its reason are both visible.
+EVENT_ERR="${TMPDIR:-/tmp}/emit-dora-event.err"
 EVENT_JSON=$(OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 \
   bash scripts/emit-dora-event.sh deploy-marker \
   --status success \
   --environment production \
   --deployment-intent planned \
-  --repo dojo-lab/test 2> /dev/null) || {
+  --repo dojo-lab/test 2> "$EVENT_ERR") || {
   log_fail "emit-dora-event.sh failed to emit deploy-marker"
-  exit 1
+  echo "--- emit-dora-event.sh stderr ---"
+  cat "$EVENT_ERR" 2> /dev/null || echo "(no stderr captured)"
+  echo "---"
 }
 
 if echo "$EVENT_JSON" | jq -e '.dora_event != null' > /dev/null; then
@@ -127,35 +146,45 @@ fi
 log_info "Verifying event reached Loki via verify-dora-event-in-loki.sh..."
 # We run the verification script which emits its own marker and polls Loki
 # It's a good proxy for the overall Loki ingestion path.
-if bash scripts/verify-dora-event-in-loki.sh > /dev/null 2>&1; then
+# Captured output is surfaced on failure — swallowing it would make
+# "the check couldn't run" look identical to "the event never arrived".
+verify_rc=0
+verify_out=$(bash scripts/verify-dora-event-in-loki.sh 2>&1) || verify_rc=$?
+if [ "$verify_rc" -eq 0 ]; then
   log_ok "verify-dora-event-in-loki.sh: marker event found in Loki"
+elif [ "$verify_rc" -eq 2 ]; then
+  # Exit code 2 = SKIP (Loki down), 1 = timeout, 0 = found
+  log_skip "verify-dora-event-in-loki.sh: Loki not reachable (SKIP)"
 else
-  # Check exit code: 2 = SKIP (Loki down), 1 = timeout, 0 = found
-  exit_code=$?
-  if [ $exit_code -eq 2 ]; then
-    log_skip "verify-dora-event-in-loki.sh: Loki not reachable (SKIP)"
-  else
-    log_fail "verify-dora-event-in-loki.sh: marker event NOT found in Loki (timeout)"
-  fi
+  log_fail "verify-dora-event-in-loki.sh: marker event NOT found in Loki (timeout)"
+  echo "$verify_out" | tail -n 20
 fi
 
 # ── Grafana dashboard check ──────────────────────────────────────────────
 log_info "Checking DORA Metrics dashboard via Grafana API..."
-# Check if Grafana API can list the DORA Metrics dashboard
-GRAFANA_USER="admin"
-GRAFANA_PASS="${GRAFANA_ADMIN_PASSWORD:-admin}"
+# Anonymous access is disabled in uFawkesObs, so authenticate: env override
+# first (GRAFANA_ADMIN_USER/GRAFANA_ADMIN_PASSWORD), then a ./.env beside the
+# stack when run from inside the uFawkesObs checkout — the same resolution
+# Lab 01's validate uses. Provisioned DORA dashboards use the
+# ufawkesobs-dora-* uids (the bare dora-* uids never existed here).
+GRAFANA_USER="${GRAFANA_ADMIN_USER:-admin}"
+GRAFANA_PASS="${GRAFANA_ADMIN_PASSWORD:-}"
+if [ -z "$GRAFANA_PASS" ] && [ -f "./.env" ]; then
+  GRAFANA_PASS=$(grep -E '^GRAFANA_ADMIN_PASSWORD=' ./.env | cut -d= -f2- || true)
+fi
+GRAFANA_PASS="${GRAFANA_PASS:-admin}"
 if curl -fsS -u "${GRAFANA_USER}:${GRAFANA_PASS}" \
-  "http://localhost:3000/api/dashboards/uid/dora-metrics" > /dev/null 2>&1; then
-  record_test "Grafana Dashboard" "PASS" "DORA Metrics Dashboard reachable via Grafana API"
+  "http://localhost:3000/api/dashboards/uid/ufawkesobs-dora-metrics" > /dev/null 2>&1; then
+  log_ok "Grafana Dashboard: DORA Metrics Dashboard reachable via Grafana API"
 else
-  # Try the Overview dashboard as fallback
-  http_code=$(curl -fsS -u "admin:admin" \
-    -o /dev/null -w "%{http_code}" \
-    "http://localhost:3000/api/dashboards/uid/dora-overview" 2> /dev/null || echo "000")
+  # Try the Overview dashboard as fallback (same credentials)
+  http_code=$(curl -sS -o /dev/null -w "%{http_code}" \
+    "http://localhost:3000/api/dashboards/uid/ufawkesobs-dora-overview" \
+    -u "${GRAFANA_USER}:${GRAFANA_PASS}" 2> /dev/null || echo "000")
   if [ "$http_code" = "200" ]; then
-    record_test "Grafana Dashboard" "PASS" "DORA Overview Dashboard reachable (fallback)"
+    log_ok "Grafana Dashboard: DORA Overview Dashboard reachable (fallback)"
   else
-    record_test "Grafana Dashboard" "FAIL" "Grafana API returned HTTP ${http_code} at /api/dashboards/uid/dora-metrics"
+    log_fail "Grafana Dashboard: Grafana API returned HTTP ${http_code} at /api/dashboards/uid/ufawkesobs-dora-metrics — set GRAFANA_ADMIN_PASSWORD to the value in your uFawkesObs .env (anonymous access is disabled)"
   fi
 fi
 

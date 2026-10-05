@@ -25,6 +25,29 @@ ALERTMANAGER_URL="${ALERTMANAGER_URL:-http://localhost:9093}"
 OTEL_URL="${OTEL_URL:-http://localhost:8888}"
 UF_OBS_DIR="${UF_OBS_DIR:-~/dojo-labs/uFawkesObs}"
 
+# Grafana API credentials — anonymous access is disabled by design in
+# uFawkesObs (see SECURITY.md), so the datasource check authenticates.
+# Resolution: env override, then the .env beside the stack ($UF_OBS_DIR/.env),
+# then ./.env (when run from inside the uFawkesObs checkout).
+GRAFANA_USER="${GRAFANA_ADMIN_USER:-}"
+GRAFANA_PASS="${GRAFANA_ADMIN_PASSWORD:-}"
+
+load_grafana_credentials() {
+  if [ -n "$GRAFANA_PASS" ]; then
+    return 0
+  fi
+  local envfile
+  for envfile in "${UF_OBS_DIR}/.env" "./.env"; do
+    [ -f "$envfile" ] || continue
+    if [ -z "$GRAFANA_USER" ]; then
+      GRAFANA_USER=$(grep -E '^GRAFANA_ADMIN_USER=' "$envfile" | cut -d= -f2- || true)
+    fi
+    GRAFANA_PASS=$(grep -E '^GRAFANA_ADMIN_PASSWORD=' "$envfile" | cut -d= -f2- || true)
+    [ -n "$GRAFANA_PASS" ] && return 0
+  done
+  return 0
+}
+
 # Test results
 TOTAL_TESTS=0
 PASSED_TESTS=0
@@ -97,7 +120,11 @@ check_ufobs_services() {
 
     if docker ps --filter "name=^${container}$" --filter "status=running" --format '{{.Names}}' 2> /dev/null | grep -q "^${container}$"; then
       local health
-      health=$(docker inspect --format '{{.State.Health.Status}}' "${container}" 2> /dev/null || echo "none")
+      # {{if .State.Health}} keeps containers without a healthcheck (tempo,
+      # otel-collector) at "none"; the bare .State.Health.Status template
+      # prints a newline plus an error, which never equals "none" and made
+      # healthy stacks fail this check.
+      health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "${container}" 2> /dev/null || echo "none")
       if [ "$health" = "healthy" ] || [ "$health" = "none" ]; then
         log_success "  $label ($container): running${health:+ (health: $health)}"
       else
@@ -120,12 +147,21 @@ check_ufobs_services() {
 check_grafana_datasources() {
   log_info "Checking Grafana datasources..."
 
+  load_grafana_credentials
+  if [ -z "$GRAFANA_PASS" ]; then
+    # Loud skip, never a silent pass: the check didn't run, so it must not
+    # read as if it did (AGENTS.md: no swallowed failures).
+    log_warning "Grafana Datasources: skipped — no credentials found. Set GRAFANA_ADMIN_PASSWORD, or keep it in ${UF_OBS_DIR}/.env"
+    return
+  fi
+  local auth=(-u "${GRAFANA_USER:-admin}:${GRAFANA_PASS}")
+
   local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${GRAFANA_URL}/api/datasources" 2> /dev/null || echo "000")
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${auth[@]}" "${GRAFANA_URL}/api/datasources" 2> /dev/null || echo "000")
 
   if [ "$http_code" = "200" ]; then
     local body
-    body=$(curl -s --max-time 10 "${GRAFANA_URL}/api/datasources" 2> /dev/null || echo "[]")
+    body=$(curl -s --max-time 10 "${auth[@]}" "${GRAFANA_URL}/api/datasources" 2> /dev/null || echo "[]")
 
     local required=("Prometheus" "Loki" "Tempo" "Alertmanager")
     local missing=()
@@ -142,7 +178,7 @@ check_grafana_datasources() {
       record_test "Grafana Datasources" "FAIL" "Missing datasources: ${missing[*]}"
     fi
   else
-    record_test "Grafana Datasources" "FAIL" "Grafana API returned HTTP $http_code at ${GRAFANA_URL}/api/datasources"
+    record_test "Grafana Datasources" "FAIL" "Grafana API returned HTTP $http_code at ${GRAFANA_URL}/api/datasources — check GRAFANA_ADMIN_PASSWORD matches your uFawkesObs .env"
   fi
 }
 
@@ -171,12 +207,17 @@ check_prometheus_metrics() {
 check_loki_logs() {
   log_info "Checking Loki log queries..."
 
+  # Loki rejects stream (log) queries against the instant-query endpoint
+  # ("log queries are not supported as an instant query type") — log queries
+  # must go to query_range, which defaults start/end when omitted.
+  # Note: braces must be percent-encoded — curl's URL globbing strips raw
+  # {…} from the request line, which turns the query into a 400 parse error.
   local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${LOKI_URL}/loki/api/v1/query?query={compose_project%21%3D%22%22}" 2> /dev/null || echo "000")
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${LOKI_URL}/loki/api/v1/query_range?query=%7Bcompose_project%21%3D%22%22%7D" 2> /dev/null || echo "000")
 
   if [ "$http_code" = "200" ]; then
     local body
-    body=$(curl -s --max-time 10 "${LOKI_URL}/loki/api/v1/query?query={compose_project%21%3D%22%22}" 2> /dev/null || echo "")
+    body=$(curl -s --max-time 10 "${LOKI_URL}/loki/api/v1/query_range?query=%7Bcompose_project%21%3D%22%22%7D" 2> /dev/null || echo "")
 
     if echo "$body" | jq -e '.status == "success"' > /dev/null 2>&1; then
       record_test "Loki Logs" "PASS" "LogQL query successful"
@@ -191,12 +232,13 @@ check_loki_logs() {
 check_tempo_traces() {
   log_info "Checking Tempo trace queries..."
 
+  # Braces percent-encoded: curl's URL globbing strips raw {…} (see Loki check).
   local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${TEMPO_URL}/api/search?q={service.name%3D%22telemetry-generator%22}" 2> /dev/null || echo "000")
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${TEMPO_URL}/api/search?q=%7Bresource.service.name%3D%22telemetry-generator%22%7D" 2> /dev/null || echo "000")
 
   if [ "$http_code" = "200" ]; then
     local body
-    body=$(curl -s --max-time 10 "${TEMPO_URL}/api/search?q={service.name%3D%22telemetry-generator%22}" 2> /dev/null || echo "")
+    body=$(curl -s --max-time 10 "${TEMPO_URL}/api/search?q=%7Bresource.service.name%3D%22telemetry-generator%22%7D" 2> /dev/null || echo "")
 
     if echo "$body" | jq -e '.traces | length > 0' > /dev/null 2>&1; then
       record_test "Tempo Traces" "PASS" "Found traces for telemetry-generator"
@@ -244,11 +286,12 @@ check_alerting() {
 check_dora_profile() {
   log_info "Checking DORA metrics profile..."
 
-  # Check if DORA services are running
+  # Check if DORA services are running. dora-compute was folded into
+  # dora-api and Pushgateway was dropped (uFawkesObs commit 2c0c84a): the
+  # compute loop runs in-process and publishes on dora-api's /metrics, so
+  # that surface is what this check asserts.
   local dora_services=(
-    "dora-api:DORA API"
-    "dora-compute:DORA Compute"
-    "pushgateway:Pushgateway"
+    "ufawkesdora-ingestion:DORA API"
   )
 
   local all_healthy=true
@@ -265,17 +308,17 @@ check_dora_profile() {
   done
 
   if [ "$all_healthy" = "true" ]; then
-    # Try to query DORA API
-    local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://localhost:8088/health" 2> /dev/null || echo "000")
+    local health_code metrics_code
+    health_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://localhost:8088/health" 2> /dev/null || echo "000")
+    metrics_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://localhost:8088/metrics" 2> /dev/null || echo "000")
 
-    if [ "$http_code" = "200" ]; then
-      record_test "DORA Profile" "PASS" "DORA services running and API healthy"
+    if [ "$health_code" = "200" ] && [ "$metrics_code" = "200" ]; then
+      record_test "DORA Profile" "PASS" "dora-api healthy and exposing DORA metrics (compute runs in-process)"
     else
-      record_test "DORA Profile" "WARN" "DORA services running but API health check failed (HTTP $http_code)"
+      record_test "DORA Profile" "FAIL" "dora-api health=HTTP $health_code, metrics=HTTP $metrics_code — check 'docker logs ufawkesdora-ingestion'"
     fi
   else
-    record_test "DORA Profile" "FAIL" "DORA services not running — enable with 'make up-dora'"
+    record_test "DORA Profile" "FAIL" "DORA API not running — enable with 'make up-dora'"
   fi
 }
 
@@ -324,7 +367,7 @@ check_logql_query() {
     local encoded
     encoded=$(echo "$query" | jq -sRr @uri)
     local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${LOKI_URL}/loki/api/v1/query?query=${encoded}" 2> /dev/null || echo "000")
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${LOKI_URL}/loki/api/v1/query_range?query=${encoded}" 2> /dev/null || echo "000")
 
     if [ "$http_code" = "200" ]; then
       log_success "  LogQL OK: $query"
@@ -344,7 +387,9 @@ check_logql_query() {
 check_traceql_query() {
   log_info "Testing TraceQL query capability..."
 
-  local query='{service.name="telemetry-generator"}'
+  # TraceQL scopes bare attributes to spans; service.name lives on the
+  # resource, so it must be resource.service.name (a bare one is a 400).
+  local query='{resource.service.name="telemetry-generator"}'
   local encoded
   encoded=$(echo "$query" | jq -sRr @uri)
   local http_code

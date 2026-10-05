@@ -77,6 +77,24 @@ check_dora_api_health() {
   fi
 }
 
+# uFawkesObs folded dora-compute into dora-api (commit 2c0c84a): the compute
+# loop now runs in-process and publishes its results on /metrics. Verify that
+# surface instead of a container that no longer exists.
+check_dora_metrics() {
+  log_info "Checking DORA compute metrics endpoint..."
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    --max-time 5 "${DORA_API_URL}/metrics" 2> /dev/null || echo "000")
+
+  if [ "$http_code" = "200" ]; then
+    record_test "DORA Compute" "PASS" \
+      "dora-api exposes DORA metrics at ${DORA_API_URL}/metrics (compute runs in-process)"
+  else
+    record_test "DORA Compute" "FAIL" \
+      "dora-api /metrics returned HTTP $http_code — compute runs inside dora-api now; check 'docker logs ufawkesdora-ingestion'"
+  fi
+}
+
 check_grafana_health() {
   log_info "Checking Grafana health..."
   local http_code
@@ -163,8 +181,8 @@ main() {
 
   check_prerequisites
   check_container_running "dora-api" "ufawkesdora-ingestion"
-  check_container_running "dora-compute" "ufawkesdora-compute"
   check_container_running "grafana" "grafana"
+  check_dora_metrics
   check_dora_api_health
   check_grafana_health
 

@@ -26,6 +26,29 @@ DORA_API_URL="${DORA_API_URL:-http://localhost:8088}"
 PUSHGATEWAY_URL="${PUSHGATEWAY_URL:-http://localhost:9091}"
 UF_OBS_DIR="${UF_OBS_DIR:-~/dojo-labs/uFawkesObs}"
 
+# Grafana API credentials — anonymous access is disabled by design in
+# uFawkesObs (see SECURITY.md), so dashboard checks authenticate.
+# Resolution: env override, then the .env beside the stack ($UF_OBS_DIR/.env),
+# then ./.env (when run from inside the uFawkesObs checkout).
+GRAFANA_USER="${GRAFANA_ADMIN_USER:-}"
+GRAFANA_PASS="${GRAFANA_ADMIN_PASSWORD:-}"
+
+load_grafana_credentials() {
+  if [ -n "$GRAFANA_PASS" ]; then
+    return 0
+  fi
+  local envfile
+  for envfile in "${UF_OBS_DIR}/.env" "./.env"; do
+    [ -f "$envfile" ] || continue
+    if [ -z "$GRAFANA_USER" ]; then
+      GRAFANA_USER=$(grep -E '^GRAFANA_ADMIN_USER=' "$envfile" | cut -d= -f2- || true)
+    fi
+    GRAFANA_PASS=$(grep -E '^GRAFANA_ADMIN_PASSWORD=' "$envfile" | cut -d= -f2- || true)
+    [ -n "$GRAFANA_PASS" ] && return 0
+  done
+  return 0
+}
+
 # Test results
 TOTAL_TESTS=0
 PASSED_TESTS=0
@@ -80,6 +103,9 @@ check_prerequisites() {
 check_ufobs_services() {
   log_info "Checking uFawkesObs service health..."
 
+  # dora-compute was folded into dora-api and Pushgateway was dropped
+  # (uFawkesObs commit 2c0c84a): the compute loop runs in-process inside
+  # dora-api, whose container_name is ufawkesdora-ingestion.
   local services=(
     "prometheus:Prometheus"
     "grafana:Grafana"
@@ -89,9 +115,7 @@ check_ufobs_services() {
     "alloy:Alloy"
     "otel-collector:OTel Collector"
     "node-exporter:Node Exporter"
-    "dora-api:DORA API"
-    "dora-compute:DORA Compute"
-    "pushgateway:Pushgateway"
+    "ufawkesdora-ingestion:DORA API (ingestion + compute)"
   )
 
   local all_healthy=true
@@ -101,7 +125,11 @@ check_ufobs_services() {
 
     if docker ps --filter "name=^${container}$" --filter "status=running" --format '{{.Names}}' 2> /dev/null | grep -q "^${container}$"; then
       local health
-      health=$(docker inspect --format '{{.State.Health.Status}}' "${container}" 2> /dev/null || echo "none")
+      # {{if .State.Health}} keeps containers without a healthcheck (tempo,
+      # otel-collector) at "none"; the bare .State.Health.Status template
+      # prints a newline plus an error, which never equals "none" and made
+      # healthy stacks fail this check.
+      health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "${container}" 2> /dev/null || echo "none")
       if [ "$health" = "healthy" ] || [ "$health" = "none" ]; then
         log_success "  $label ($container): running${health:+ (health: $health)}"
       else
@@ -115,7 +143,7 @@ check_ufobs_services() {
   done
 
   if [ "$all_healthy" = "true" ]; then
-    record_test "uFawkesObs Stack" "PASS" "All 11 services healthy (including DORA services)"
+    record_test "uFawkesObs Stack" "PASS" "All 9 services healthy (8 core + DORA API)"
   else
     record_test "uFawkesObs Stack" "FAIL" "One or more services not healthy — run 'make status' in uFawkesObs"
   fi
@@ -138,16 +166,21 @@ check_dora_event_ingestion() {
   log_info "Checking DORA event ingestion..."
 
   # Send a test event
+  # Send a test event — must match dora/events/deployment-event.schema.json
+  # (1.0): required schema_version/repo/deployed_at/pipeline_url, commit_sha
+  # as full 40-hex, and no extra properties (timestamp, deployed_by and
+  # work_type are rejected with HTTP 422 since the schema tightened).
   local test_event
   test_event='{
+    "schema_version": "1.0",
     "event_type": "deployment",
+    "repo": "dojo-lab/validation",
     "service": "validation-test",
     "environment": "test",
+    "commit_sha": "'"$(printf '%040x' "$(date +%s)")"'",
+    "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
     "status": "success",
-    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
-    "commit_sha": "validate123",
-    "deployed_by": "validator",
-    "work_type": "feature"
+    "pipeline_url": "https://example.com/ci/validate-'"$(date +%s)"'"
   }'
 
   local http_code
@@ -206,12 +239,21 @@ check_prometheus_metrics() {
 check_grafana_dashboard() {
   log_info "Checking Grafana DORA dashboard..."
 
+  load_grafana_credentials
+  if [ -z "$GRAFANA_PASS" ]; then
+    # Loud skip, never a silent pass: the check didn't run, so it must not
+    # read as if it did (AGENTS.md: no swallowed failures).
+    log_warning "Grafana DORA Dashboard: skipped — no credentials found. Set GRAFANA_ADMIN_PASSWORD, or keep it in ${UF_OBS_DIR}/.env"
+    return
+  fi
+  local auth=(-u "${GRAFANA_USER:-admin}:${GRAFANA_PASS}")
+
   local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${GRAFANA_URL}/api/search?query=dora" 2> /dev/null || echo "000")
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${auth[@]}" "${GRAFANA_URL}/api/search?query=dora" 2> /dev/null || echo "000")
 
   if [ "$http_code" = "200" ]; then
     local body
-    body=$(curl -s --max-time 10 "${GRAFANA_URL}/api/search?query=dora" 2> /dev/null || echo "[]")
+    body=$(curl -s --max-time 10 "${auth[@]}" "${GRAFANA_URL}/api/search?query=dora" 2> /dev/null || echo "[]")
     local count
     count=$(echo "$body" | jq 'length' 2> /dev/null || echo 0)
 
@@ -221,7 +263,7 @@ check_grafana_dashboard() {
       record_test "Grafana DORA Dashboard" "FAIL" "No DORA dashboards found — create one with 5 DORA metric panels"
     fi
   else
-    record_test "Grafana DORA Dashboard" "FAIL" "Grafana API returned HTTP $http_code"
+    record_test "Grafana DORA Dashboard" "FAIL" "Grafana API returned HTTP $http_code at ${GRAFANA_URL}/api/search — check GRAFANA_ADMIN_PASSWORD matches your uFawkesObs .env (anonymous access is disabled)"
   fi
 }
 
@@ -251,19 +293,23 @@ check_alerting() {
 check_event_ingestion() {
   log_info "Checking DORA event ingestion end-to-end..."
 
-  # Send a test event with unique identifier
+  # Schema-valid test event (dora/events/deployment-event.schema.json 1.0):
+  # 40-hex commit_sha, schema_version/repo/deployed_at/pipeline_url required,
+  # no extra properties — the old timestamp/deployed_by/work_type shape is
+  # rejected with HTTP 422.
   local test_sha
-  test_sha="validate-$(date +%s)"
+  test_sha="$(printf '%040x' "$(date +%s)")"
   local test_event
   test_event="{
+    \"schema_version\": \"1.0\",
     \"event_type\": \"deployment\",
+    \"repo\": \"dojo-lab/validation\",
     \"service\": \"validation-test\",
     \"environment\": \"test\",
-    \"status\": \"success\",
-    \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
     \"commit_sha\": \"${test_sha}\",
-    \"deployed_by\": \"validator\",
-    \"work_type\": \"feature\"
+    \"deployed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+    \"status\": \"success\",
+    \"pipeline_url\": \"https://example.com/ci/validate-${test_sha}\"
   }"
 
   local http_code
@@ -273,7 +319,7 @@ check_event_ingestion() {
     -d "$test_event" 2> /dev/null || echo "000")
 
   if [ "$http_code" = "200" ] || [ "$http_code" = "201" ] || [ "$http_code" = "202" ]; then
-    # Wait a moment for dora-compute to process
+    # Give dora-api's in-process compute loop a beat before querying
     sleep 5
 
     # Check if the event appears in metrics
