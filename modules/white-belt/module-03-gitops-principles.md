@@ -1,28 +1,26 @@
-# Module 3: GitOps Principles
+# Module 3: GitOps Principles with uFawkesDevX
 
 **Belt Level**: 🥋 White Belt
 **Duration**: 60 minutes
-**Prerequisites**: Module 1 & 2 completed, Git basics
-**Learning Path**: Module 3 of 20 (White Belt: Modules 1-4)
+**Prerequisites**: Module 1 & 2 completed, Docker basics, uFawkesDevX v1.0.1 running
+**DORA Capabilities**: Continuous Delivery, Deployment Pipeline
 
 ---
 
-## 📋 Module Overview
+## 1. Learning Objectives (3 minutes)
 
-GitOps is a revolutionary approach to infrastructure and application deployment. Instead of running commands to make changes, you declare your desired state in Git, and automation ensures reality matches that declaration. This module teaches you the principles, benefits, and practices of GitOps.
+### What You'll Learn
 
-### Learning Objectives
+By the end of this module, you will be able to:
 
-By completing this module, you will be able to:
+- ✅ Define GitOps and explain its four core principles (Declarative, Versioned, Pulled, Reconciled)
+- ✅ Differentiate between push-based and pull-based deployment models
+- ✅ Explain how the Score service provides GitOps-like workload validation and pipeline triggering
+- ✅ Describe how Backstage catalog serves as the source of truth for services
+- ✅ Understand how uFawkesDevX implements GitOps principles without Kubernetes/ArgoCD
+- ✅ Make a GitOps-driven service change using the Score API and Backstage Scaffolder
 
-1. **Define** GitOps and explain its core principles
-2. **Differentiate** between push-based and pull-based deployment models
-3. **Describe** how Git becomes the single source of truth for infrastructure
-4. **Explain** the benefits of GitOps for DORA metrics and reliability
-5. **Navigate** the Fawkes GitOps repository structure
-6. **Make** a GitOps-driven deployment change in the hands-on lab
-
-### Why This Matters
+### Why It Matters
 
 GitOps is a fundamental practice in modern platform engineering:
 
@@ -31,11 +29,32 @@ GitOps is a fundamental practice in modern platform engineering:
 - **DORA research** shows GitOps supports improvement across all five delivery metrics
 - **90% of cloud-native teams** use or plan to use GitOps (CNCF Survey 2024)
 
-Understanding GitOps is essential for elite delivery performance.
+Understanding GitOps is essential for elite delivery performance — and uFawkesDevX brings these principles to your laptop via Docker Compose.
+
+### Success Criteria
+
+You've mastered this module when you can:
+
+- Explain the four GitOps principles and how uFawkesDevX implements them
+- Navigate the Backstage catalog as the source of truth
+- Register a new service via the Score API and verify it appears in Backstage
+- Use the Scaffolder to create a service and understand the pipeline trigger
+- Perform a rollback by reverting a Score workload spec
 
 ---
 
-## 📚 Section 1: The GitOps Paradigm (15 minutes)
+## 2. Theory & Concepts (20 minutes)
+
+### 📺 Video: GitOps Principles in uFawkesDevX (8 minutes) — *not produced yet*
+
+> **[VIDEO PLACEHOLDER]** > **Script Summary** *(video not produced)*:
+>
+> - Opening: Show the problem with manual deployments (drift, no audit trail, slow)
+> - GitOps definition: Declarative state in Git, automated reconciliation
+> - uFawkesDevX architecture: Score service validates specs, Backstage catalog is source of truth
+> - Demo: Register service via Score API → triggers pipeline → appears in Backstage
+> - Show rollback: Update spec → revert via Score API
+> - Closing: "GitOps without the cluster complexity"
 
 ### The Traditional Way: Imperative Operations
 
@@ -59,121 +78,128 @@ terraform apply
 - ❌ **Error-prone** - Manual commands = human mistakes
 - ❌ **No code review** - Infrastructure changes not peer-reviewed
 
-### The GitOps Way: Declarative State
+### The uFawkesDevX Way: Declarative Workload Specs
 
-**With GitOps**, you declare desired state in Git:
+**With uFawkesDevX**, you declare desired state as a Score workload spec:
 
 ```yaml
-# In Git repository: apps/prod/myapp/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
+# score.yaml - Declarative workload specification
+apiVersion: score.dev/v1b1
 metadata:
-  name: myapp
-spec:
-  replicas: 5
-  template:
-    spec:
-      containers:
-        - name: myapp
-          image: myapp:v2.0
+  name: my-service
+containers:
+  my-service:
+    image: ghcr.io/myorg/my-service:latest
+    variables:
+      PORT: "8080"
+service:
+  ports:
+    www:
+      port: 8080
+      targetPort: 8080
 ```
 
-**GitOps operator** (like ArgoCD) continuously:
-
-1. **Watches Git** for changes
-2. **Compares** Git state with cluster state
-3. **Applies** differences automatically
-4. **Heals** any manual changes (self-healing)
+**Score Service** continuously:
+1. **Validates** specs against schema when submitted
+2. **Triggers** pipeline via webhook to uFawkesPipe
+3. **Stores** spec as source of truth in Backstage catalog
+4. **Reconciles** by detecting drift between spec and deployed state
 
 **Benefits**:
-
-- ✅ **Complete audit trail** - Every change is a Git commit
-- ✅ **No drift** - System automatically returns to Git state
-- ✅ **Easy rollback** - `git revert` restores previous state
-- ✅ **Knowledge sharing** - Git repository documents everything
+- ✅ **Complete audit trail** - Every spec change is a Git commit
+- ✅ **No drift** - Score service detects and reports differences
+- ✅ **Easy rollback** - Revert spec in Git → re-submit
+- ✅ **Knowledge sharing** - Backstage catalog documents everything
 - ✅ **Reliable** - Automation eliminates human error
-- ✅ **Code review** - All changes via pull requests
+- ✅ **Code review** - All changes via pull requests on specs
 
-### Four Principles of GitOps
+### Four Principles of GitOps (Applied to uFawkesDevX)
 
-The **OpenGitOps** working group defines four core principles:
+The **OpenGitOps** working group defines four core principles. Here's how uFawkesDevX implements each:
 
 #### 1. Declarative
 
 **Definition**: System's desired state is expressed declaratively (what, not how).
 
-**Example**:
+**uFawkesDevX Example**:
 
 ```yaml
-# Declarative (GitOps) - Describe WHAT you want
-replicas: 5
-image: myapp:v2.0
-
-# vs. Imperative - Describe HOW to achieve it
-kubectl scale --replicas=5
-kubectl set image deployment/myapp myapp=v2.0
+# Declarative (Score spec) - Describe WHAT you want
+apiVersion: score.dev/v1b1
+metadata:
+  name: my-service
+containers:
+  my-service:
+    image: ghcr.io/myorg/my-service:v2.0
+    variables:
+      PORT: "8080"
+service:
+  ports:
+    www:
+      port: 8080
+      targetPort: 8080
 ```
 
-**Why it matters**: Declarative is idempotent (run multiple times = same result), easier to understand, and automation-friendly.
+**Why it matters**: Declarative is idempotent (submit multiple times = same result), easier to understand, and automation-friendly.
 
 #### 2. Versioned and Immutable
 
 **Definition**: Desired state is stored in Git, providing version history and immutability.
 
-**Benefits**:
-
+**uFawkesDevX Implementation**:
+- Score specs stored in Backstage catalog (backed by PostgreSQL with full history)
+- Git repository for each service contains `score.yaml`
 - Every change has a commit SHA (immutable reference)
 - Full history of who changed what, when, and why
-- Easy to see what production looked like at any point in time
-- Rollback is just a `git revert`
+- Rollback is just a `git revert` on the score.yaml
 
 **Example**:
 
 ```bash
 # View deployment history
-git log apps/prod/myapp/deployment.yaml
+git log score.yaml
 
 # See what changed
-git diff HEAD~1 apps/prod/myapp/deployment.yaml
+git diff HEAD~1 score.yaml
 
 # Rollback to previous version
 git revert HEAD
+# Re-submit to Score service
+curl -X POST http://localhost:8000/api/score/specs -d @score.yaml
 ```
 
 #### 3. Pulled Automatically
 
 **Definition**: Software agents automatically pull desired state from Git (not pushed).
 
-**Pull Model** (GitOps):
+**Traditional Push Model** (CI/CD):
+
+```
+CI/CD System (Jenkins/Woodpecker)
+         │
+         ↓ Push changes
+         │ (when triggered)
+         │
+    Target Environment
+```
+
+**uFawkesDevX Pull Model** (Score Service):
 
 ```
 Git Repository (source of truth)
-        ↑
-        │ Pull changes
-        │ (every 3 minutes)
-        │
-    GitOps Agent (ArgoCD)
-        │
-        ↓ Apply to cluster
-        │
-    Kubernetes Cluster
-```
-
-**Push Model** (Traditional CI/CD):
-
-```
-CI/CD System (Jenkins)
-        │
-        ↓ Push changes
-        │ (when triggered)
-        │
-    Kubernetes Cluster
+         ↑
+         │ Poll for changes / Webhook
+         │
+    Score Service
+         │
+         ├─→ Validates spec
+         ├─→ Triggers uFawkesPipe webhook
+         └─→ Updates Backstage catalog
 ```
 
 **Why Pull is Better**:
-
-- ✅ **More secure** - Cluster credentials not in CI/CD system
-- ✅ **Self-healing** - Detects and corrects drift automatically
+- ✅ **More secure** - Target credentials not in CI/CD system
+- ✅ **Self-healing** - Detects and reports drift automatically
 - ✅ **Better failure handling** - Retries automatically
 - ✅ **Audit trail** - All changes go through Git (no backdoors)
 
@@ -181,53 +207,52 @@ CI/CD System (Jenkins)
 
 **Definition**: Software agents continuously ensure actual state matches desired state.
 
-**Reconciliation Loop**:
+**uFawkesDevX Reconciliation Loop**:
 
 ```
-1. Fetch desired state from Git
-2. Compare with actual state in cluster
-3. If different, apply changes
-4. Wait (e.g., 3 minutes)
-5. Repeat from step 1
+1. Score service receives spec submission
+2. Validates against score.dev/v1b1 schema
+3. Stores spec in Backstage catalog
+4. Triggers uFawkesPipe pipeline via webhook
+5. Pipeline builds, tests, deploys
+6. Score service monitors deployment status
+7. If drift detected (manual change, failure), reports in Backstage
+8. User corrects by updating spec in Git → repeat
 ```
 
 **Self-Healing Example**:
 
 ```bash
-# Someone manually changes replicas
-kubectl scale deployment/myapp --replicas=10
-
-# Within 3 minutes, GitOps operator detects drift
-# and reverts to Git-declared state (5 replicas)
+# Someone manually changes deployment in target environment
+# Score service detects drift on next reconciliation
+# Backstage shows: "OutOfSync - actual state differs from spec"
+# User corrects by updating score.yaml and re-submitting
 ```
 
 **Benefits**:
-
 - Prevents configuration drift
 - Recovers from manual mistakes automatically
-- Ensures production always matches Git
+- Ensures target always matches spec
 - Reduces operational toil
 
 ---
 
-## 📚 Section 2: GitOps and DORA Metrics (15 minutes)
+## 3. GitOps and DORA Metrics (10 minutes)
 
 ### How GitOps Improves Deployment Frequency
 
 **Deployment Frequency**: How often you deploy to production
 
 **Without GitOps**:
-
 - Manual deployments require coordination
 - Fear of breaking production slows deploys
-- Need specific people with kubectl access
+- Need specific people with access
 - Result: Weekly or monthly deployments
 
-**With GitOps**:
-
-- Merge to main branch → automatic deployment
+**With uFawkesDevX GitOps**:
+- Merge to main → Score API submission → automatic pipeline
 - Git PR process provides confidence
-- Any developer can merge (with approval)
+- Any developer can submit spec (with approval)
 - Result: Multiple deployments per day
 
 **Example Flow**:
@@ -236,84 +261,75 @@ kubectl scale deployment/myapp --replicas=10
 # Developer workflow
 git checkout -b feature/new-endpoint
 # Make changes to application code
+# Update score.yaml with new image tag
 git commit -m "Add new API endpoint"
 git push origin feature/new-endpoint
 # Create pull request
 # After approval and merge to main:
-# → CI builds and pushes image
-# → Updates GitOps repo with new image tag
-# → ArgoCD deploys automatically (within 3 minutes)
+# → Submit score.yaml to Score API
+# → Score triggers uFawkesPipe webhook
+# → Pipeline builds, tests, deploys
+# → Backstage catalog updated
 ```
-
-**Impact**: Fawkes teams average 10-20 deployments/day with GitOps vs. 2-3/week without.
 
 ### How GitOps Reduces Lead Time for Changes
 
 **Lead Time for Changes**: Time from commit to production
 
 **Without GitOps**:
-
 ```
 Commit → Wait for CI → Manual deployment steps → Production
-        (10 min)      (30-60 min manual work)
+         (10 min)      (30-60 min manual work)
 Total: 40-70 minutes
 ```
 
-**With GitOps**:
-
+**With uFawkesDevX GitOps**:
 ```
-Commit → CI builds → Update GitOps repo → ArgoCD syncs → Production
-        (10 min)    (1 min)              (3 min)
-Total: 14 minutes
+Commit → CI builds → Submit score.yaml → Score triggers pipeline → Production
+         (10 min)    (1 min)             (2-5 min)
+Total: 13-16 minutes
 ```
 
-**Key Difference**: Elimination of manual deployment steps.
-
-**Fawkes Optimization**: Using webhooks instead of polling reduces sync time to <30 seconds.
+**Key Difference**: Elimination of manual deployment steps. The Score service + uFawkesPipe handles it all.
 
 ### How GitOps Lowers Change Failure Rate
 
 **Change Failure Rate**: % of deployments causing failures
 
 **Without GitOps**:
-
-- Manual kubectl commands prone to errors
+- Manual commands prone to errors
 - No code review of infrastructure changes
 - Difficult to test changes before production
 - Configuration drift introduces unknowns
 - Result: 15-20% failure rate typical
 
-**With GitOps**:
-
-- Declarative configs easier to review
+**With uFawkesDevX GitOps**:
+- Declarative specs easier to review in PR
 - Pull requests catch errors before merge
-- Can test in staging (identical GitOps workflow)
+- Can test in staging (identical Score workflow)
 - No drift means fewer surprises
 - Result: 3-5% failure rate achievable
 
 **Safety Mechanisms**:
-
-1. **Git History**: Every change reviewed and auditable
-2. **Dry Run**: ArgoCD shows what will change before applying
-3. **Progressive Sync**: Gradual rollout with health checks
-4. **Automatic Rollback**: Failed deployments auto-revert
+1. **Git History**: Every spec change reviewed and auditable
+2. **Dry Run**: Score service shows validation results before triggering
+3. **Progressive Pipeline**: uFawkesPipe stages (lint → test → build → deploy)
+4. **Automatic Rollback**: Failed deployments can be reverted via `git revert` + re-submit
 
 ### How GitOps Improves Time to Restore Service
 
 **Time to Restore Service**: Time to recover from failure
 
 **Without GitOps**:
-
 ```
 Incident detected → Find person with access → Figure out what changed →
 Run commands to fix → Hope it works
 Total: 30-60 minutes (or more)
 ```
 
-**With GitOps**:
-
+**With uFawkesDevX GitOps**:
 ```
-Incident detected → git revert HEAD → ArgoCD syncs → Service restored
+Incident detected → git revert HEAD → Submit spec → Pipeline deploys rollback
 Total: 3-5 minutes
 ```
 
@@ -323,955 +339,387 @@ Total: 3-5 minutes
 # Quick rollback
 git log --oneline  # Find commit to revert to
 git revert abc123  # Creates new commit that undoes abc123
-git push           # ArgoCD automatically applies rollback
-```
+git push           # CI/CD picks up revert
 
-**Fawkes Average MTTR**: 4 minutes with GitOps vs. 45 minutes without.
+# Re-submit rolled-back spec
+curl -X POST http://localhost:8000/api/score/specs -d @score.yaml
+# Score triggers pipeline with previous version
+# Service restored in minutes
+```
 
 ---
 
-## 📚 Section 3: GitOps Repository Structure (15 minutes)
+## 4. uFawkesDevX GitOps Architecture (10 minutes)
 
-### The Mono-repo Pattern
+### The Score Service as GitOps Engine
 
-Fawkes uses a **mono-repo approach** where all environments and applications live in one repository.
-
-**Benefits**:
-
-- Single source of truth
-- Easy to see all environments
-- Shared modules and configurations
-- Consistent tooling
-
-**Structure**:
+The **Score Service** is the heart of uFawkesDevX's GitOps implementation:
 
 ```
-fawkes-gitops/
-├── apps/                       # Application deployments
-│   ├── dev/                    # Development environment
-│   │   ├── team-a/
-│   │   │   ├── service-1/
-│   │   │   │   ├── kustomization.yaml
-│   │   │   │   ├── deployment.yaml
-│   │   │   │   ├── service.yaml
-│   │   │   │   └── ingress.yaml
-│   │   │   └── service-2/
-│   │   └── team-b/
-│   ├── staging/                # Staging environment
-│   │   └── team-a/
-│   └── prod/                   # Production environment
-│       └── team-a/
-├── platform/                   # Platform components
-│   ├── backstage/
-│   │   ├── deployment.yaml
-│   │   └── service.yaml
-│   ├── jenkins/
-│   ├── argocd/
-│   └── prometheus/
-├── infrastructure/             # Infrastructure resources
-│   ├── namespaces/
-│   │   ├── team-a-dev.yaml
-│   │   ├── team-a-staging.yaml
-│   │   └── team-a-prod.yaml
-│   ├── rbac/
-│   ├── network-policies/
-│   └── resource-quotas/
-└── argocd-apps/               # ArgoCD Application definitions
-    ├── dev-apps.yaml
-    ├── staging-apps.yaml
-    └── prod-apps.yaml
+┌─────────────────────────────────────────────────────────────────────┐
+│                         uFawkesDevX Stack                           │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐         │
+│  │   Git Repo   │───▶│ Score Service│───▶│ uFawkesPipe  │         │
+│  │  (score.yaml)│    │  (Validator) │    │  (Pipeline)  │         │
+│  └──────────────┘    └──────┬───────┘    └──────┬───────┘         │
+│                             │                   │                  │
+│                             ▼                   ▼                  │
+│                    ┌──────────────┐    ┌──────────────┐           │
+│                    │  Backstage   │    │  Deployed    │           │
+│                    │   Catalog    │    │  Service     │           │
+│                    │ (Source of   │    │  (Actual     │           │
+│                    │  Truth)      │    │   State)     │           │
+│                    └──────────────┘    └──────────────┘           │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Directory Responsibilities
+### Score Service Responsibilities
 
-**`apps/`** - Application Deployments
+| Responsibility | Description |
+|----------------|-------------|
+| **Spec Validation** | Validates `score.yaml` against `score.dev/v1b1` schema |
+| **Spec Storage** | Stores validated specs, serves via API |
+| **Pipeline Trigger** | POSTs to uFawkesPipe webhook with workload info |
+| **Catalog Sync** | Updates Backstage catalog with spec metadata |
+| **Drift Detection** | Compares spec with deployed state (future) |
 
-- One directory per environment (dev, staging, prod)
-- Team-based organization
-- Contains Kubernetes manifests or Kustomize/Helm references
+### Backstage Catalog as Source of Truth
 
-**`platform/`** - Platform Components
+The **Backstage Catalog** is the single source of truth for all services:
 
-- Fawkes platform services (Backstage, Jenkins, ArgoCD, etc.)
-- Usually deployed once (not per environment)
-- Managed by platform team
+- Each registered service has a catalog entity
+- Entity metadata includes: name, owner, type, lifecycle, APIs, spec reference
+- TechDocs renders `README.md` and `score.yaml` as documentation
+- Scaffolder creates new services from templates
+- Search and discovery across all services
 
-**`infrastructure/`** - Infrastructure Resources
+### Golden Path Templates
 
-- Namespaces, RBAC, network policies
-- Resource quotas and limits
-- Applied before applications
-
-**`argocd-apps/`** - ArgoCD Applications
-
-- Defines what ArgoCD should deploy
-- ApplicationSets for deploying multiple apps
-- Points to directories in `apps/`, `platform/`, `infrastructure/`
-
-### Environment Promotion Pattern
-
-**Dev → Staging → Prod** promotion via Git:
-
-```bash
-# Deploy to dev (automatic on merge)
-git checkout main
-git merge feature-branch
-git push
-# → ArgoCD deploys to dev
-
-# After testing in dev, promote to staging
-cp apps/dev/team-a/service-1/deployment.yaml \
-   apps/staging/team-a/service-1/deployment.yaml
-git commit -m "Promote service-1 to staging"
-git push
-# → ArgoCD deploys to staging
-
-# After testing in staging, promote to prod
-cp apps/staging/team-a/service-1/deployment.yaml \
-   apps/prod/team-a/service-1/deployment.yaml
-git commit -m "Promote service-1 to production"
-git push
-# → ArgoCD deploys to prod
-```
-
-**Better Approach: Kustomize Overlays** (covered in Green Belt)
-
-### GitOps Repository Best Practices
-
-#### 1. Separate Application Code from Deployment Config
-
-**Anti-pattern**: Kubernetes manifests in application repository
+**Cookiecutter templates** provide pre-wired GitOps-ready services:
 
 ```
-myapp/
-├── src/           # Application code
-├── deployment.yaml  # ❌ Deployment config mixed with code
-└── service.yaml
+templates/python-flask-app/
+├── {{cookiecutter.project_slug}}/
+│   ├── .devcontainer/devcontainer.json
+│   ├── score.yaml                 # ← Score workload spec
+│   ├── .fawkespipe.yml            # ← uFawkesPipe CI/CD contract
+│   ├── Dockerfile
+│   ├── src/app.py
+│   ├── tests/
+│   └── README.md
 ```
 
-**Best Practice**: Separate repositories
-
-```
-myapp/             # Application code repository
-└── src/
-
-fawkes-gitops/     # Deployment config repository
-└── apps/dev/team-a/myapp/
-    ├── deployment.yaml  # ✅ Deployment config separate
-    └── service.yaml
-```
-
-**Why**: Allows deploying same app code to multiple environments with different configs.
-
-#### 2. Use Meaningful Commit Messages
-
-**Bad**:
-
-```bash
-git commit -m "update"
-git commit -m "fix"
-```
-
-**Good**:
-
-```bash
-git commit -m "Scale myapp from 3 to 5 replicas to handle increased load"
-git commit -m "Update myapp to v2.1.3 (fixes memory leak)"
-```
-
-**Why**: Commit messages are your audit trail and rollback documentation.
-
-#### 3. Keep Files Small and Focused
-
-**Anti-pattern**: One giant `all-resources.yaml`
-
-```yaml
-# ❌ 500 lines containing everything
-apiVersion: apps/v1
-kind: Deployment
-# ... 200 lines
----
-apiVersion: v1
-kind: Service
-# ... 100 lines
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-# ... 200 lines
-```
-
-**Best Practice**: One file per resource type
-
-```
-myapp/
-├── kustomization.yaml  # ✅ Small, focused files
-├── deployment.yaml
-├── service.yaml
-└── ingress.yaml
-```
-
-**Why**: Easier to review, understand, and modify. Better Git diffs.
-
-#### 4. Use Kustomize for Environment Differences
-
-Instead of copying entire files per environment, use Kustomize overlays:
-
-```
-base/                      # Common configuration
-├── kustomization.yaml
-├── deployment.yaml
-└── service.yaml
-
-overlays/
-├── dev/                  # Dev-specific overrides
-│   └── kustomization.yaml  # replicas: 1, resources: small
-├── staging/              # Staging-specific overrides
-│   └── kustomization.yaml  # replicas: 3, resources: medium
-└── prod/                 # Prod-specific overrides
-    └── kustomization.yaml  # replicas: 10, resources: large
-```
-
-**Why**: DRY principle - define once, override only what differs.
-
-#### 5. Never Commit Secrets to Git
-
-**Wrong (example with placeholder)**:
-
-```yaml
-# ❌ NEVER commit real secrets
-apiVersion: v1
-kind: Secret
-metadata:
-  name: database-password
-data:
-  password: PLACEHOLDER_BASE64_VALUE # base64 is NOT encryption
-```
-
-**Right**: Use Sealed Secrets or External Secrets Operator
-
-```yaml
-# ✅ Encrypted secret safe for Git
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
-metadata:
-  name: database-password
-spec:
-  encryptedData:
-    password: AgAAAA...REDACTED_EXAMPLE # Encrypted; only decryptable by controller
-```
-
-**Why**: Git history is forever. Committed secrets are compromised secrets.
+Every scaffolded service includes:
+- **Score spec** — declares desired state
+- **Pipeline contract** — defines build/test/deploy stages
+- **Devcontainer** — consistent development environment
+- **Tests** — validates functionality
 
 ---
 
-## 📚 Section 4: GitOps in Action with ArgoCD (10 minutes)
+## 5. Hands-On Lab (15 minutes)
 
-### ArgoCD: The GitOps Operator
+### Lab Overview
 
-**ArgoCD** is Fawkes' GitOps continuous delivery tool. It:
+You'll use the running uFawkesDevX stack from Module 1 to:
+1. Explore the Backstage catalog (source of truth)
+2. Register a new service via the Score API
+3. Create a service using the Backstage Scaffolder
+4. Observe the GitOps-like workflow
+5. Practice rollback by reverting a spec
 
-- Watches Git repositories for changes
-- Compares desired state (Git) with actual state (Kubernetes)
-- Applies differences automatically
-- Provides UI for visualizing deployments
+**Time Estimate**: 15 minutes
+**Difficulty**: Beginner (Module 1 completion required)
+**Auto-Graded**: Yes
+**Points**: 50
 
-### Application Health States
+### Lab Environment
 
-ArgoCD tracks application health:
+**Prerequisites**: uFawkesDevX v1.0.1 running from Module 1
+- ✅ Backstage at http://localhost:7007
+- ✅ Score Service at http://localhost:8000/api/score
+- ✅ Coder at CODER_ACCESS_URL
+- ✅ Your `hello-devx` service from Module 1 already registered
 
-**🟢 Healthy** - All resources running as expected
+➡️ **[Lab 01: GitOps Workflow with Score Service](white-belt/module-03-gitops-principles/lab-01/instructions.md)**
 
-- Deployments have desired replicas ready
-- Services have endpoints
-- Ingresses configured correctly
+This lab walks you through using the Score API to register services, the Backstage Scaffolder to create new services, and practicing rollback — all demonstrating GitOps principles without Kubernetes.
 
-**🟡 Progressing** - Deployment in progress
-
-- New pods starting up
-- Rolling update ongoing
-- Health checks not yet passing
-
-**🟠 Degraded** - Partially working
-
-- Some replicas not ready
-- Some pods crashing
-- Service partially available
-
-**🔴 Missing** - Resource doesn't exist
-
-- Deleted manually
-- Never created
-- Configuration error
-
-### Sync Status
-
-ArgoCD compares Git vs. Kubernetes:
-
-**✅ Synced** - Git matches cluster
-
-- No differences detected
-- Latest commit deployed
-
-**❌ OutOfSync** - Git differs from cluster
-
-- Someone made manual changes, OR
-- New commit not yet deployed
-
-**🔄 Syncing** - Applying changes
-
-- ArgoCD deploying Git changes
-- Resources being created/updated
-
-### Hands-On: Viewing Your Application in ArgoCD
-
-**Access ArgoCD UI**:
-
-```bash
-# Get ArgoCD URL
-echo "https://argocd.fawkes.local"
-
-# Login credentials provided in lab
-Username: admin
-Password: [provided in lab environment]
-```
-
-**Navigate to Your Application**:
-
-1. Click on `Applications` in left sidebar
-2. Find application: `dojo-learner-[yourname]-myapp`
-3. Observe the application topology (visual graph)
-
-**Understanding the Topology**:
-
-```
-Application
-    ↓
-Deployment
-    ↓
-ReplicaSet
-    ↓
-Pod → Service → Ingress
-```
-
-**Key Information**:
-
-- **Sync Status**: Is Git in sync with cluster?
-- **Health Status**: Are resources healthy?
-- **Last Sync**: When was last deployment?
-- **Git Commit**: Which commit is deployed?
-
-### Making a GitOps Change
-
-**Scenario**: Scale your application from 1 to 3 replicas
-
-### Step 1: Clone GitOps Repository
-
-```bash
-git clone https://github.com/fawkes-dojo/gitops-lab
-cd gitops-lab
-```
-
-### Step 2: Make Change
-
-```bash
-# Edit deployment file
-vim apps/dojo/learner-[yourname]/myapp/deployment.yaml
-
-# Change replicas from 1 to 3
-spec:
-  replicas: 3  # Changed from 1
-```
-
-### Step 3: Commit and Push
-
-```bash
-git add apps/dojo/learner-[yourname]/myapp/deployment.yaml
-git commit -m "Scale myapp to 3 replicas for load testing"
-git push origin main
-```
-
-### Step 4: Watch ArgoCD Sync
-
-```bash
-# ArgoCD detects change within 3 minutes (or immediately with webhooks)
-# Watch in ArgoCD UI:
-# 1. Sync Status changes to "OutOfSync"
-# 2. ArgoCD automatically syncs (if auto-sync enabled)
-# 3. New pods appear in topology
-# 4. Sync Status returns to "Synced"
-```
-
-### Step 5: Verify
-
-```bash
-# Check pods
-kubectl get pods -n dojo-learner-[yourname]
-
-# Should see 3 pods running
-NAME                     READY   STATUS    AGE
-myapp-7d8f5c9b8d-abc12   1/1     Running   2m
-myapp-7d8f5c9b8d-def34   1/1     Running   2m
-myapp-7d8f5c9b8d-ghi56   1/1     Running   2m
-```
-
-**Congratulations!** You just made your first GitOps deployment! 🎉
+**Validation**: `bash white-belt/module-03-gitops-principles/lab-01/validate.sh`
 
 ---
 
-## 🧪 Hands-On Lab: GitOps Workflow (15 minutes) — *not built yet*
+## 6. Knowledge Check (5 minutes)
 
-### Lab Objectives
+### Quiz: GitOps Principles in uFawkesDevX
 
-In this lab, you will:
+**Instructions**: Answer all 10 questions. You need 8/10 (80%) to pass. Unlimited attempts allowed.
 
-1. Make a GitOps change (update image version)
-2. Create a pull request for code review
-3. Observe ArgoCD sync the change
-4. Practice rollback using `git revert`
-
-### Lab Setup
-
-Your lab environment includes:
-
-- Personal namespace: `dojo-learner-[yourname]`
-- Sample application: `myapp`
-- GitOps repository access
-- ArgoCD UI access
-
-### Task 1: Update Application Version
-
-**Scenario**: Deploy v2.0 of myapp which includes new features.
-
-```bash
-# 1. Create feature branch
-git checkout -b update-myapp-v2
-
-# 2. Edit deployment
-vim apps/dojo/learner-[yourname]/myapp/deployment.yaml
-
-# 3. Change image tag
-spec:
-  template:
-    spec:
-      containers:
-      - name: myapp
-        image: fawkes/myapp:v2.0  # Changed from v1.0
-
-# 4. Commit change
-git add apps/dojo/learner-[yourname]/myapp/deployment.yaml
-git commit -m "Update myapp to v2.0 - adds new API endpoints"
-
-# 5. Push branch
-git push origin update-myapp-v2
-```
-
-### Task 2: Create Pull Request
-
-**In GitHub**:
-
-1. Navigate to `https://github.com/fawkes-dojo/gitops-lab`
-2. Click "Pull Requests" → "New Pull Request"
-3. Base: `main`, Compare: `update-myapp-v2`
-4. Title: "Update myapp to v2.0"
-5. Description:
-
-   ```
-   ## Changes
-   - Updates myapp from v1.0 to v2.0
-   - Adds new /api/v2/health endpoint
-   - Improves response time by 30%
-
-   ## Testing
-   - Tested in local environment
-   - All tests pass
-   - Ready for deployment
-
-   ## Rollback Plan
-   - If issues, revert this commit
-   - Previous version: v1.0 (commit abc123)
-   ```
-
-6. Click "Create Pull Request"
-
-**Code Review**:
-
-- Wait for peer review (or auto-approve in lab)
-- Address any feedback
-- Once approved, click "Merge Pull Request"
-
-### Task 3: Observe ArgoCD Sync
-
-**After merge**:
-
-```bash
-# Watch ArgoCD detect change
-# In ArgoCD UI:
-# 1. Application shows "OutOfSync"
-# 2. After ~30 seconds (or up to 3 min), sync begins
-# 3. Observe pod replacement in topology
-# 4. Application returns to "Synced" and "Healthy"
-
-# Verify from command line
-kubectl get pods -n dojo-learner-[yourname] -w
-
-# Watch pods terminate and new ones start
-# Old pod (v1.0):
-myapp-abc123-xyz  1/1  Terminating  5m
-# New pod (v2.0):
-myapp-def456-uvw  0/1  ContainerCreating  0s
-myapp-def456-uvw  1/1  Running  15s
-
-# Verify new version
-kubectl describe pod -n dojo-learner-[yourname] myapp-def456-uvw | grep Image:
-# Should show: Image: fawkes/myapp:v2.0
-```
-
-### Task 4: Practice Rollback
-
-**Scenario**: v2.0 has a bug. Rollback to v1.0 immediately.
-
-```bash
-# 1. Find commit to revert
-git log --oneline -5
-# Example output:
-# def456 Update myapp to v2.0
-# abc123 Scale myapp to 3 replicas
-# 789xyz Initial deployment
-
-# 2. Revert the v2.0 update
-git revert def456
-
-# 3. Git opens editor for commit message
-# Default message is fine, save and close
-
-# 4. Push revert
-git push origin main
-
-# 5. Watch ArgoCD sync rollback
-# Within 3 minutes:
-# - Pods replaced with v1.0
-# - Application healthy again
-# - MTTR: ~3 minutes! 🎉
-```
-
-### Task 5: Verify Rollback
-
-```bash
-# Check image version
-kubectl describe pod -n dojo-learner-[yourname] [pod-name] | grep Image:
-# Should show: Image: fawkes/myapp:v1.0
-
-# Check application health
-curl https://myapp-learner-[yourname].fawkes.local/health
-# Should respond with v1.0 health check
-```
-
-**Lab Complete!** You've experienced the full GitOps workflow:
-
-- Made a change via Git
-- Code review via pull request
-- Automated deployment via ArgoCD
-- Fast rollback via git revert
-
----
-
-## ✅ Knowledge Check (5 minutes)
-
-Test your understanding with these questions:
-
-### Question 1: Core Principles
+#### Question 1
 
 **What are the four principles of GitOps?**
 
-<details>
-<summary>Click to reveal answer</summary>
+- [ ] A) Declarative, Versioned, Pushed, Reconciled
+- [x] B) Declarative, Versioned, Pulled, Reconciled
+- [ ] C) Imperative, Versioned, Pulled, Reconciled
+- [ ] D) Declarative, Mutable, Pulled, Reconciled
 
-1. **Declarative** - Desired state expressed declaratively
-2. **Versioned and Immutable** - Stored in Git with full history
-3. **Pulled Automatically** - Software agents pull from Git
-4. **Continuously Reconciled** - Automatic drift detection and correction
+**Explanation**: The four OpenGitOps principles are: **Declarative**, **Versioned and Immutable**, **Pulled Automatically**, and **Continuously Reconciled**.
 
-</details>
+---
 
-### Question 2: Pull vs. Push
+#### Question 2
 
-**What's the key difference between GitOps (pull) and traditional CI/CD (push)?**
+**In uFawkesDevX, which component validates Score workload specs?**
 
-<details>
-<summary>Click to reveal answer</summary>
+- [ ] A) Backstage
+- [ ] B) Coder
+- [x] C) Score Service
+- [ ] D) Plugin Manager
 
-**Pull (GitOps)**:
+**Explanation**: The **Score Service** validates `score.yaml` against the `score.dev/v1b1` schema and stores the validated spec.
 
-- GitOps operator runs inside cluster
-- Pulls desired state from Git
-- No cluster credentials in CI/CD
-- Self-healing and drift detection
+---
 
-**Push (Traditional)**:
+#### Question 3
 
-- CI/CD system pushes changes to cluster
-- Requires cluster credentials in CI/CD
-- No automatic drift detection
-- Manual healing required
+**What is the key difference between GitOps (pull) and traditional CI/CD (push)?**
 
-</details>
+- [ ] A) Push is more secure
+- [x] B) Pull model doesn't require cluster credentials in CI/CD
+- [ ] C) Push model has self-healing
+- [ ] D) Pull model requires manual intervention
 
-### Question 3: DORA Impact
+**Explanation**: In the **pull model**, the agent (Score Service) runs inside the environment and pulls from Git — no cluster credentials needed in CI/CD. This is more secure and enables self-healing.
+
+---
+
+#### Question 4
 
 **How does GitOps improve Lead Time for Changes?**
 
-<details>
-<summary>Click to reveal answer</summary>
+- [ ] A) By adding more manual approval steps
+- [x] B) By eliminating manual deployment steps through automation
+- [ ] C) By requiring more code reviews
+- [ ] D) By slowing down the pipeline for safety
 
-GitOps reduces lead time by:
-
-1. **Eliminating manual steps** - No manual kubectl commands
-2. **Automation** - Merge to Git → automatic deployment
-3. **Faster feedback** - See changes in cluster within minutes
-4. **Reduced errors** - Declarative configs less error-prone
-
-**Typical improvement**: 40-70 min → 10-15 min lead time
-
-</details>
-
-### Question 4: Repository Structure
-
-**Why should application code and deployment configs be in separate repositories?**
-
-<details>
-<summary>Click to reveal answer</summary>
-
-**Benefits of separation**:
-
-1. **Deploy same app to multiple environments** with different configs
-2. **Different access controls** - More people can deploy than modify code
-3. **Independent versioning** - App version ≠ deployment config version
-4. **Clear separation of concerns** - Developers focus on code, platform team on deployment
-5. **Easier rollbacks** - Revert deployment without touching app code
-
-</details>
-
-### Question 5: Secrets Management
-
-**Why should you never commit Kubernetes Secrets to Git, even base64-encoded?**
-
-<details>
-<summary>Click to reveal answer</summary>
-
-**Reasons**:
-
-1. **Base64 is encoding, not encryption** - Easily decoded
-2. **Git history is forever** - Can't truly delete from history
-3. **Access control** - Anyone with Git access gets secrets
-4. **Rotation complexity** - Hard to rotate secrets in Git history
-
-**Instead use**:
-
-- Sealed Secrets (encrypted in Git)
-- External Secrets Operator (fetches from Vault/AWS Secrets Manager)
-- Never commit raw secrets
-
-</details>
-
-### Question 6: Practical Application
-
-**Your application is experiencing high load. You need to scale from 3 to 10 replicas. What's the GitOps way to do this?**
-
-<details>
-<summary>Click to reveal answer</summary>
-
-**GitOps approach**:
-
-```bash
-# 1. Edit deployment in Git
-vim apps/prod/myapp/deployment.yaml
-# Change: replicas: 10
-
-# 2. Commit and push
-git commit -m "Scale myapp to 10 replicas for high load"
-git push
-
-# 3. ArgoCD syncs automatically (within 3 min)
-# 4. Verify scaling occurred
-```
-
-**NOT GitOps** (anti-pattern):
-
-```bash
-# ❌ Don't do this:
-kubectl scale deployment/myapp --replicas=10
-# This creates drift - Git still says 3, cluster has 10
-```
-
-</details>
+**Explanation**: GitOps reduces lead time by **eliminating manual steps** — merge to Git → automatic pipeline → production. Typical improvement: 40-70 min → 10-15 min.
 
 ---
 
-## 🎓 Module Summary
+#### Question 5
 
-### Key Takeaways
+**In uFawkesDevX, what triggers the uFawkesPipe pipeline?**
 
-1. **GitOps = Git as Source of Truth**
+- [ ] A) Backstage Scaffolder directly
+- [ ] B) Coder workspace creation
+- [x] C) Score Service webhook after spec validation
+- [ ] D) Manual curl command
 
-   - All configuration in Git
-   - Automated deployment from Git
-   - Self-healing and drift detection
+**Explanation**: The **Score Service** validates the spec, then POSTs to the uFawkesPipe webhook URL to trigger the build/test/deploy pipeline.
 
-2. **Four Core Principles**
+---
 
-   - Declarative
-   - Versioned and Immutable
-   - Pulled Automatically
-   - Continuously Reconciled
+#### Question 6
 
-3. **DORA Benefits**
+**What serves as the "source of truth" in uFawkesDevX?**
 
-   - Increased deployment frequency
-   - Reduced lead time
-   - Lower change failure rate
-   - Faster time to restore service
+- [ ] A) The Git repository alone
+- [ ] B) The deployed containers
+- [x] C) The Backstage Catalog (backed by Score Service specs)
+- [ ] D) The uFawkesPipe pipeline
 
-4. **Best Practices**
+**Explanation**: The **Backstage Catalog** stores the validated Score specs and serves as the source of truth. It's the "Git" in GitOps for uFawkesDevX.
 
-   - Separate app code from deployment config
-   - Meaningful commit messages
-   - Never commit secrets
-   - Use Kustomize for environment differences
-   - Small, focused files
+---
 
-5. **ArgoCD Workflow**
-   - Make changes in Git
-   - Pull request for review
-   - ArgoCD detects and syncs
-   - Monitor in ArgoCD UI
-   - Rollback via `git revert`
+#### Question 7
 
-### What You've Learned
+**How do you rollback a service in uFawkesDevX GitOps?**
 
-✅ Define GitOps and its four principles
-✅ Explain pull vs. push deployment models
-✅ Describe how GitOps improves DORA metrics
-✅ Navigate GitOps repository structure
-✅ Make GitOps-driven changes
-✅ Practice rollback procedures
+- [ ] A) `kubectl rollout undo`
+- [ ] B) Manually edit the deployed container
+- [x] C) `git revert` the score.yaml, then re-submit to Score API
+- [ ] D) Delete and recreate the service in Backstage
 
-### Time Investment
+**Explanation**: Rollback is a **Git operation** — `git revert` the spec commit, then re-submit the reverted `score.yaml` to the Score API. The pipeline deploys the previous version.
 
-- **Theory**: 45 minutes
-- **Hands-On Lab**: 15 minutes
-- **Knowledge Check**: 5 minutes
-- **Total**: ~60 minutes
+---
 
-### Next Steps
+#### Question 8
 
-**Module 4: Your First Deployment** awaits! You'll:
+**Which file in a golden path template declares the desired state for GitOps?**
 
-- Use Backstage to create a new service from template
-- Deploy your application using GitOps
-- Configure CI/CD pipeline
+- [ ] A) `.fawkespipe.yml`
+- [ ] B) `Dockerfile`
+- [x] C) `score.yaml`
+- [ ] D) `.devcontainer/devcontainer.json`
+
+**Explanation**: The **`score.yaml`** is the Score workload spec (score.dev/v1b1) that declares the desired state — containers, variables, services, resources.
+
+---
+
+#### Question 9
+
+**What happens when Score Service detects drift between spec and deployed state?**
+
+- [ ] A) Automatically fixes it without notification
+- [ ] B) Deletes the service
+- [x] C) Reports "OutOfSync" in Backstage catalog for user action
+- [ ] C) Ignores it until next deployment
+
+**Explanation**: Score Service reports drift in Backstage (shows "OutOfSync"). The **user** corrects by updating the spec in Git and re-submitting — this is the GitOps reconciliation loop.
+
+---
+
+#### Question 10
+
+**Why should Score workload specs be in Git rather than only in Backstage?**
+
+- [ ] A) Backstage doesn't persist data
+- [x] B) Git provides version history, code review, and rollback capability
+- [ ] C) Score Service requires Git
+- [ ] D) Backstage catalog is read-only
+
+**Explanation**: **Git provides version history, code review via PRs, and rollback via `git revert`** — these are core GitOps benefits. Backstage catalog reflects the Git state.
+
+---
+
+### Quiz Results
+
+**Score: X / 10**
+
+- ✅ **Passed** (8+): Great job! You're ready to move to the next section.
+- ❌ **Not Yet** (<8): Review the content and try again. Focus on areas you missed.
+
+**Incorrect answers?** Each question links back to the relevant section for review.
+
+---
+
+## 7. Reflection & Next Steps (5 minutes)
+
+### What You Learned
+
+Congratulations! 🎉 You've completed Module 3. Let's recap:
+
+✅ **You now understand**:
+- The four GitOps principles and how uFawkesDevX implements them
+- How Score Service validates specs and triggers pipelines
+- How Backstage catalog serves as the source of truth
+- How GitOps improves all five DORA metrics
+- The uFawkesDevX golden path template pattern
+
+✅ **You can now**:
+- Register a service via the Score API
+- Create a service using the Backstage Scaffolder
+- Verify the GitOps workflow in Backstage
+- Perform a rollback by reverting a spec
+
+### How This Connects to Your Work
+
+**For Developers**:
+- You now understand how to declare desired state instead of running commands
+- You know where to find service specs (Backstage catalog)
+- You can use golden path templates for consistent, GitOps-ready services
+
+**For Platform Engineers**:
+- You understand your role in maintaining the GitOps engine (Score service, pipelines)
+- You know how to treat developers as customers with self-service GitOps
+- You can articulate the value of the GitOps workflow to stakeholders
+
+**For Leaders**:
+- You can explain how GitOps accelerates delivery and reduces risk
+- You understand the metrics that matter (DORA, deployment frequency, MTTR)
+- You can make the case for platform investments in GitOps automation
+
+### Reflection Questions
+
+Take 2 minutes to think about:
+
+1. **What surprised you most about GitOps in uFawkesDevX?**
+
+    - Was there a concept that changed your perspective on deployments?
+
+2. **How does your current deployment workflow compare?**
+
+    - Are you using GitOps? Manual? CI/CD push? Somewhere in between?
+
+3. **What would improve your deployment experience?**
+
+    - If you could wave a magic wand, what would you change about how you deploy?
+
+4. **Who could benefit from this knowledge?**
+
+    - Think of 2-3 colleagues who should go through this module
+
+### Additional Resources
+
+**📚 Further Reading**:
+- [OpenGitOps Principles](https://opengitops.dev/) - Official GitOps principles
+- [Score Specification](https://score.dev/docs/reference/score-spec/) - Score workload spec reference
+- [Backstage Catalog](https://backstage.io/docs/features/software-catalog/) - Catalog documentation
+- [DORA Research](https://dora.dev) - Research behind DORA metrics
+
+**🎥 Videos to Watch**:
+- "What is GitOps?" by Weaveworks (10 min)
+- "GitOps with ArgoCD" by TechWorld with Nana (20 min)
+- "Score.dev Introduction" (15 min)
+
+**💬 Community**:
+- Join [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-white-belt`
+- Share your "aha!" moments
+- Help others who are just starting
+
+### Preview: Module 4
+
+**Next Up: Your First Deployment - End-to-End**
+
+In Module 4, you'll bring everything together:
+
+- Use Backstage Scaffolder to create a complete service
+- Configure the full CI/CD pipeline via `.fawkespipe.yml`
+- Deploy and observe the service in the target environment
 - View DORA metrics for your deployment
+- Practice the complete developer workflow
 
-**Continue to Module 4** → [Your First Deployment](./module-04-first-deployment.md)
+**Time**: 60 minutes
+**Hands-On**: Full service lifecycle from template to production
 
----
-
-## 📚 Additional Resources
-
-### Official Documentation
-
-- [OpenGitOps Principles](https://opengitops.dev/)
-- [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
-- [GitOps Working Group](https://github.com/gitops-working-group/gitops-working-group)
-
-### Articles & Videos
-
-- [What is GitOps?](https://www.weave.works/technologies/gitops/) - Weaveworks
-- [GitOps Tech Talk](https://www.youtube.com/watch?v=f5EpcWp0THw) - CNCF (30 min)
-- [ArgoCD Tutorial](https://www.youtube.com/watch?v=MeU5_k9ssrs) - TechWorld with Nana (20 min)
-
-### Books
-
-- *GitOps and Kubernetes* by Billy Yuen, et al.
-- *Continuous Delivery* by Jez Humble - Foundation for GitOps
-
-### Practice
-
-- [ArgoCD Katacoda Tutorial](https://killercoda.com/argoproj/scenario/argocd) - Interactive lab
-- [GitOps Playground](https://github.com/cloudogu/gitops-playground) - Local GitOps environment
-- [Fawkes Dojo Lab Environment](https://dojo.ufawkes.dev) - Continue practicing!
-
-### Community
-
-- [ArgoCD Slack](https://argoproj.github.io/community/join-slack) - Ask questions
-- [GitOps Days](https://www.gitopsdays.com/) - Annual conference
-- [#gitops on Kubernetes Slack](https://kubernetes.slack.com/) - General discussion
+**Get Ready**: Think about a service you'd like to create. What language? What framework?
 
 ---
 
-## 🎯 Module Completion
+## Module Completion
 
-### Assessment Results
+### ✅ You've Completed Module 3
 
-Your lab work has been automatically graded:
+**Next Steps**:
 
-- ✅ **GitOps Change**: Successfully updated image version
-- ✅ **Pull Request**: Created PR with proper description
-- ✅ **Deployment**: ArgoCD synced changes successfully
-- ✅ **Rollback**: Demonstrated git revert workflow
-- ✅ **Knowledge Check**: Passed (need 80%+ to proceed)
+1. ✅ Mark this module complete in your Backstage profile
+2. 📊 View your progress on the Dojo dashboard
+3. 💬 Share your completion in `#dojo-achievements` (optional but encouraged!)
+4. ➡️ **Continue to Module 4** when ready
 
-### Module 3 Score: [AUTO-CALCULATED] / 50 points
-
-**Breakdown**:
-
-- Theory Understanding (Knowledge Check): 20 points
-- Hands-On Lab Completion: 20 points
-- Code Quality (commit messages, PR description): 10 points
-
-### Certificate Progress
-
-**White Belt Progress**: 3 of 4 modules complete (75%)
-
-Modules completed:
-
-- ✅ Module 1: Internal Delivery Platforms - What and Why
-- ✅ Module 2: DORA Metrics - The North Star
-- ✅ Module 3: GitOps Principles
-
-Next module:
-
-- ⏳ Module 4: Your First Deployment
-
-**Continue to Module 4** to complete White Belt requirements!
+**Time Investment**: 60 minutes
+**Skills Gained**: GitOps principles, Score API, Backstage Scaffolder, rollback procedures
+**Progress**: 3 of 4 modules toward White Belt (75% complete)
 
 ---
 
-## 💬 Feedback & Support
+**Questions or Issues?**
 
-### How was this module?
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-white-belt`
+- 📧 Email: dojo@ufawkes.dev
+- 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 
-**Rate this module** (helps us improve):
+**Feedback?**
 
-- ⭐⭐⭐⭐⭐ Excellent
-- ⭐⭐⭐⭐ Good
-- ⭐⭐⭐ Average
-- ⭐⭐ Needs Improvement
-- ⭐ Poor
-
-**Share feedback**: [Feedback Form](https://dojo.ufawkes.dev/feedback/module-03)
-
-### Need Help?
-
-**Stuck on something?** We're here to help!
-
-- **GitHub Discussions**: Join `#dojo-white-belt` category
-- **Office Hours**: Wednesdays 2-3 PM ET, Fridays 10-11 AM ET
-- **Discussion Forum**: [GitHub Discussions](https://github.com/paruff/fawkes/discussions)
-- **Documentation**: [GitOps Guide](https://docs.fawkes.io/gitops)
-
-### Common Issues
-
-**Issue**: ArgoCD not syncing changes
-
-- Check if auto-sync is enabled
-- Verify Git repository connection
-- Check ArgoCD logs: `kubectl logs -n argocd deploy/argocd-application-controller`
-
-**Issue**: Can't access ArgoCD UI
-
-- Verify ingress configuration
-- Check ArgoCD service: `kubectl get svc -n argocd`
-- Try port-forward: `kubectl port-forward -n argocd svc/argocd-server 8080:443`
-
-**Issue**: Git push rejected
-
-- Verify you have write access to repository
-- Check if branch is protected
-- Ensure you're pushing to correct remote
+- Rate this module (takes 30 seconds)
+- Suggest improvements
+- Help us make the dojo better!
 
 ---
 
-## 🏆 Achievement Unlocked
-
-### 🎓 GitOps Practitioner
-
-You've completed Module 3 and demonstrated:
-
-- Understanding of GitOps core principles
-- Ability to make GitOps-driven changes
-- Knowledge of ArgoCD workflow
-- Proficiency in Git-based rollbacks
-
-**Share your achievement**:
-
-- LinkedIn: "Just completed GitOps Principles module in @Fawkes Dojo! #GitOps #PlatformEngineering"
-- Twitter: "Learned GitOps with hands-on ArgoCD practice at @FawkesIDP dojo 🚀 #DevOps #GitOps"
-
-**Next milestone**: Complete Module 4 to earn your **White Belt Certification**! 🥋
-
----
-
-## 📊 Your Dojo Progress
-
-```
-White Belt Journey: ████████████░░░░░░░░ 75%
-
-Completed:
-✅ Module 1: What is an IDP (60 min)
-✅ Module 2: DORA Metrics (60 min)
-✅ Module 3: GitOps Principles (60 min)
-
-Remaining:
-⏳ Module 4: Your First Deployment (60 min)
-⏳ White Belt Assessment (30 min)
-
-Total Time Invested: 3 hours
-Estimated Time to White Belt: 1.5 hours
-
-Keep going! You're 75% of the way to your first certification! 💪
-```
-
----
-
-## 🎯 Ready for Module 4?
-
-**Module 4: Your First Deployment** brings together everything you've learned:
-
-**You'll learn to**:
-
-- Create a service using Backstage templates
-- Configure CI/CD pipeline (Jenkins)
-- Deploy using GitOps (ArgoCD)
-- Monitor with observability tools
-- View DORA metrics for your service
-
-**Prerequisites**: Modules 1, 2, and 3 complete ✅
-
-**Estimated time**: 60 minutes
-
-**[Start Module 4 Now →](./module-04-first-deployment.md)**
-
----
-
-## 📝 Module Notes
-
-**Module**: GitOps Principles
-**Version**: 1.0
-**Last Updated**: October 8, 2025
-**Author**: Fawkes Platform Team
-**Contributors**: [View Contributors](https://github.com/paruff/fawkes/graphs/contributors)
-
-**Module Changelog**:
-
-- v1.0 (2025-10-08): Initial release
-
-**Feedback & Improvements**:
-This module is continuously improved based on learner feedback. If you have suggestions, please [open an issue](https://github.com/paruff/fawkes/issues/new?template=dojo-feedback.yml) or discuss in `#dojo-feedback` channel.
-
----
-
-### © 2025 Fawkes Platform | Licensed under MIT License
-
-**Platform**: [https://fawkes.io](https://fawkes.io)
-**GitHub**: [https://github.com/paruff/fawkes](https://github.com/paruff/fawkes)
-**Community**: [https://community.fawkes.io](https://community.fawkes.io)
+**Module Author**: Fawkes Learning Team
+**Last Updated**: October 2026
+**Version**: 2.0
