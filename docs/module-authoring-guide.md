@@ -35,8 +35,8 @@ lab, because it looks complete during review.
 Have learners study something already built and working before asking them
 to build their own. Novices learn faster from a worked example than from
 solving from scratch — cognitive load theory (Sweller) and a meta-analysis
-of worked-example design (Crissman, 2006, an unpublished dissertation
-reporting d ≈ 0.57; Wittwer & Renkl, 2010)
+of worked-example design (Crissman, 2006, a dissertation reporting
+d ≈ 0.57; Wittwer & Renkl, 2010)
 both support this. In lab terms: "here's the pre-built dashboard, here's
 what each panel means" comes *before* "now build your own panel."
 
@@ -205,7 +205,7 @@ data flow through a stack, before and after a pipeline change, or where a
 DORA metric gets measured. Every image needs alt text that carries the
 same meaning.
 
-### Sources for items 9–17
+### Sources for items 1–17
 
 - Adesope, O. O., Trevisan, D. A., & Sundararajan, N. (2017). Rethinking
   the use of tests. *Review of Educational Research*, 87(3), 659–701.
@@ -217,6 +217,8 @@ same meaning.
   Higher Education*, 27, 1–13.
 - Brown, P. C., Roediger, H. L., & McDaniel, M. A. (2014). *Make It Stick:
   The Science of Successful Learning*. Harvard University Press.
+- Crissman, J. (2006). *Worked examples in computer-based learning: A
+  meta-analysis* (Doctoral dissertation). University of Georgia.
 - Dunlosky, J., et al. (2013). Improving students' learning with effective
   learning techniques. *Psychological Science in the Public Interest*,
   14(1), 4–58.
@@ -244,6 +246,9 @@ same meaning.
 - Sailer, M., & Homner, L. (2020). The gamification of learning: A
   meta-analysis. *Educational Psychology Review*, 32, 77–112.
   https://eric.ed.gov/?id=EJ1245270
+- Wittwer, J., & Renkl, A. (2010). How effective are instructional
+  explanations in example-based learning? A meta-analysis. *Educational
+  Psychology Review*, 22(4), 393–409.
 
 ## What this guide does not cover
 
