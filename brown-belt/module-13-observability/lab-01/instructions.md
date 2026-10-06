@@ -501,7 +501,7 @@ You've:
 **Next Steps**:
 1. ✅ Mark this module complete in your Backstage profile
 2. 📊 View your progress on the Dojo dashboard
-3. 💬 Share your completion in `#dojo-achievements` (optional!)
+3. 💬 Share your completion in [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell) (optional!)
 4. ➡️ **Continue to Module 14: DORA Deep Dive**
 
 **Time Investment**: 3-4 hours
@@ -511,7 +511,7 @@ You've:
 ---
 
 **Questions or Issues?**
-- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-brown-belt`
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) ([Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a))
 - 📧 Email: dojo@ufawkes.dev
 - 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 

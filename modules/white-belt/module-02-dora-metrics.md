@@ -355,9 +355,9 @@ Fawkes collects DORA metrics automatically from your CI/CD pipeline:
 ```
 Developer commits code
     ↓
-Git webhook triggers Jenkins pipeline
+Git webhook triggers CI pipeline
     ↓ (Lead Time measurement starts)
-Jenkins builds, tests, packages
+CI builds, tests, packages
     ↓
 Artifact pushed to Harbor registry
     ↓
@@ -376,7 +376,7 @@ Alertmanager detects any incidents
 **Data Sources**:
 
 - **Git**: Commit timestamps (lead time start)
-- **Jenkins**: Build results (quality signals)
+- **CI** (Tekton on Fawkes, Woodpecker on uFawkesPipe): Build results (quality signals)
 - **ArgoCD**: Deployment events (DF, lead time end, CFR)
 - **Prometheus/Alertmanager**: Incident detection and resolution (MTTR)
 
@@ -679,7 +679,7 @@ Take 2 minutes to think about:
 
 **💬 Community**:
 
-- Share your team's metrics (anonymously!) in `#dojo-metrics`
+- Share your team's metrics (anonymously!) in [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell)
 - Join the DORA community discussions
 - Help others interpret their data
 
@@ -710,7 +710,7 @@ In Module 3, you'll learn:
 
 1. ✅ Mark this module complete in your Backstage profile
 2. 📊 View your progress on the Dojo dashboard
-3. 💬 Share your DORA metrics insights in `#dojo-achievements`
+3. 💬 Share your DORA metrics insights in [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell)
 4. ➡️ **Continue to Module 3** when ready
 
 **Time Investment**: 60 minutes
@@ -721,7 +721,7 @@ In Module 3, you'll learn:
 
 **Questions or Issues?**
 
-- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-white-belt`
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) ([Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a))
 - 📧 Email: dojo@ufawkes.dev
 - 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 

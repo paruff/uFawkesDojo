@@ -1614,7 +1614,7 @@ We'd love to hear about your Fawkes Dojo journey!
 
 **Join the community**:
 
-- 💬 **GitHub Discussions**: `#dojo-graduates` category
+- 💬 **GitHub Discussions**: [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell)
 - 🐦 **Twitter**: Tweet with `#FawkesDojo` and `@FawkesPlatform`
 - 💼 **LinkedIn**: Add "Fawkes Platform Architect" to certifications
 - 📝 **Blog**: Write about your learning experience

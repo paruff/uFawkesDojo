@@ -1258,7 +1258,7 @@ nano ~/fawkes-dojo/module6-submission/reflection.md
 cd ~/fawkes-dojo
 tar -czf module6-submission.tar.gz module6-submission/
 
-# Submit via Fawkes Dojo portal or email to dojo@fawkes-platform.io
+# Submission portal: not built yet. Attach the archive to a GitHub Discussions post or email dojo@ufawkes.dev
 ```
 
 ---
@@ -1329,7 +1329,7 @@ Bootstrap ArgoCD to manage itself:
 
 1. **Check the Troubleshooting Section** (Part 5) - covers 90% of common issues
 2. **ArgoCD Slack** - #argo-cd channel, very responsive community
-3. **GitHub Discussions** - `#dojo-green-belt` category
+3. **GitHub Discussions** - [Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a)
 4. **Office Hours** - Bi-weekly live Q&A (see dojo calendar)
 
 ### Share Your Success
@@ -1339,13 +1339,13 @@ Completed the module? Share with the community!
 - **Tweet**: "Just completed @FawkesPlatform Dojo Module 6: GitOps with ArgoCD! 🎉 #GitOps #Platform Engineering"
 - **LinkedIn Post**: Share your reflection and learnings
 - **Fawkes Blog**: Write a guest post about your experience
-- **GitHub Discussions**: Share screenshots in `#show-and-tell` category
+- **GitHub Discussions**: Share screenshots in [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell)
 
 ### Help Others
 
 The best way to solidify your learning:
 
-- Answer questions in #dojo-green-belt channel
+- Answer questions in [Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a)
 - Review peer submissions
 - Contribute troubleshooting tips to the docs
 - Create supplementary learning materials
@@ -1503,8 +1503,8 @@ kubectl delete applications --all -n argocd
 Found an issue or have suggestions?
 
 - Open issue: https://github.com/paruff/fawkes/issues
-- Email: dojo@fawkes-platform.io
-- Slack: #dojo-feedback
+- Email: dojo@ufawkes.dev
+- Discussions: [Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a)
 
 ---
 

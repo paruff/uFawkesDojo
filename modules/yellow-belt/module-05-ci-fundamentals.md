@@ -527,7 +527,7 @@ In Module 6, you'll learn:
 **Next Steps**:
 1. ✅ Mark this module complete in your Backstage profile
 2. 📊 View your progress on the Dojo dashboard
-3. 💬 Share your completion in `#dojo-achievements` (optional!)
+3. 💬 Share your completion in [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell) (optional!)
 4. ➡️ **Continue to Module 6** when ready
 
 **Time Investment**: 60 minutes
@@ -537,7 +537,7 @@ In Module 6, you'll learn:
 ---
 
 **Questions or Issues?**
-- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-yellow-belt`
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) ([Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a))
 - 📧 Email: dojo@ufawkes.dev
 - 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 

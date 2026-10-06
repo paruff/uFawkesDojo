@@ -383,7 +383,7 @@ Week 11: Final assessment
 
 ### Study Groups
 
-- Weekly study sessions on Mattermost
+- Weekly study sessions: not built yet. Meanwhile, find a study partner in [Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a)
 - Peer review of practice projects
 - Mock interviews for Black Belt
 
