@@ -12,6 +12,14 @@ name: Pre-commit
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner — hosted (default), or the MBP fallback during a hosted incident
+        type: choice
+        options:
+          - ubuntu-latest
+          - self-hosted
+        default: ubuntu-latest
 
 # Pre-flight's job asks for pull-requests: read (to read the PR's size and
 # commits); a called workflow can't have more than its caller grants, so a
@@ -23,7 +31,8 @@ permissions:
 jobs:
   pre-commit:
     name: Pre-commit hooks
-    uses: paruff/uFawkesPipe/.github/workflows/reusable-preflight.yml@56226a057899ec3407c7a5c6bd5182d88783d2d2 # v1.11.0-beta.1
+    uses: paruff/uFawkesPipe/.github/workflows/reusable-preflight.yml@c366d41b52754340fd7f88175d7cd270397e1713 # feat/reusable-runner-input (e2e test pin — this branch must not merge)
     with:
+      runner: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
       pr-size-limit: 0 # this repo had no PR size gate; Pre-flight's default is 400
       commit-format: conventional
