@@ -1,165 +1,118 @@
 # Plan: Teach the uFawkes Compose Suite First
 
 **Traces to:** [`spec.md`](spec.md) → [`intent.md`](intent.md)
-**Status:** Draft | **Revision:** 2
+**Status:** Draft | **Revision:** 3 | **State as of:** 2026-10-06
+**Evidence:** [`audit-2026-10-06.md`](audit-2026-10-06.md)
 
 Phases follow the suite release order. Each phase starts only after its
-stack's release ships (spec R1). One module per PR, and every step is run
-for real (spec R2). Live status is tracked in the
+stack's release ships (spec R1), one module per PR, and every step is run for
+real (spec R2, R7). This file holds order and verification, not task status:
+live status is on the
 [uFawkes Suite Release Project](https://github.com/users/paruff/projects/7)
-under Release = "Dojo compose", not in this file.
+(Release = "Dojo 0.2" or "Dojo labs") and in the issues.
 
-## Phase 0.2.1 — Accuracy pass (Dojo 0.2, before any stack lab)
+## Where each phase stands
 
-1. Five DORA metrics everywhere (#19). Every module that still teaches
-   Jenkins says so at the top and names the replacement module's release.
-   Every lab, video or community link that doesn't exist is either removed
-   or labeled "not built yet".
-2. Extend the existing module-authoring guide (AC-DOJO-03).
-3. Build the "Start here" uFawkesAI lab and run it for real.
-4. **Add Module 0: "From Vibe Coding to Agentic Engineering"** — White Belt
-   entry primer (≤10 min theory) citing *The AI-Native SDLC Playbook*
-   (Claxton, Anthropic, 2026). Points to "Start here" lab. Implemented in
-   `modules/white-belt/module-00-vibe-coding-to-agentic.md` and
-   `white-belt/module-00-vibe-coding-to-agentic/README.md`.
-5. Update `docs/ai-sdlc/compose-curriculum/plan.md` to this order, and align
-   ufawkes.dev's learn guides (uFawkes.dev #67).
-6. Release Dojo `0.2`. Announce with uFawkesAI follow-up: "now learn it".
+| Phase | Stack release today | Content | Run for real |
+|---|---|---|---|
+| 0.2.1 Accuracy + "Start here" | uFawkesAI `v2.0.0-rc.3` (no `v2.0.0`) | Guide, PR template, Module 0 and its lab merged | "Start here" on `rc.3`; **AC-DOJO-01 fails** (24 lines) |
+| 0.2.2 uFawkesObs | `v1.0.6-rc.1` (no `v1.0.0`) | Module 2 lab-01 re-run (#79); Brown Belt 13–16 written | Module 2 lab-01; M13/M14 `validate.sh` in the nightly only |
+| 0.2.3 uFawkesPipe | `v1.11.1-beta.1` (no `v2.0.0`) | Yellow Belt 5–8 written against `v2.0.0` | none |
+| 0.2.4 uFawkesDevX | `v1.0.1` (stable) | White Belt 1/3/4 written against `v1.0.1` | none; ADR (uFawkesDevX#57) open |
+| 0.2.5 Green Belt framing | none needed | Done (Modules 9–12) | n/a |
 
-## Phase 0.2.2 — uFawkesObs content (after uFawkesObs v1.0.0, Dojo 0.3)
+"Written" means the lab files exist. It does not mean a learner can follow
+them. Twelve labs were merged ahead of their stacks without a run (audit F1).
 
-1. **Pilot (AC-001):** pin `white-belt/module-02-dora-metrics/lab-01/`
-   to `v1.0.0` and re-run it end to end, including `validate.sh`.
-2. Brown Belt Modules 13–16 → uFawkesObs, one module per PR. Add an
-   explicit spacing boundary to any module still over about 90 minutes.
-3. Add the Brown Belt graduation-delta lab: what changes on Fawkes. Source
-   it from `uFawkesObs/docs/fawkes-migration.md`.
+## Phase 0.2.0 — Verify and gate (now, before any announcement)
 
-   **Module 13 lab migration** (PR #70): Brown Belt Module 13 migrated to
-   uFawkesObs v1.0.0 — implements observability via Prometheus, Grafana, Loki,
-   Tempo, Alertmanager, Alloy, OTel Collector. Lab demonstrates stack deployment,
-   datasource exploration, PromQL/LogQL/TraceQL queries, alerting configuration,
-   and DORA profile enablement. Lab instructions and validation script added in
-   `brown-belt/module-13-observability/lab-01/`.
+1. Merge #79 (Module 2 lab-01 on `v1.0.6-rc.1`).
+2. **Make AC-DOJO-01 pass.** Run the suite's script
+   (`uFawkes.dev/scripts/checks/ac-dojo-01.sh`) with `CHECK_DOJO_DIR` set to
+   the branch. Fix the 22 remaining lines: the vision doc, quiz distractors, same-line
+   qualifiers, `index.html`, and the dead `.pre-commit-config.yaml` path.
+3. **Quarantine the twelve unverified labs** (spec R7): add the header
+   "Written ahead of its stack, not yet run for real" and remove release links
+   to tags that do not exist. Relabel #42–#53 as "written, awaiting
+   verification".
+4. **Protect `main`** and add CODEOWNERS (#20), so R7 is enforced and not
+   only written down.
+5. Add the AC-006 script (every named tag exists) to the nightly and to lab PRs.
+6. Record the owner's decisions on the three open questions in `intent.md`.
 
-   **Module 14 lab migration** (PR #71): Brown Belt Module 14 migrated to
-   uFawkesObs v1.0.0 — implements DORA metrics deep dive via uFawkesObs DORA
-   profile (dora-api with in-process metric computation). Lab demonstrates DORA profile
-   enablement, event ingestion via dora-api, PromQL querying for all 5 DORA metrics,
-   Grafana dashboard construction, failure/recovery testing, and DORA alerting.
-   Lab instructions and validation script added in
-   `brown-belt/module-14-dora-deep-dive/lab-01/`.
+## Phase 0.2.1 — Accuracy pass and "Start here" (Dojo 0.2)
 
-   **Module 15 lab migration** (PR #71): Brown Belt Module 15 migrated to
-   uFawkesObs v1.0.0 — implements SLI/SLO/Error Budget management via
-   uFawkesObs Prometheus recording rules (SLI/SLO/Error Budget), Alertmanager
-   burn rate alerts, and Grafana SLO dashboards. Lab demonstrates SLI/SLO
-   recording rules, error budget configuration, multi-window burn rate alerting,
-   SLO dashboard construction, and SLO-driven deployment decision practice.
-   Lab instructions and validation script added in
-   `brown-belt/module-15-slis-slos/lab-01/`.
+1. Five DORA metrics, retired Jenkins labeling, and removal or labeling of
+   unbuilt labs, videos and links (AC-DOJO-01): content done in #76 and #78; the
+   suite's check still fails (Phase 0.2.0 step 2).
+2. Extend the authoring guide (AC-DOJO-03): done, items 1–17 (#63, #66).
+3. "Start here" lab (AC-DOJO-02): built and run on `rc.3` (#77). **Remaining:**
+   re-pin to uFawkesAI `v2.0.0` and re-run when it ships (#37).
+4. Align this plan and ufawkes.dev's learn guides: this revision; uFawkes.dev
+   #67 is closed.
+5. Release Dojo `0.2` once AC-DOJO-01 and AC-DOJO-02 are met. Announce with
+   uFawkesAI's follow-up post: "now learn it".
 
-   **Module 16 lab migration** (this PR): Brown Belt Module 16 migrated to
-   uFawkesObs v1.0.0 — implements advanced incident management via uFawkesObs
-   observability stack (Prometheus, Grafana, Loki, Tempo, Alertmanager, Alloy,
-   OTel Collector). Lab demonstrates full incident lifecycle: detection via
-   Alertmanager, investigation via Loki/Tempo/Prometheus, mitigation via
-   Docker Compose, resolution verification, and blameless postmortem with
-   uFawkesObs data. Lab instructions and validation script added in
-   `brown-belt/module-16-incident-management/lab-01/`.
+## Phase 0.2.2 — uFawkesObs (Dojo 0.3, after Obs stable)
 
-## Phase 0.2.3 — uFawkesPipe → Yellow Belt (after uFawkesPipe v2.0.0, Dojo 0.4)
+1. **Pilot (AC-001):** Module 2 lab-01 pinned and re-run: done on `rc.3` (#79).
+   **Remaining:** re-pin to the stable tag and re-run (#41).
+2. Brown Belt 13–16, written. **Remaining:** run each for real against the
+   newest rc, one lab per PR, labeled pre-release; re-pin on the stable tag.
+   Fix the stale service names and event-schema steps first (#72).
+3. Brown Belt graduation-delta lab (what changes on Fawkes), sourced from
+   `uFawkesObs/docs/fawkes-migration.md`. Not started.
 
-1. Modules 5–8 → uFawkesPipe (Woodpecker, the `.fawkespipe.yml`
-   contract, security scanning, DefectDojo). This retires the Jenkins
-   content.
-2. Give the GitHub OAuth app registration its own worked example, timed
-   from a real first run.
+## Phase 0.2.3 — uFawkesPipe (Dojo 0.4, after Pipe `v2.0.0`)
 
-   **Module 5 lab migration** (PR #71): Yellow Belt Module 5 migrated to
-   uFawkesPipe v2.0.0 — implements CI fundamentals via Woodpecker CI
-   (pipeline stages: validate, test, security, build), `.fawkespipe.yml`
-   contract, security scanning (Gitleaks, Trivy, SonarQube), and DefectDojo
-   integration. Lab demonstrates Woodpecker UI exploration, `.fawkespipe.yml`
-   creation, pipeline execution, security scan examination, and failure/recovery
-   cycle. Lab instructions and validation script added in
-   `yellow-belt/module-05-ci-fundamentals/lab-01/`.
+1. Yellow Belt 5–8, written against a `v2.0.0` that does not exist.
+   **Remaining:** run each for real against the newest Pipe release, labeled
+   pre-release; re-pin on `v2.0.0`.
+2. Give the GitHub OAuth app registration its own worked example, timed from
+   a real first run. Not started.
 
-   **Module 6 lab migration** (PR #71): Yellow Belt Module 6 migrated to
-   uFawkesPipe v2.0.0 — implements Golden Path pipelines via `.fawkespipe.yml`
-   contract, Golden Path templates (Python, Java, Node.js, Go), pipeline
-   optimization (parallel stages, CNB caching, resource tuning). Lab demonstrates
-   template customization, parallel execution, CNB caching, and build performance
-   measurement. Lab instructions and validation script added in
-   `yellow-belt/module-06-golden-path/lab-01/`.
+## Phase 0.2.4 — uFawkesDevX (Dojo 0.5)
 
-   **Module 7 lab migration** (PR #71): Yellow Belt Module 7 migrated to
-   uFawkesPipe v2.0.0 — implements security scanning & quality gates via
-   uFawkesPipe security stages (secrets-scan, vuln-scan-fs, vuln-scan-image,
-   sast, dependency_scan, image_scan, dast, defectdojo). Lab demonstrates
-   SAST configuration (SonarQube, Trivy, Bandit), dependency/image scanning,
-   secret detection (Gitleaks), quality gates, and DefectDojo integration.
-   Lab instructions and validation script added in
-   `yellow-belt/module-07-security-scanning/lab-01/`.
+1. White Belt 1, 3 and 4, written against `v1.0.1`, which exists.
+   **Remaining:** run each for real. This is the first lab set that can be
+   fully verified today. Module 4 also depends on uFawkesPipe, so its run waits
+   on a Pipe release.
+2. Record the Postgres decision (AC-004, uFawkesDevX#57) or amend the spec to
+   say it no longer gates White Belt.
 
-   **Module 8 lab migration** (this PR): Yellow Belt Module 8 migrated to
-   uFawkesPipe v2.0.0 — implements artifact lifecycle management via
-   uFawkesPipe stages (build, image_scan, push, deploy) with CNB builder,
-   Trivy image scanning, configurable retention policies, and deployment
-   promotion. Lab demonstrates artifact build, image scanning, retention
-   configuration, promotion configuration, and artifact lifecycle verification.
-   Lab instructions and validation script added in
-   `yellow-belt/module-08-artifact-management/lab-01/`.
+## Phase 0.2.5 — Green Belt graduation framing
 
-## Phase 0.2.4 — uFawkesDevX → White Belt (after uFawkesDevX v0.1.0 + AC-004, Dojo 0.5)
+Done: "why Kubernetes now" and Tekton references in Modules 9–12 (#53).
 
-1. Modules 1, 3 and 4 → uFawkesDevX (Backstage catalog, a Cookiecutter
-   golden path as "first deployment"). This replaces the kubectl-first
-   Module 1 lab.
+## Phase 0.2.6 — The nightly (spec R8)
 
-   **Module 1 lab migration** (PR #69): White Belt Module 1 migrated to
-   uFawkesDevX v1.0.1 — scaffolds `hello-devx` via Cookiecutter
-   python-flask-app template, registers in Backstage via Score service API.
-   Lab instructions and validation script added in
-   `white-belt/module-01-what-is-idp/lab-01/`.
+The nightly live acceptance (#55) runs 4 of 14 labs.
 
-   **Module 3 lab migration** (PR #70): White Belt Module 3 migrated to
-   uFawkesDevX v1.0.1 — implements GitOps principles via Score service
-   (spec validation, pipeline trigger), Backstage catalog (source of truth),
-   and Scaffolder (self-service). Lab demonstrates Score API registration,
-   Scaffolder template, and rollback via spec revert.
-   Lab instructions and validation script added in
-   `white-belt/module-03-gitops-principles/lab-01/`.
-
-   **Module 4 lab migration** (this PR): White Belt Module 4 migrated to
-   uFawkesDevX v1.0.1 — implements end-to-end deployment workflow via
-   Scaffolder (template), Score Service (spec validation, pipeline trigger),
-   uFawkesPipe (Woodpecker CI/CD), and Coder (devcontainer workspace).
-   Lab demonstrates Scaffolder template creation, Score spec submission,
-   pipeline execution, and Coder workspace verification.
-   Lab instructions and validation script added in
-   `white-belt/module-04-first-deployment/lab-01/`.
-
-## Phase 0.2.5 — Green Belt graduation framing (no stack dependency, Dojo 0.6)
-
-1. Add a "why Kubernetes now" opening to Modules 9–12.
-2. Update CI references to Tekton. Keep the existing ArgoCD labs.
-
-This phase can run any time, in parallel with 0.2.2–0.2.4.
+1. Add a `stack_ref` per lab (the lab's pinned tag). Keep a `main` run as an
+   advisory early warning (AC-007).
+2. Add the "Start here" lab, which is self-contained.
+3. Run each lab's deterministic instruction steps, not only `validate.sh`
+   (the verbatim-block technique used for #77).
+4. The nine labs that need student artifacts stay in #73.
+5. In uFawkes.dev, correct the `live-checks.yml` purpose text from "every lab's
+   `validate.sh`" to the real coverage.
 
 ## Every phase
 
-- Check the published lesson links for moved or rewritten modules
-  (AC-002).
-- Update `README.md`'s belt summary and `INTENT.md`'s Direction section
-  when a phase completes.
+- Check the published lesson links for moved or rewritten modules (AC-002).
+- Update `README.md`'s belt summary and `INTENT.md` when a phase completes.
+- Do not close an issue with a closing keyword in a commit; close it from
+  the PR that has the run evidence.
 
 ## Verification Strategy
 
 | Criterion | Evidence | When |
 |---|---|---|
-| AC-001 | Real run transcript against uFawkesObs `v1.0.0` in the pilot PR, plus the `content-integrity.yml` pass | Phase 0.2.2 step 1 |
+| AC-001 | Real run transcript against the Obs tag in the pilot PR, plus the `content-integrity.yml` pass | Phase 0.2.2 step 1 |
 | AC-002 | Manual check of each changed module's `lesson.html?src=` URL after deploy | Every phase |
-| AC-003 | `grep -rn "git clone" white-belt modules labs` shows `--branch vX.Y.Z` on every stack clone | Every lab PR |
-| AC-004 | A link to uFawkesDevX's Postgres ADR in the Phase 0.2.4 PR | Phase 0.2.4 start |
+| AC-003 | `grep -rn "git clone" white-belt brown-belt yellow-belt modules labs` shows `--branch vX.Y.Z` on every stack clone | Every lab PR |
+| AC-004 | A link to uFawkesDevX's Postgres ADR, or an amended spec | Phase 0.2.4 |
 | AC-005 | Authoring-guide boxes in the PR template checked, or each gap explained | Every module PR |
+| AC-006 | Script: every tag a lab names exists | Phase 0.2.0 step 5; nightly |
+| AC-007 | The nightly's checkout ref equals the lab's pin | Phase 0.2.6 |
+| AC-DOJO-01 (suite) | `bash scripts/checks/ac-dojo-01.sh` in uFawkes.dev exits 0 | Before the 0.2 release |
