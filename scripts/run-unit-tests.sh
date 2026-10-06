@@ -24,6 +24,22 @@ SUITES=(
 )
 
 failed=0
+
+# Parity: every scripts/test-*.sh must be registered in SUITES above — a
+# suite that exists but is never listed would never run, and the summary
+# would still read "all passed".
+for candidate in scripts/test-*.sh; do
+  [[ -e "$candidate" ]] || continue
+  listed=0
+  for suite in "${SUITES[@]}"; do
+    if [[ "$suite" == "$candidate" ]]; then listed=1; fi
+  done
+  if [[ "$listed" -eq 0 ]]; then
+    echo "run-unit-tests: $candidate exists but is not registered in SUITES" >&2
+    failed=1
+  fi
+done
+
 results=()
 
 for suite in "${SUITES[@]}"; do
