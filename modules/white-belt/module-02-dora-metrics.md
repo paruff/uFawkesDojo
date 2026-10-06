@@ -673,7 +673,7 @@ Take 2 minutes to think about:
 
 **🛠️ Tools**:
 
-- [Four Keys Project](https://github.com/dora-team/fourkeys) - Open source DORA metrics tool
+- [Four Keys Project](https://github.com/dora-team/fourkeys) - Open source DORA metrics tool (historical name: it predates the fifth metric)
 - [Sleuth](https://www.sleuth.io/) - Commercial DORA tracking (Fawkes alternative)
 - [LinearB](https://linearb.io/) - Engineering intelligence platform
 

@@ -98,8 +98,8 @@ Learning" (Principle #1) is supposed to be the point.
 
 Before merging, grep the module for facts that might have moved on:
 
-- Tool/vendor names (e.g. Jenkins → Tekton — see issue #11)
-- Metric definitions (e.g. DORA's four keys → five, added late 2025)
+- Tool/vendor names (e.g. Jenkins replaced by Tekton — see issue #11)
+- Metric definitions (e.g. DORA's four keys replaced by five, added late 2025)
 - Contact info and URLs (e.g. `fawkes.io` → `ufawkes.dev` for email — see
   issue #11 and PR #12)
 - "Last Updated" / version footer, if the module has one — bump it

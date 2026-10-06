@@ -91,7 +91,7 @@ You've mastered this module when you can:
 > - uFawkesPipe tour: `.fawkespipe.yml` contract, templates, Woodpecker stages
 > - Demo: Create `.fawkespipe.yml` from template → customize → pipeline runs
 > - Show optimization: parallel stages, caching, resource tuning
-> - Closing: "From 200-line Jenkinsfile to 20-line contract"
+> - Closing: "From a 200-line legacy Jenkinsfile to a 20-line contract"
 
 ### What is a Golden Path in uFawkesPipe?
 
@@ -831,7 +831,7 @@ This lab walks you through customizing a golden path template, configuring pipel
 
 **In uFawkesPipe, what file defines the pipeline contract?**
 
-- [ ] A) Jenkinsfile
+- [ ] A) Makefile
 - [ ] B) .woodpecker.yml
 - [x] C) .fawkespipe.yml
 - [ ] D) pipeline.yaml
@@ -846,7 +846,7 @@ This lab walks you through customizing a golden path template, configuring pipel
 
 - [ ] A) Run all stages in parallel
 - [x] B) Set `advanced.parallel.enabled: true` in `.fawkespipe.yml`
-- [ ] C) Use Jenkins parallel syntax
+- [ ] C) Use GNU Make's `-j` flag
 - [ ] D) Run multiple pipelines simultaneously
 
 **Explanation**: Setting **`advanced.parallel.enabled: true`** enables parallel execution for compatible stages (lint steps, test steps).
@@ -898,7 +898,7 @@ This lab walks you through customizing a golden path template, configuring pipel
 
 - [ ] A) Fork the template repository
 - [x] B) Copy template, modify `.fawkespipe.yml` with your app details
-- [ ] C) Write a new Jenkins Shared Library
+- [ ] C) Write a new shared Makefile library
 - [ ] D) Create a new Woodpecker plugin
 
 **Explanation**: Copy a template from `examples/`, customize `app`, `build`, `stages`, and `advanced` sections for your application.

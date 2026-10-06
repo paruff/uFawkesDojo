@@ -47,7 +47,7 @@ You have mastered this module when you can:
 - Look at the `dora-overview` and `dora-metrics` Grafana dashboards and say
   what each panel means
 - Explain what a "deployment event" is and how it reaches a dashboard
-- Say what changed in the DORA model in 2025 (four keys → five)
+- Say what changed in the DORA model in 2025 (four keys replaced by five)
 
 ---
 

@@ -328,7 +328,7 @@ D) Deployments only happen via Git hooks
 
 **Question 22**: Which tool is most commonly used for GitOps in Kubernetes?
 
-A) Jenkins
+A) Docker Compose
 B) GitLab CI
 C) ArgoCD or Flux
 D) GitHub Actions

@@ -26,7 +26,7 @@ before requesting review:
 - [ ] Currency check done: tool names, metric definitions, contact info,
       and any "Last Updated" footer are current (see
       [issue #11](https://github.com/paruff/uFawkesDojo/issues/11) for
-      known in-flight changes: Jenkins → Tekton, `fawkes.io` → `ufawkes.dev`)
+      known in-flight changes: Jenkins replaced by Tekton, `fawkes.io` replaced by `ufawkes.dev`)
 - [ ] **Cumulative, spaced retrieval**: module opens with 2–3 recall
       questions from *earlier* modules, not only the current one
 - [ ] **Interleaving**: Green+ belt modules mix problem types; White/Yellow
