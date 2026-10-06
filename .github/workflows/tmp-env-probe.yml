@@ -1,0 +1,16 @@
+name: tmp-env-probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: self-hosted
+    timeout-minutes: 5
+    steps:
+      - name: Dump env
+        run: |
+          echo "RUNNER_TOOL_CACHE=${RUNNER_TOOL_CACHE:-UNSET}"
+          echo "PATH=$PATH"
+          env | grep -E "^RUNNER_|^ImageOS|^AGENT_" | sort
+          mkdir -p "${RUNNER_TOOL_CACHE}/probe" && echo "mkdir into toolcache: OK"
