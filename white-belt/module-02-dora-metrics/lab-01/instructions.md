@@ -1,9 +1,9 @@
 # Lab 01: See DORA Metrics Live in Grafana
 
 **Module**: White Belt — Module 2: DORA Metrics
-**Estimated Time**: 20 minutes
+**Estimated Time**: 25 minutes (the dashboard needs up to two minutes to catch up after each event)
 **Difficulty**: Beginner (no Grafana or DORA experience required)
-**Runs against**: [uFawkesObs](https://github.com/paruff/uFawkesObs) (Docker Compose), not `fawkes`/Kubernetes
+**Runs against**: [uFawkesObs `v1.0.6-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.6-rc.1) (Docker Compose), not `fawkes`/Kubernetes. This is a **pre-release** pin: uFawkesObs has no stable release yet, and the lab moves to the stable tag when it ships ([#41](https://github.com/paruff/uFawkesDojo/issues/41)).
 
 ---
 
@@ -41,7 +41,9 @@ DORA metrics before starting.
 
 ```bash
 # In a separate directory from your uFawkesDojo checkout:
-git clone https://github.com/paruff/uFawkesObs.git
+export OBS_TAG=v1.0.6-rc.1
+git clone -c advice.detachedHead=false --depth 1 --branch "$OBS_TAG" \
+  https://github.com/paruff/uFawkesObs.git
 cd uFawkesObs
 
 # Copy the env template and set a real Grafana password
@@ -68,24 +70,26 @@ in a standard Docker Desktop install.
 Open Grafana: **<http://localhost:3000>** (login: `admin` / the password you
 set in `.env`).
 
-Navigate to **Dashboards → DORA Overview**. This dashboard already has
-seed/historical data in it — you haven't done anything yet, and it isn't
-empty. That's deliberate: you're studying a **worked example** before you
-touch anything.
+Navigate to **Dashboards → DORA Overview**. The stack has received no
+events yet, so the panels read **0** or "No data". That is correct: you
+are not looking at numbers yet, you are learning what each panel *will*
+measure once events arrive in Steps 2 and 3.
 
-For each panel, write down (mentally or on paper) which of the DORA key
-metrics it maps to:
+Read the panel titles and match each to the DORA metric it shows:
 
-- A panel showing deploys-per-day → **Deployment Frequency**
-- A panel showing commit-to-production time → **Lead Time for Changes**
-- A panel showing % of deploys that failed → **Change Failure Rate**
-- A panel showing incident recovery time → **Time to Restore**
+- **Deployment Frequency** → how often you deploy
+- **Lead Time for Changes** → commit-to-production time
+- **Change Failure Rate** → the share of deploys that failed
+- **Failed Deployment Recovery Time (FDRT)** → how long recovery takes (the
+  theory doc calls this Time to Restore, or MTTR)
+- **Rework Rate** → the share of merged work later reverted or hotfixed
 
-Now open **Dashboards → DORA Metrics**. Look at its title bar. It says
+Now open **Dashboards → uFawkesObs — DORA Metrics**. Its first panel says
 **"DORA 2026 — Five Key Metrics"** — not four. Find the panel for the fifth
 metric, **Rework Rate** (% of merged work later reverted or hotfixed). The
 DORA research program added this in late 2025; the theory doc covers it as
-"Deployment Rework Rate", and here you see it live.
+"Deployment Rework Rate", and here you see it live. Ignore the two "uFawkesRes PostgreSQL" panels
+near the bottom: uFawkesRes is deprecated and this lab does not use them.
 
 ✅ **Checkpoint**: You should be able to point at a specific panel for each
 of the five metrics before moving on.
@@ -113,7 +117,8 @@ curl -s -X POST http://localhost:8088/event \
   }'
 ```
 
-Expected response: `{"queued":true,"id":<some number>}`.
+Expected response: `{"queued":true,"id":1}` (the id counts up from 1 on a
+fresh stack).
 
 > **What just happened**: `dora-api` validated your payload against
 > [`dora/events/deployment-event.schema.json`](https://github.com/paruff/uFawkesObs/blob/main/dora/events/deployment-event.schema.json)
@@ -121,19 +126,27 @@ Expected response: `{"queued":true,"id":<some number>}`.
 > DORA database. This is the exact same schema a real CI/CD pipeline would
 > POST to — you just did by hand what a robot normally does.
 
-By default the compute job that turns queued events into dashboard numbers
-runs once an hour (`DORA_COMPUTE_INTERVAL_SECONDS=3600`). Restarting it
-forces an immediate recompute instead of waiting:
+You do not need to restart anything. `make up-dora` sets the compute loop
+to run every 15 seconds (`DORA_COMPUTE_INTERVAL_SECONDS=15`), inside the
+`dora-api` container. You can see its result straight away:
 
 ```bash
-docker compose restart dora-compute
+curl -s http://localhost:8088/metrics | grep '^dora_deployment_frequency'
 ```
 
-Wait about 20 seconds, then refresh the **DORA Metrics** dashboard in your
-browser.
+**Expected output**:
 
-✅ **Checkpoint**: The Deployment Frequency panel's count should have gone
-up by one. If it hasn't after a minute, see Troubleshooting below.
+```
+dora_deployment_frequency_per_week{team_id="your-name/dojo-lab",tier="low"} 0.23333333333333334
+```
+
+That is one deployment in the last 30 days, expressed per week. Prometheus
+then refreshes the dashboard's numbers every 60 seconds, so wait up to about
+two minutes and refresh **uFawkesObs — DORA Metrics** in your browser.
+
+✅ **Checkpoint**: The Deployment Frequency panel should read about **0.23**.
+It shows a weekly rate, not a count. If it still reads 0 after two minutes,
+see Troubleshooting below.
 
 ---
 
@@ -157,14 +170,23 @@ curl -s -X POST http://localhost:8088/event \
   }'
 ```
 
-Restart `dora-compute` again and refresh the dashboard:
+Wait up to two minutes and refresh the dashboard. To see the API's side of
+it straight away:
 
 ```bash
-docker compose restart dora-compute
+curl -s http://localhost:8088/metrics | grep '^dora_cfr_pct'
 ```
 
-✅ **Checkpoint**: Change Failure Rate should now show a non-zero
-percentage (1 failed out of however many deployments you've now sent).
+**Expected output**:
+
+```
+dora_cfr_pct{team_id="your-name/dojo-lab",tier="low"} 0.5
+```
+
+✅ **Checkpoint**: Change Failure Rate should now read **50.0%** (the panel
+shows the ratio 0.5 as a percentage: 1 failed deployment out of 2). The
+Deployment Frequency figure stays at 0.23, because it counts successful
+deployments.
 
 Recall from the theory doc: **elite performers have a nonzero CFR too**
 (0–15%). A dashboard showing 0% forever is a sign that failures aren't
@@ -194,8 +216,8 @@ or Time to Restore; 2 = 50%, which is well outside even the "Low" tier —
 one bad sample size isn't a real signal, which is itself worth noticing;
 3 = Deployment Frequency, because batch size shrank; 4 = Rework Rate,
 because AI-assisted code can ship fast and still need heavy correction;
-5 = an event had to be sent to `dora-api` and successfully processed by
-`dora-compute`.)
+5 = an event had to be sent to `dora-api` and processed by the compute
+loop inside `dora-api`.)
 
 ---
 
@@ -206,30 +228,23 @@ because AI-assisted code can ship fast and still need heavy correction;
 bash /path/to/uFawkesDojo/white-belt/module-02-dora-metrics/lab-01/validate.sh
 ```
 
-**Expected output** (all checks pass):
+**Expected output** (all 8 checks pass):
 
 ```
-[INFO] Starting White Belt Module 02 Lab 01 validation...
-
 [✓] Prerequisites: docker and curl are installed
-[✓] Stack: dora-api container is running
-[✓] Stack: dora-compute container is running
-[✓] Stack: grafana container is running
-[✓] dora-api Health: reachable, queue_depth reported
-[✓] Grafana Health: reachable
-[✓] DORA Overview Dashboard: reachable via Grafana API
-[✓] DORA Metrics Dashboard: reachable via Grafana API
+[✓] Stack: dora-api container (ufawkesdora-ingestion) is running
+[✓] Stack: grafana container (grafana) is running
+[✓] DORA Compute: dora-api exposes DORA metrics at http://localhost:8088/metrics (compute runs in-process)
+[✓] dora-api Health: reachable at http://localhost:8088, response: {"status":"ok","queue_depth":0}
+[✓] Grafana Health: reachable at http://localhost:3000
+[✓] DORA Overview Dashboard: reachable via Grafana API (uid=ufawkesobs-dora-overview)
+[✓] DORA Metrics Dashboard: reachable via Grafana API (uid=ufawkesobs-dora-metrics)
 
-==========================================
-Total Tests: 7
-Passed: 7
-Failed: 0
+Total Tests : 8
+Passed      : 8
+Failed      : 0
 
 [✓] All tests passed! ✅
-
-🎉 Congratulations! You've completed White Belt Module 2 Lab 01.
-   You've seen real DORA metrics move because of events you sent yourself.
-   Move on to Module 03: GitOps Principles.
 ```
 
 ---
@@ -238,11 +253,14 @@ Failed: 0
 
 ```bash
 # From your uFawkesObs checkout:
-make down
+docker compose --profile core --profile dora down
 ```
 
-This lab used the `dora` profile's self-contained SQLite backend — nothing
-to clean up beyond stopping containers.
+`make down` does not stop this stack at this version: it runs
+`docker compose down` without the profiles `make up-dora` started
+([uFawkesObs#617](https://github.com/paruff/uFawkesObs/issues/617)). This lab
+used the `dora` profile's self-contained SQLite backend — nothing to clean up
+beyond stopping containers.
 
 ---
 
@@ -252,7 +270,7 @@ to clean up beyond stopping containers.
 | ------------------------------------------ | -------------------------------------------- | -------------------------------------------------------------------- |
 | `curl: (7) Failed to connect` on port 8088 | Stack not up yet, or `dora` profile not started | Run `make up-dora`, then `make status`                             |
 | `422` response from `/event`               | Payload doesn't match the schema             | Check every required field is present; `commit_sha` must be exactly 40 hex characters |
-| Dashboard still shows old numbers          | `dora-compute` hasn't recomputed yet         | `docker compose restart dora-compute`, wait ~20s, refresh           |
+| Dashboard still shows old numbers          | Prometheus refreshes the DORA rules every 60 s | Wait up to two minutes. Check the API first: `curl -s http://localhost:8088/metrics \| grep '^dora_'` |
 | Grafana asks for login you don't know      | `.env` still has the placeholder password    | Check `.env`; `make check-env` will refuse to start with a weak default |
 | `make up-dora` fails immediately           | Docker not running, or ports already in use  | Start Docker Desktop; check nothing else uses 3000/8088/9090        |
 
