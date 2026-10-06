@@ -85,7 +85,7 @@ catalog with TechDocs.
 
 **Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose), not `fawkes`/Kubernetes
 
-> **Not yet run for real.** uFawkesDevX v1.0.1 exists, but no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Blocked: this lab cannot run on its pinned tag.** uFawkesDevX v1.0.1 cannot build its Backstage image (`backstage/` has no app source), so Step 2 fails; tracked in [uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98). Step 1 was run for real. Steps 2 onward are unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 **Validation**: `bash white-belt/module-01-what-is-idp/lab-01/validate.sh`
 

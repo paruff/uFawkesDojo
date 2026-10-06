@@ -5,7 +5,7 @@
 **Difficulty**: Beginner (basic Docker and command line knowledge required)
 **Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose)
 
-> **Not yet run for real.** uFawkesDevX v1.0.1 exists, but no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Blocked: this lab cannot run on its pinned tag.** uFawkesDevX v1.0.1 cannot build its Backstage image (`backstage/` has no app source), so Step 2 fails; tracked in [uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98). Step 1 was run for real. Steps 2 onward are unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -127,10 +127,10 @@ echo "PostgreSQL ready with coder, backstage, and score databases"
 # Copy the example env file
 cp .env.example .env
 
-# Find your Docker socket GID (needed for Coder to manage workspace containers)
-make check-gid
-# Example output: "Your Docker GID is: 999"
-# Copy that number and set it in .env as DOCKER_GID=999
+# Find the Docker socket's group ID as your containers see it (Coder needs it to manage
+# workspace containers). This works on Linux, Docker Desktop and Colima.
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock alpine stat -c %g /var/run/docker.sock
+# Example output: 991. Set that number in .env as DOCKER_GID=991
 
 # Set CODER_ACCESS_URL to a LAN-reachable address (NOT localhost)
 # Workspace containers need to dial back to the Coder server
@@ -149,7 +149,7 @@ make check-gid
 
 | Variable | Value | Notes |
 |----------|-------|-------|
-| `DOCKER_GID` | Output from `make check-gid` | e.g., `999` |
+| `DOCKER_GID` | Output of the `docker run ... stat` command above | e.g., `991` |
 | `CODER_ACCESS_URL` | `http://<your-lan-ip>:7080` | **Not localhost** |
 | `POSTGRES_USER` | `postgres` | |
 | `POSTGRES_PASSWORD` | `changeme` | |
@@ -447,7 +447,7 @@ rm -rf ~/dojo-labs
 | `cookiecutter: command not found` | Cookiecutter not installed | `pip install cookiecutter` |
 | Score service returns 422 | `score.yaml` invalid | Check `cat score.yaml` for syntax errors |
 | Service not in Backstage catalog | Registration failed or catalog not refreshed | Check Score service logs, refresh Backstage catalog |
-| `make check-gid` fails | Docker not running | Start Docker Desktop |
+| `make check-gid` fails with `No such file or directory` | Docker Desktop for Mac and Colima have no host `docker.sock` to read | Use the `docker run ... stat` command in Step 1 |
 
 ---
 

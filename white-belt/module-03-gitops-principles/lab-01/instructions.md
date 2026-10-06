@@ -5,7 +5,7 @@
 **Difficulty**: Beginner (Module 1 completion required)
 **Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose)
 
-> **Not yet run for real.** uFawkesDevX v1.0.1 exists, but no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Blocked: this lab cannot run on its pinned tag.** It needs Module 1's stack, and uFawkesDevX v1.0.1 cannot build its Backstage image ([uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98)). No step has been run for real. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 

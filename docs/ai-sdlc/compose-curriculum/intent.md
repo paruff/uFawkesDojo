@@ -54,10 +54,9 @@ later as an explicit graduation step, once a learner needs what it adds.
 
 ## Open questions
 
-1. **What uFawkesDevX uses for Postgres now that uFawkesRes is
-   deprecated.** uFawkesDevX has since shipped stable `v1.0.0` and `v1.0.1`,
-   but the decision issue (uFawkesDevX#57, suite AC-DEVX-01) is still open.
-   Does it still gate White Belt, or does the plan follow what shipped?
+1. **What uFawkesDevX uses for Postgres now that uFawkesRes is deprecated.** Decided
+   2026-10-06: SQLite for now (uFawkesDevX#57). It is not implemented in `v1.0.1`, which
+   still needs an external Postgres and cannot build Backstage (uFawkesDevX#98).
 2. **What certification becomes.** The suggested direction is a
    self-attested completion tied to a real capstone, with no badge
    infrastructure (per the module-authoring guide: badges support
