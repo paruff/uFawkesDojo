@@ -3,10 +3,21 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner — hosted (default), or the MBP fallback during a hosted incident
+        type: choice
+        options:
+          - ubuntu-latest
+          - self-hosted
+        default: ubuntu-latest
 
 jobs:
   markdownlint:
-    runs-on: ubuntu-latest
+    # Only a manual dispatch can route to the MBP: push/PR runs stay on
+    # GitHub-hosted runners, so fork-PR code never executes self-hosted.
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
       - name: job-start

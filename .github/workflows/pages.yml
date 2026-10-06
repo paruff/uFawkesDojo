@@ -4,6 +4,14 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner — hosted (default), or the MBP fallback during a hosted incident
+        type: choice
+        options:
+          - ubuntu-latest
+          - self-hosted
+        default: ubuntu-latest
 
 permissions:
   contents: read
@@ -16,7 +24,9 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Only a manual dispatch can route to the MBP: push runs stay on
+    # GitHub-hosted runners, so untrusted code never executes self-hosted.
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - name: Log job start
@@ -34,7 +44,8 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    # Same gate as build: dispatch-only routing to the MBP.
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
     timeout-minutes: 5
     environment:
       name: github-pages
