@@ -603,7 +603,7 @@ Modules 17-20:
 **Next Steps**:
 1. ✅ Mark this module complete in your Backstage profile
 2. 📊 View your progress on the Dojo dashboard
-3. 💬 Share your completion in `#dojo-achievements` (optional!)
+3. 💬 Share your completion in [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell) (optional!)
 4. 🎓 **Prepare for Brown Belt Assessment!**
 
 **Time Investment**: 60 minutes
@@ -688,9 +688,9 @@ You've mastered:
 - [VOID Report](https://void.report/) - Postmortem database
 
 ### Community
-- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - `#dojo-brown-belt`
+- [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) - [Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a)
 - Share your certification achievement!
-- Help others in `#dojo-white-belt` / `#dojo-yellow-belt`
+- Help others in [Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a)
 
 ---
 

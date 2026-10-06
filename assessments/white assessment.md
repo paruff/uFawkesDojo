@@ -170,16 +170,16 @@ D) They are unrelated concepts
 
 ### Section B: DORA Metrics (10 questions)
 
-**Question 11**: What are the four key DORA metrics?
+**Question 11**: What are the five key DORA metrics?
 
 A) Uptime, latency, cost, scalability
-B) Deployment frequency, lead time, MTTR, change failure rate
+B) Deployment frequency, lead time, MTTR, change failure rate, rework rate
 C) Code coverage, bug count, technical debt, velocity
 D) Commits, pull requests, releases, rollbacks
 
 <details>
 <summary>Answer</summary>
-**B** - The four DORA metrics are: deployment frequency, lead time for changes, time to restore service (MTTR), and change failure rate.
+**B** - The five DORA metrics are: deployment frequency, lead time for changes, time to restore service (MTTR), change failure rate, and deployment rework rate (added in 2025).
 </details>
 
 ---
@@ -666,7 +666,7 @@ Remember:
 - ✅ If stuck, move on and come back later
 - ✅ Validate labs before submitting
 
-**Questions?** Contact #dojo-support on Mattermost
+**Questions?** Ask in [Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a) or email dojo@ufawkes.dev
 
 ---
 

@@ -34,9 +34,8 @@ cluster, ArgoCD, or Backstage for this lab. You need Docker.
 
 This lab assumes you've read
 [`modules/white-belt/module-02-dora-metrics.md`](../../../modules/white-belt/module-02-dora-metrics.md)
-up through "Why These Four Metrics?" You should be able to name the four
-original DORA metrics before starting. (Spoiler for later in this lab:
-there's now a fifth.)
+up through "Why These Five Metrics?" You should be able to name all five
+DORA metrics before starting.
 
 ## Prerequisites
 
@@ -85,9 +84,8 @@ metrics it maps to:
 Now open **Dashboards → DORA Metrics**. Look at its title bar. It says
 **"DORA 2026 — Five Key Metrics"** — not four. Find the panel for the fifth
 metric, **Rework Rate** (% of merged work later reverted or hotfixed). The
-DORA research program added this in late 2025; the theory doc's "Four Key
-Metrics" framing predates that change, which is exactly why you're seeing
-it live here instead.
+DORA research program added this in late 2025; the theory doc covers it as
+"Deployment Rework Rate", and here you see it live.
 
 ✅ **Checkpoint**: You should be able to point at a specific panel for each
 of the five metrics before moving on.

@@ -593,8 +593,8 @@ Take 2 minutes to think about:
 - Practice the full workflow: Scaffolder → Score → Pipeline → Coder
 
 **💬 Community**:
-- Share your first deployment in `#dojo-achievements`
-- Help others in `#dojo-white-belt`
+- Share your first deployment in [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell)
+- Help others in [Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a)
 - Ask questions in daily office hours
 
 ### Preview: White Belt Assessment
@@ -633,7 +633,7 @@ Next up is the **White Belt Assessment** (2 hours):
 
 1. ✅ Mark this module complete in your Backstage profile
 2. 📊 View your progress on the Dojo dashboard
-3. 💬 Share your first deployment in `#dojo-achievements`!
+3. 💬 Share your first deployment in [Show and tell](https://github.com/paruff/uFawkesDojo/discussions/categories/show-and-tell)!
 4. ➡️ **Prepare for White Belt Assessment** when ready
 
 **Time Investment**: 60 minutes
@@ -648,7 +648,7 @@ Next up is the **White Belt Assessment** (2 hours):
 
 **Questions or Issues?**
 
-- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) for `#dojo-white-belt`
+- 💬 Ask in [GitHub Discussions](https://github.com/paruff/uFawkesDojo/discussions) ([Q&A](https://github.com/paruff/uFawkesDojo/discussions/categories/q-a))
 - 📧 Email: dojo@ufawkes.dev
 - 🐛 Report bugs: [GitHub Issues](https://github.com/paruff/fawkes/issues)
 
