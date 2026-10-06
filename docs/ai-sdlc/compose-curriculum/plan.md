@@ -18,11 +18,11 @@ live status is on the
 | 0.2.1 Accuracy + "Start here" | uFawkesAI `v2.0.0-rc.3` (no `v2.0.0`) | Guide, PR template, Module 0 and its lab merged | "Start here" on `rc.3`; **AC-DOJO-01 fails** (24 lines) |
 | 0.2.2 uFawkesObs | `v1.0.6-rc.1` (no `v1.0.0`) | Module 2 lab-01 re-run (#79); Brown Belt 13–16 written | Module 2 lab-01; M13/M14 `validate.sh` in the nightly only |
 | 0.2.3 uFawkesPipe | `v1.11.1-beta.1` (no `v2.0.0`) | Yellow Belt 5–8 written against `v2.0.0` | none |
-| 0.2.4 uFawkesDevX | `v1.0.1` (stable) | White Belt 1/3/4 written against `v1.0.1` | none; ADR (uFawkesDevX#57) open |
+| 0.2.4 uFawkesDevX | `v1.0.1` (stable) | White Belt 1/3/4 written against `v1.0.1` | none. **Blocked:** `v1.0.1` cannot build Backstage (uFawkesDevX#98). SQLite adopted for #57 |
 | 0.2.5 Green Belt framing | none needed | Done (Modules 9–12) | n/a |
 
 "Written" means the lab files exist. It does not mean a learner can follow
-them. Twelve labs were merged ahead of their stacks without a run (audit F1).
+them. Eleven labs were merged ahead of their stacks without a run (audit F1).
 
 ## Phase 0.2.0 — Verify and gate (now, before any announcement)
 
@@ -31,9 +31,9 @@ them. Twelve labs were merged ahead of their stacks without a run (audit F1).
    (`uFawkes.dev/scripts/checks/ac-dojo-01.sh`) with `CHECK_DOJO_DIR` set to
    the branch. Fix the 22 remaining lines: the vision doc, quiz distractors, same-line
    qualifiers, `index.html`, and the dead `.pre-commit-config.yaml` path.
-3. **Quarantine the twelve unverified labs** (spec R7): add the header
+3. **Quarantine the eleven unverified labs** (spec R7): add the header
    "Written ahead of its stack, not yet run for real" and remove release links
-   to tags that do not exist. Relabel #42–#53 as "written, awaiting
+   to tags that do not exist. Relabel #42–#52 as "written, awaiting
    verification".
 4. **Protect `main`** and add CODEOWNERS (#20), so R7 is enforced and not
    only written down. Done 2026-10-06: the ruleset requires a pull request and
@@ -78,12 +78,14 @@ them. Twelve labs were merged ahead of their stacks without a run (audit F1).
 
 ## Phase 0.2.4 — uFawkesDevX (Dojo 0.5)
 
-1. White Belt 1, 3 and 4, written against `v1.0.1`, which exists.
-   **Remaining:** run each for real. This is the first lab set that can be
-   fully verified today. Module 4 also depends on uFawkesPipe, so its run waits
-   on a Pipe release.
-2. Record the Postgres decision (AC-004, uFawkesDevX#57) or amend the spec to
-   say it no longer gates White Belt.
+1. White Belt 1, 3 and 4, written against `v1.0.1`, which exists but **cannot be
+   built**: its Backstage image has no app source (uFawkesDevX#98, found by a real
+   run on 2026-10-06; Module 1 Step 1 ran, Step 2 fails). **Remaining:** wait for a
+   DevX release that builds, then run each for real. Module 4 also depends on
+   uFawkesPipe, so its run waits on a Pipe release.
+2. Postgres decision (AC-004): SQLite adopted for now, recorded on uFawkesDevX#57
+   on 2026-10-06. The three spikes in that issue are still needed, and DevX
+   `v1.0.1` still requires an external Postgres until it is implemented.
 
 ## Phase 0.2.5 — Green Belt graduation framing
 

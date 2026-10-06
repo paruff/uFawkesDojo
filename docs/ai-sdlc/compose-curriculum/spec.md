@@ -14,7 +14,7 @@ it targets is released, and every lab step is run for real first.
 | 2 | 2026-09-27 | CI tooling facts; uFawkesRes resolved | Confirmed: Fawkes = Tekton, uFawkesPipe = Woodpecker, uFawkesRes deprecated |
 | 3 | 2026-09-27 | Split into intent/spec/plan (uFawkesAI convention); pilot changed from "White Belt Module 4 on DevX" to "pin Module 2's existing uFawkesObs lab to v1.0.0"; corrected "all modules are Kubernetes-based" | Decided: labs follow suite release order (Obs → Pipe → DevX). Module 2's lab (#10) already runs on uFawkesObs. |
 | 4 | 2026-10-04 | Added R6 and AC-005: rewritten modules pass the whole authoring-guide checklist | Review against mastery learning and Visible Learning: R5 bound only two of the guide's items, so a rewrite could meet every AC and skip retrieval, feedback and correctives |
-| 5 | 2026-10-06 | Added R7, R8, AC-006, AC-007; belt table notes uFawkesDevX is released (`v1.0.1`) | [Audit](audit-2026-10-06.md): twelve labs were merged ahead of their stacks with no run evidence, eight naming tags that do not exist, and the nightly tests `main`, not the pinned tag |
+| 5 | 2026-10-06 | Added R7, R8, AC-006, AC-007; belt table notes uFawkesDevX is released (`v1.0.1`) | [Audit](audit-2026-10-06.md): eleven labs were merged ahead of their stacks with no run evidence, eight naming tags that do not exist, and the nightly tests `main`, not the pinned tag |
 | 5.1 | 2026-10-06 | R1 allows a labeled pre-release tag | Owner decision, 2026-10-06: pre-release pins are acceptable |
 
 ## Requirements

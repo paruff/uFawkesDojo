@@ -57,8 +57,9 @@ been run, for real").
   13 and 14. It tests the stack's default branch and runs `validate.sh`, not
   the instructions' steps.
 
-**Written, but not yet run for real** (12 labs; see the audit):
-- White Belt 1, 3 and 4 on uFawkesDevX `v1.0.1` (the tag exists).
+**Written, but not yet run for real** (11 labs; see the audit):
+- White Belt 1, 3 and 4 on uFawkesDevX `v1.0.1`. The tag exists, but it cannot build
+  its Backstage image (uFawkesDevX#98), so these labs cannot run yet.
 - Yellow Belt 5–8 on a uFawkesPipe `v2.0.0` that does not exist yet.
 - Brown Belt 13–16 on a uFawkesObs `v1.0.0` that does not exist yet.
 
