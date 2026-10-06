@@ -36,7 +36,9 @@ them. Twelve labs were merged ahead of their stacks without a run (audit F1).
    to tags that do not exist. Relabel #42–#53 as "written, awaiting
    verification".
 4. **Protect `main`** and add CODEOWNERS (#20), so R7 is enforced and not
-   only written down.
+   only written down. Done 2026-10-06: the ruleset requires a pull request and
+   four checks (Pre-flight, commit-lint, markdownlint, Artifact Chain); the
+   path-filtered content-integrity check is deliberately not required.
 5. Add the AC-006 script (every named tag exists) to the nightly and to lab PRs.
 6. Record the owner's decisions on the three open questions in `intent.md`.
 
