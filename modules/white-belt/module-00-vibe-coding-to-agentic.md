@@ -17,7 +17,7 @@ By the end of this primer, you will be able to:
 - ✅ Explain why vibe coding doesn't scale for team delivery
 - ✅ Name the six maturity stages from the AI-Native SDLC Playbook
 - ✅ Identify where the uFawkes suite fits in that maturity model
-- ✅ Know your first step: the "Start here" lab on uFawkesAI `v2.0.0`
+- ✅ Know your first step: the "Start here" lab on uFawkesAI (pinned to the `v2.0.0-rc.3` pre-release until `v2.0.0` ships)
 
 ### Why It Matters
 
@@ -133,7 +133,7 @@ Answer without looking back:
 
 - **Next module**: [Module 1 — What is an Internal Delivery Platform?](../white-belt/module-01-what-is-idp.md) — the platform that makes agentic engineering possible
 - **Next guide**: [DORA Primer](https://ufawkes.dev/learn/dora-primer.html) — the five metrics that measure whether agentic engineering works
-- **Hands-on**: Run the [Dojo "Start here" lab](https://dojo.ufawkes.dev/lesson.html?src=white-belt/module-01-what-is-idp/lab-01/instructions.md) (published with Dojo 0.2)
+- **Hands-on**: Run the [Dojo "Start here" lab](https://dojo.ufawkes.dev/lesson.html?src=white-belt/module-00-vibe-coding-to-agentic/lab-01/instructions.md)
 - **Reference**: [The AI-Native SDLC Playbook](https://claude.com/blog/the-ai-native-sdlc-playbook) (Claxton, Anthropic, 2026-08-21)
 
 ---

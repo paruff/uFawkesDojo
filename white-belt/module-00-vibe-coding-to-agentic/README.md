@@ -13,7 +13,7 @@ This primer introduces the **AI-Native SDLC mindset** that underpins the entire 
 ## Learning Path
 
 1. **Read the primer** → `../modules/white-belt/module-00-vibe-coding-to-agentic.md` (10 min)
-2. **Run the "Start here" lab** → Module 1 Lab 01 (clones uFawkesAI template, runs intent→spec→plan→execute→verify)
+2. **Run the "Start here" lab** → [Lab 01](lab-01/instructions.md) (clones a pinned uFawkesAI template, opens its devcontainer, tours the six harness components, writes one intent→spec→plan chain; `validate.sh` checks it)
 
 ## Module Content
 
@@ -33,12 +33,12 @@ This primer introduces the **AI-Native SDLC mindset** that underpins the entire 
 - [ ] Can identify uFawkes target stages (3–4)
 - [ ] Can articulate platform engineer's role
 - [ ] Retrieval check: 4/4 correct
-- [ ] Proceeds to Module 1 "Start here" lab
+- [ ] Passes the "Start here" lab's `validate.sh` (14 checks)
 
 ## Files
 
 - `../modules/white-belt/module-00-vibe-coding-to-agentic.md` — theory primer
-- No separate lab file — this module points directly to Module 1 Lab 01 ("Start here")
+- `lab-01/instructions.md` and `lab-01/validate.sh` — the "Start here" lab (runs against uFawkesAI `v2.0.0-rc.3` until `v2.0.0` ships)
 
 ## Upstream Citation
 
