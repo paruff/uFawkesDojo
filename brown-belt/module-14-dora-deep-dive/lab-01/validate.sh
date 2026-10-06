@@ -23,7 +23,6 @@ LOKI_URL="${LOKI_URL:-http://localhost:3100}"
 TEMPO_URL="${TEMPO_URL:-http://localhost:3200}"
 ALERTMANAGER_URL="${ALERTMANAGER_URL:-http://localhost:9093}"
 DORA_API_URL="${DORA_API_URL:-http://localhost:8088}"
-PUSHGATEWAY_URL="${PUSHGATEWAY_URL:-http://localhost:9091}"
 UF_OBS_DIR="${UF_OBS_DIR:-~/dojo-labs/uFawkesObs}"
 
 # Grafana API credentials — anonymous access is disabled by design in
@@ -415,7 +414,6 @@ main() {
   log_info "Loki URL       : $LOKI_URL"
   log_info "Tempo URL      : $TEMPO_URL"
   log_info "DORA API URL   : $DORA_API_URL"
-  log_info "Pushgateway URL: $PUSHGATEWAY_URL"
   echo ""
 
   check_prerequisites
