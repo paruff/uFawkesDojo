@@ -59,7 +59,7 @@ them. Twelve labs were merged ahead of their stacks without a run (audit F1).
    **Remaining:** re-pin to the stable tag and re-run (#41).
 2. Brown Belt 13–16, written. **Remaining:** run each for real against the
    newest rc, one lab per PR, labeled pre-release; re-pin on the stable tag.
-   Fix the stale `dora-compute` and event-schema steps first (#72).
+   Fix the stale service names and event-schema steps first (#72).
 3. Brown Belt graduation-delta lab (what changes on Fawkes), sourced from
    `uFawkesObs/docs/fawkes-migration.md`. Not started.
 
