@@ -1,7 +1,7 @@
 # Spec: Teach the uFawkes Compose Suite First
 
 **Traces to:** [`intent.md`](intent.md) | **Plan:** [`plan.md`](plan.md)
-**Status:** Draft | **Revision:** 4
+**Status:** Draft | **Revision:** 5
 **Approval required before risky work:** Yes. This rewrites live curriculum
 content that dojo.ufawkes.dev links to. No module changes until the stack
 it targets is released, and every lab step is run for real first.
@@ -14,6 +14,7 @@ it targets is released, and every lab step is run for real first.
 | 2 | 2026-09-27 | CI tooling facts; uFawkesRes resolved | Confirmed: Fawkes = Tekton, uFawkesPipe = Woodpecker, uFawkesRes deprecated |
 | 3 | 2026-09-27 | Split into intent/spec/plan (uFawkesAI convention); pilot changed from "White Belt Module 4 on DevX" to "pin Module 2's existing uFawkesObs lab to v1.0.0"; corrected "all modules are Kubernetes-based" | Decided: labs follow suite release order (Obs → Pipe → DevX). Module 2's lab (#10) already runs on uFawkesObs. |
 | 4 | 2026-10-04 | Added R6 and AC-005: rewritten modules pass the whole authoring-guide checklist | Review against mastery learning and Visible Learning: R5 bound only two of the guide's items, so a rewrite could meet every AC and skip retrieval, feedback and correctives |
+| 5 | 2026-10-06 | Added R7, R8, AC-006, AC-007; belt table notes uFawkesDevX is released (`v1.0.1`) | [Audit](audit-2026-10-06.md): twelve labs were merged ahead of their stacks with no run evidence, eight naming tags that do not exist, and the nightly tests `main`, not the pinned tag |
 
 ## Requirements
 
@@ -42,13 +43,26 @@ it targets is released, and every lab step is run for real first.
   with a corrective loop, and diagrams. If an item can't be met, the PR
   says why.
 
+- **R7 — Gate before merge.** A lab or module rewrite that targets a stack
+  merges only through a pull request that pastes a real run of every step,
+  and only once the stack tag it names exists. A lab written ahead of its
+  stack may merge only if its header says "Written ahead of its stack, not
+  yet run for real" and it names no release link that does not exist. It
+  counts toward no release gate until it has been run for real.
+- **R8 — The nightly tests what the lab teaches.** The nightly live
+  acceptance checks out each lab's stack at the tag the lab pins, not the
+  default branch. A run against `main` may be added as an advisory early
+  warning. Where a lab's steps are deterministic, the nightly runs those
+  steps as well as `validate.sh`, because `validate.sh` can pass while the
+  taught flow is wrong (#72).
+
 ## Design
 
 ### Belt → stack mapping
 
 | Belt | Today | Target | Why |
 |---|---|---|---|
-| White | Module 1 lab is kubectl; **Module 2 lab already on uFawkesObs** (#10) | uFawkesDevX (Backstage catalog, golden-path Cookiecutter "first deployment") for Modules 1/3/4. Module 2 stays on uFawkesObs, pinned. | Removes the cluster barrier from the first labs |
+| White | Module 1 lab is kubectl; **Module 2 lab already on uFawkesObs** (#10) | uFawkesDevX (Backstage catalog, golden-path Cookiecutter "first deployment") for Modules 1/3/4; uFawkesDevX is released (`v1.0.1`). Module 2 stays on uFawkesObs, pinned. | Removes the cluster barrier from the first labs |
 | Yellow | Jenkins-in-Fawkes (stale) | uFawkesPipe: Woodpecker, the `.fawkespipe.yml` contract, Gitleaks/Trivy/SonarQube, DefectDojo | Teaches what the Compose tier actually runs |
 | Green | Fawkes ArgoCD | **Graduation belt.** Opens with why Kubernetes now, then ArgoCD and progressive delivery on Fawkes; CI references use Tekton. | GitOps and canary patterns have no clean Compose analog |
 | Brown | Fawkes in-cluster observability | uFawkesObs for SLIs, SLOs and dashboards, plus a short graduation-delta lab on what changes on Fawkes (Loki → OpenSearch is a rewrite, per `uFawkesObs/docs/fawkes-migration.md`) | Reuses real portability findings |
@@ -134,3 +148,25 @@ measure during rewrite rather than assume:
 - **Must not:** Leave a box unchecked without saying why
 - **Verification:** The PR template checklist, checked at review
 - **Priority:** Required
+
+### AC-006: Every release tag a lab names exists
+
+- **Scenario:** Any lab whose "Runs against" line or clone command names a
+  stack tag
+- **Expected:** For each, `gh api repos/paruff/<stack>/git/refs/tags/<tag>`
+  succeeds
+- **Must not:** Link to a release page for a tag that does not exist
+- **Verification:** A script over every `*/module-*/lab-*/instructions.md`,
+  run in the nightly and in any lab PR
+- **Priority:** Required. Today it fails for Brown Belt 13–16
+  (`uFawkesObs v1.0.0`) and Yellow Belt 5–8 (`uFawkesPipe v2.0.0`).
+
+### AC-007: The nightly checks out the tag the lab pins
+
+- **Scenario:** A lab with a nightly entry
+- **Expected:** The ref the nightly checks out for that lab's stack equals the
+  tag in its "Runs against" line
+- **Verification:** The nightly workflow reads the tag from the lab, or a
+  check compares the two
+- **Priority:** Required once R8 lands. Today the nightly checks out the
+  stack's default branch for every lab.

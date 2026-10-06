@@ -14,45 +14,28 @@ Learners progress through five belt levels (White → Yellow → Green → Brown
 Black), each covering a slice of the 24 DORA capabilities, each with hands-on
 labs and a certification assessment.
 
-## Direction (as of 2026-10-05)
+## Direction (as of 2026-10-06)
 
-The curriculum is transitioning to the Compose-tier uFawkes stacks first,
-with Fawkes/Kubernetes as a later "graduation" belt (Green Belt onward).
-This means a lower barrier to entry, faster lab setup, and no cluster
-required. Labs follow the suite's release order, each pinned to a
-released stack version:
+Teach the Compose-tier uFawkes stacks first, and treat Fawkes/Kubernetes as a
+later "graduation" belt (Green Belt onward). That means a lower barrier to
+entry, faster lab setup, and no cluster required. uFawkesObs's own migration
+notes state the intended sequencing: **"Fawkes replaces uFawkesObs
+wholesale... uFawkesObs is the Compose-tier stepping stone you run until
+Kubernetes earns its operational cost."**
 
-1. uFawkesObs content after its v1.0.0 (Module 2 complete)
-2. uFawkesPipe → Yellow Belt after its v2.0.0
-3. uFawkesDevX → White Belt after its v0.1.0 (Module 1 complete as of 2026-10-05)
-
-Module 1's lab now runs on uFawkesDevX v1.0.1 (Docker Compose), using
-the golden path Cookiecutter template to scaffold a service and register
-it in Backstage. Module 2's lab runs on uFawkesObs. Modules 3-4 remain
-Kubernetes-based for now (transitional).
-
-Since this repo's earlier content was written, three more uFawkes stacks
-have shipped as Docker Compose ("zero to running in 60 seconds," per their
-own docs), explicitly positioned as the on-ramp *before* Kubernetes:
-`uFawkesObs` (observability), `uFawkesPipe` (CI/CD — Woodpecker-based, not
-Jenkins), and `uFawkesDevX` (Backstage/Coder/golden-paths). uFawkesObs's own
-migration notes state the intended sequencing directly: **"Fawkes replaces
-uFawkesObs wholesale... uFawkesObs is the Compose-tier stepping stone you
-run until Kubernetes earns its operational cost."**
-
-Direction: teach the Compose-tier uFawkes stacks first, and treat
-Fawkes/Kubernetes as a later "graduation" belt (Green Belt onward). That
-means a lower barrier to entry, faster lab setup, and no cluster
-required. Labs follow the suite's release order, each pinned to a
-released stack version:
-
-1. uFawkesObs content after its v1.0.0
-2. uFawkesPipe → Yellow Belt after its v2.0.0
-3. uFawkesDevX → White Belt after its v0.1.0
+Labs follow the suite's release order and pin a released stack tag, never
+`main`: uFawkesAI (Dojo 0.2), then uFawkesObs, uFawkesPipe and uFawkesDevX.
+**As of 2026-10-06 none of the Obs, Pipe or AI stacks has a stable release**
+(newest: Obs `v1.0.6-rc.1`, Pipe `v1.11.1-beta.1`, AI `v2.0.0-rc.3`), and
+uFawkesDevX is at stable `v1.0.1`. Labs written ahead of a release are marked
+"not yet run for real" until they are verified against a tag that exists (see
+the audit below).
 
 The feature chain is
 [`docs/ai-sdlc/compose-curriculum/`](docs/ai-sdlc/compose-curriculum/)
-(intent → spec → plan). The suite-wide plan lives in
+(intent → spec → plan), with the current state in
+[`audit-2026-10-06.md`](docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+The suite-wide plan lives in
 [uFawkes.dev `docs/ai-sdlc/suite-release/`](https://github.com/paruff/uFawkes.dev/tree/main/docs/ai-sdlc/suite-release),
 and live status in the
 [uFawkes Suite Release Project](https://github.com/users/paruff/projects/7).
@@ -64,22 +47,28 @@ own `content-integrity.yml` CI gate exists specifically to keep aspirational
 content out of shipped lessons ("no lab step may be described unless it has
 been run, for real").
 
-**Real, shipped, and load-bearing:**
-- The 20 belt module docs under `modules/<belt>/`. They are mostly
-  Fawkes/Kubernetes-based; see Direction above for why that's changing.
-- Two runnable labs, each run for real:
-  - `white-belt/module-01-what-is-idp/lab-01/` — runs on uFawkesDevX v1.0.1
-    (Compose). Scaffolds a service via golden path Cookiecutter template,
-    registers in Backstage, validates via Score service.
-  - `white-belt/module-02-dora-metrics/lab-01/` — runs on uFawkesObs
-    (Compose). It clones `main` unpinned; the pin comes after v1.0.0.
+**Run for real, with evidence:**
+- `white-belt/module-00-vibe-coding-to-agentic/lab-01/` ("Start here") — on
+  uFawkesAI `v2.0.0-rc.3` (pre-release pin), 14/14, run verbatim end to end.
+- `white-belt/module-02-dora-metrics/lab-01/` — on uFawkesObs `v1.0.6-rc.1`
+  (pre-release pin), re-run in #79.
+- A nightly live acceptance run (`live-acceptance.yml`) boots a real uFawkesObs
+  stack and runs the self-checks of Module 2 labs 01 and 02 and Brown Belt
+  13 and 14. It tests the stack's default branch and runs `validate.sh`, not
+  the instructions' steps.
 
-  The other 18 modules are theory only, with no executable lab.
+**Written, but not yet run for real** (12 labs; see the audit):
+- White Belt 1, 3 and 4 on uFawkesDevX `v1.0.1` (the tag exists).
+- Yellow Belt 5–8 on a uFawkesPipe `v2.0.0` that does not exist yet.
+- Brown Belt 13–16 on a uFawkesObs `v1.0.0` that does not exist yet.
+
+**Other real content:**
+- The 20 belt module docs under `modules/<belt>/`. Green Belt has its "why
+  Kubernetes now" framing and Tekton references.
 - `dojo.ufawkes.dev`, a static GitHub Pages site (`index.html` +
-  `lesson.html`) that lists the belt curriculum and renders each module's
-  markdown in place, on-domain.
-- CI: markdown lint, commit-message lint, and the content-integrity
-  placeholder gate.
+  `lesson.html`) that renders each module's markdown on-domain.
+- CI: markdown lint, commit-message lint, the content-integrity placeholder
+  gate, the artifact-chain check and pre-commit.
 
 **Removed as over-engineered (2026-09-27):**
 - `labs/fawkes-cli.py` and `labs/setup.py` — a sketched-out packaged CLI
@@ -89,9 +78,8 @@ been run, for real").
   duplicated an interface that already exists per-stack.
 
 **Prototype, not yet real:**
-- Anything in `onboarding.html` describing `fawkes secret set`, `fawkes`
-  CLI commands, etc. — these describe the platform CLI's target UX, not a
-  currently runnable tool in this repo.
+- `onboarding.html`: a prototype page, now labeled as one. It describes
+  `fawkes` CLI commands, Mattermost channels and videos that are not built.
 - Certification badges and verification: not built. The live site marks
   them as planned (see Decisions below).
 - The vision doc's "Implementation Roadmap"
@@ -137,10 +125,12 @@ been run, for real").
   they don't replace it"). Building real badge infrastructure is a much
   bigger lift than the curriculum content itself; recommend deferring it
   until belt completion numbers justify it.
-- What `uFawkesDevX` now uses for Postgres/Coder-DB/Backstage-DB, now that
-  its documented `uFawkesRes` dependency is confirmed stale — that repo's
-  own docs need their own fix, and Dojo's White Belt setup steps can't be
-  written concretely until this is answered.
+- What `uFawkesDevX` uses for Postgres/Coder-DB/Backstage-DB now that
+  `uFawkesRes` is deprecated. DevX has shipped stable `v1.0.0` and `v1.0.1`,
+  but its decision issue (uFawkesDevX#57) is still open. Decide whether it
+  still gates White Belt, or update the plan to match what shipped.
+- Whether labs may ship pinned to a labeled pre-release (rc or beta) tag, or
+  must wait for the stable tag.
 
 ## Related repos
 

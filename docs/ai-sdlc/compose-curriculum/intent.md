@@ -1,6 +1,6 @@
 # Intent: Teach the uFawkes Compose Suite First
 
-**Owner:** @paruff | **Created:** 2026-09-27 | **Status:** Draft
+**Owner:** @paruff | **Created:** 2026-09-27 | **Updated:** 2026-10-06 | **Status:** Draft
 **Chain:** `intent.md` → [`spec.md`](spec.md) → [`plan.md`](plan.md)
 **Suite plan:** [uFawkes.dev `docs/ai-sdlc/suite-release/`](https://github.com/paruff/uFawkes.dev/tree/main/docs/ai-sdlc/suite-release)
 
@@ -11,9 +11,11 @@ The curriculum assumes a Kubernetes cluster from Module 1:
 `kubectl rollout status`. That's a high barrier for a beginner track, and
 parts of the content are stale:
 
-- Yellow Belt teaches Jenkins, but Fawkes has dropped Jenkins for Tekton,
-  and uFawkesPipe (the Compose CI plane) is Woodpecker.
-- Several modules still say DORA has four key metrics; there are now five.
+- Yellow Belt taught Jenkins, which Fawkes has replaced with Tekton, and
+  uFawkesPipe (the Compose CI plane) is Woodpecker. Yellow Belt was rewritten
+  for uFawkesPipe on 2026-10-05, ahead of any uFawkesPipe stable release.
+- Several modules gave DORA as four metrics; the model now has five (fixed in
+  the accuracy pass).
 
 Meanwhile the uFawkes Compose stacks (uFawkesObs, uFawkesPipe,
 uFawkesDevX) now exist, and they are explicitly positioned as the on-ramp
@@ -53,13 +55,18 @@ later as an explicit graduation step, once a learner needs what it adds.
 ## Open questions
 
 1. **What uFawkesDevX uses for Postgres now that uFawkesRes is
-   deprecated.** It blocks White Belt only, and is tracked as
-   paruff/uFawkesDevX#55 and the suite plan's AC-DEVX-01.
-2. **Whether rewritten modules keep their current paths** (an in-place
-   rewrite) **or become new modules with the old ones deprecated.** See
-   `spec.md` R3.
+   deprecated.** uFawkesDevX has since shipped stable `v1.0.0` and `v1.0.1`,
+   but the decision issue (uFawkesDevX#57, suite AC-DEVX-01) is still open.
+   Does it still gate White Belt, or does the plan follow what shipped?
+2. **Whether labs may pin a labeled pre-release tag.** As of 2026-10-06 no
+   uFawkesObs, uFawkesPipe or uFawkesAI stable release exists. Labs verified
+   against an rc or beta are useful, but are not the "released stack version"
+   the decisions above call for.
 3. **What certification becomes.** The suggested direction is a
    self-attested completion tied to a real capstone, with no badge
    infrastructure (per the module-authoring guide: badges support
    competence, they don't replace it). Open Badges would come later, and
    only if demand justifies it. This isn't approved yet.
+
+Resolved since 2026-09-27: rewritten modules keep their paths (in-place
+rewrite), so published lesson links still resolve (spec R3).
