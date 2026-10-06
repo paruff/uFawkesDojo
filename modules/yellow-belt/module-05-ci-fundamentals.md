@@ -352,7 +352,7 @@ You'll use the running uFawkesPipe stack to:
 
 **What file defines the pipeline contract in uFawkesPipe?**
 
-- [ ] A) Jenkinsfile
+- [ ] A) Makefile
 - [ ] B) .woodpecker.yml
 - [x] C) .fawkespipe.yml
 - [ ] D) pipeline.yaml
@@ -500,7 +500,7 @@ You'll use the running uFawkesPipe stack to:
 
 ### Reflection Questions
 
-1. **What surprised you most about uFawkesPipe vs. Jenkins?**
+1. **What surprised you most about uFawkesPipe vs. the retired Jenkins setup?**
 2. **How does your current CI process compare?**
 3. **What security scanning would you add to your pipelines?**
 4. **Who on your team should go through this module?**

@@ -501,7 +501,7 @@ This lab walks you through:
 
 **What is the primary artifact contract file in uFawkesPipe?**
 
-- [ ] A) Jenkinsfile
+- [ ] A) Makefile
 - [ ] B) .woodpecker.yml
 - [x] C) .fawkespipe.yml
 - [ ] D) Dockerfile

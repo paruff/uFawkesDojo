@@ -222,7 +222,7 @@ Inspired by martial arts dojo systems, the belt progression provides:
 
 **Core Competencies**:
 
-- Build custom Jenkins pipelines from scratch
+- Build CI pipelines from scratch with uFawkesPipe (Woodpecker)
 - Implement security scanning (SAST, dependency check, container scanning)
 - Configure quality gates and automated testing
 - Optimize build times and resource usage
@@ -433,7 +433,7 @@ Total Time per Module: 45-60 minutes
 
 **Module 2: DORA Metrics - The North Star** (60 min)
 
-- Four Key Metrics explained in depth
+- The five DORA metrics explained in depth
 - High performers vs. low performers data
 - How DORA metrics drive business outcomes
 - Fawkes DORA metrics automation
@@ -468,10 +468,10 @@ Total Time per Module: 45-60 minutes
 **Module 5: Continuous Integration Fundamentals** (60 min)
 
 - CI principles and benefits
-- Jenkins architecture
-- Pipeline-as-code (Jenkinsfile)
+- Woodpecker architecture
+- Pipeline-as-code (`.fawkespipe.yml`)
 - Build stages and best practices
-- **Lab**: Create basic Jenkinsfile, run first build
+- **Lab**: Create a basic `.fawkespipe.yml`, run first build
 
 **Module 6: Building Golden Path Pipelines** (60 min)
 
@@ -664,7 +664,7 @@ Total Time per Module: 45-60 minutes
 │  │   └── LoadBalancers: 2                                │
 │  ├── Pre-deployed:                                        │
 │  │   ├── sample-app (demo application)                  │
-│  │   ├── jenkins-agent (personal CI agent)              │
+│  │   ├── woodpecker-agent (personal CI agent)           │
 │  │   └── lab-validator (checks lab completion)          │
 │  ├── RBAC:                                                │
 │  │   ├── Full control within namespace                   │
