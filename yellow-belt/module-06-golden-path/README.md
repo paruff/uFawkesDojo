@@ -79,7 +79,9 @@ This lab walks you through:
 4. Pushing to Git, watching pipeline execute in Woodpecker
 6. Measuring and improving build performance
 
-**Runs against**: [uFawkesPipe v2.0.0](https://github.com/paruff/uFawkesPipe/releases/tag/v2.0.0) (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
+
+> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 **Prerequisites**: Module 5 completed, uFawkesPipe running
 
