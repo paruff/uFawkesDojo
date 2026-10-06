@@ -3,7 +3,9 @@
 **Module**: Brown Belt — Module 13: Observability
 **Estimated Time**: 60 minutes
 **Difficulty**: Advanced (Modules 9-12 complete required)
-**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) (Docker Compose)
+**Runs against**: uFawkesObs v1.0.0 (not released yet) (Docker Compose)
+
+> **Written ahead of its stack, not yet run for real.** uFawkesObs v1.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 

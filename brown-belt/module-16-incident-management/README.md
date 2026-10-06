@@ -84,7 +84,9 @@ This lab walks you through a complete incident response simulation:
 6. Resolution & verification (Grafana/Prometheus/Loki)
 7. Postmortem (timeline, RCA, action items in uFawkesObs format)
 
-**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) (Docker Compose)
+**Runs against**: uFawkesObs v1.0.0 (not released yet) (Docker Compose)
+
+> **Written ahead of its stack, not yet run for real.** uFawkesObs v1.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 **Prerequisites**: Module 13 (Observability), Module 14 (DORA), Module 15 (SLI/SLO) complete
 

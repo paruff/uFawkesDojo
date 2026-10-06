@@ -99,7 +99,9 @@ This lab walks you through:
 5. Testing failure/recovery scenarios
 5. Configuring DORA-specific alerting
 
-**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) with DORA profile
+**Runs against**: uFawkesObs v1.0.0 (not released yet) with DORA profile
+
+> **Written ahead of its stack, not yet run for real.** uFawkesObs v1.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 **Prerequisites**: Module 13 completed, uFawkesObs running with `make up-dora`
 
