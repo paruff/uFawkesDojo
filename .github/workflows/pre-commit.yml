@@ -36,3 +36,14 @@ jobs:
       runner: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
       pr-size-limit: 0 # this repo had no PR size gate; Pre-flight's default is 400
       commit-format: conventional
+
+  env-probe: # TEMP diagnostic on the test branch — delete with it
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    steps:
+      - name: Dump step env
+        run: |
+          echo "RUNNER_TOOL_CACHE=${RUNNER_TOOL_CACHE:-UNSET}"
+          echo "HOME=$HOME"
+          env | grep -E "^RUNNER_|^ImageOS" | sort
+          mkdir -p "${RUNNER_TOOL_CACHE}/probe" && echo "mkdir into toolcache: OK"
