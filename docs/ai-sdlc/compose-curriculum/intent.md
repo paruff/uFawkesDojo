@@ -58,15 +58,14 @@ later as an explicit graduation step, once a learner needs what it adds.
    deprecated.** uFawkesDevX has since shipped stable `v1.0.0` and `v1.0.1`,
    but the decision issue (uFawkesDevX#57, suite AC-DEVX-01) is still open.
    Does it still gate White Belt, or does the plan follow what shipped?
-2. **Whether labs may pin a labeled pre-release tag.** As of 2026-10-06 no
-   uFawkesObs, uFawkesPipe or uFawkesAI stable release exists. Labs verified
-   against an rc or beta are useful, but are not the "released stack version"
-   the decisions above call for.
-3. **What certification becomes.** The suggested direction is a
+2. **What certification becomes.** The suggested direction is a
    self-attested completion tied to a real capstone, with no badge
    infrastructure (per the module-authoring guide: badges support
    competence, they don't replace it). Open Badges would come later, and
    only if demand justifies it. This isn't approved yet.
+
+Resolved on 2026-10-06 (owner): labs may pin a labeled pre-release (rc or beta)
+tag, and Dojo 0.2 may ship on uFawkesAI `v2.0.0-rc.3`.
 
 Resolved since 2026-09-27: rewritten modules keep their paths (in-place
 rewrite), so published lesson links still resolve (spec R3).

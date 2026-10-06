@@ -109,6 +109,9 @@ been run, for real").
   separate fact, not the resolution of that rename. Both mean Yellow Belt
   Module 5's Jenkins content is stale, regardless of which plane it
   targets.
+- Labs may ship pinned to a labeled pre-release (rc or beta) tag, and Dojo 0.2
+  may ship on uFawkesAI `v2.0.0-rc.3` (owner decision, 2026-10-06). The lab's
+  header says "pre-release", and it is re-pinned when the stable tag ships.
 - `uFawkesRes` is deprecated (confirmed). Dojo will not teach it or send
   learners to run it.
 - Labs follow the suite release order (Obs → Pipe → DevX), each pinned to
@@ -129,8 +132,6 @@ been run, for real").
   `uFawkesRes` is deprecated. DevX has shipped stable `v1.0.0` and `v1.0.1`,
   but its decision issue (uFawkesDevX#57) is still open. Decide whether it
   still gates White Belt, or update the plan to match what shipped.
-- Whether labs may ship pinned to a labeled pre-release (rc or beta) tag, or
-  must wait for the stable tag.
 
 ## Related repos
 

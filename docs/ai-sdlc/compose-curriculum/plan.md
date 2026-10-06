@@ -40,7 +40,8 @@ them. Twelve labs were merged ahead of their stacks without a run (audit F1).
    four checks (Pre-flight, commit-lint, markdownlint, Artifact Chain); the
    path-filtered content-integrity check is deliberately not required.
 5. Add the AC-006 script (every named tag exists) to the nightly and to lab PRs.
-6. Record the owner's decisions on the three open questions in `intent.md`.
+6. Owner decisions recorded 2026-10-06: pre-release pins are allowed, and 0.2
+   may ship on `rc.3`. Still open: whether uFawkesDevX#57 gates White Belt.
 
 ## Phase 0.2.1 — Accuracy pass and "Start here" (Dojo 0.2)
 
@@ -48,11 +49,13 @@ them. Twelve labs were merged ahead of their stacks without a run (audit F1).
    unbuilt labs, videos and links (AC-DOJO-01): content done in #76 and #78; the
    suite's check still fails (Phase 0.2.0 step 2).
 2. Extend the authoring guide (AC-DOJO-03): done, items 1–17 (#63, #66).
-3. "Start here" lab (AC-DOJO-02): built and run on `rc.3` (#77). **Remaining:**
-   re-pin to uFawkesAI `v2.0.0` and re-run when it ships (#37).
+3. "Start here" lab (AC-DOJO-02): built and run on `rc.3` (#77). Dojo 0.2 may
+   ship on this pre-release pin (owner decision, 2026-10-06). **Remaining, after
+   0.2:** re-pin to uFawkesAI `v2.0.0` and re-run when it ships (#37).
 4. Align this plan and ufawkes.dev's learn guides: this revision; uFawkes.dev
    #67 is closed.
-5. Release Dojo `0.2` once AC-DOJO-01 and AC-DOJO-02 are met. Announce with
+5. Release Dojo `0.2` once AC-DOJO-01 passes and AC-DOJO-02 is met on the
+   `rc.3` pin. Announce with
    uFawkesAI's follow-up post: "now learn it".
 
 ## Phase 0.2.2 — uFawkesObs (Dojo 0.3, after Obs stable)
