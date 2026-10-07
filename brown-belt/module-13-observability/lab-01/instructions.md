@@ -56,6 +56,14 @@ cp .env.example .env
 
 The other `REPLACE_ME` values in `.env` (the Slack and Discord webhooks) can stay as they are.
 
+Create the data directories the containers write to, as uFawkesObs's README does:
+
+```bash
+make init
+```
+
+On Linux, also run the three `sudo chown -R …` commands `make init` prints. Without them Prometheus cannot write to `data/prometheus`, and starting the stack stops with `dependency failed to start: container prometheus is unhealthy`.
+
 **Required**: Modules 9-12 completed (understand CI/CD, deployment, security patterns)
 
 **Tools required** (already installed from previous modules):
@@ -406,7 +414,7 @@ docker ps --format '{{.Names}}' | grep dora
 ```
 
 **Expected output**: one container, `ufawkesdora-ingestion`. It is the DORA API (port 8088), and it
-computes the metrics itself, so there is no separate `dora-compute` or Pushgateway.
+computes the metrics itself, so there is no second DORA container.
 
 ### 7.3 Send a deployment event
 

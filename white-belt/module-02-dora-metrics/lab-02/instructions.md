@@ -3,7 +3,7 @@
 **Module**: White Belt — Module 2: DORA Metrics
 **Estimated Time**: 15 minutes
 **Difficulty**: Beginner (no CI/CD pipeline experience required)
-**Prerequisites**: Lab 01 completed (uFawkesObs stack running, `dora-compute` reachable)
+**Prerequisites**: Lab 01 completed (uFawkesObs stack running, `dora-api` reachable on port 8088)
 **Runs against**: uFawkesObs (Docker Compose) + uFawkesAI scripts
 
 ---
@@ -183,20 +183,29 @@ Expected output (all checks pass):
 
 ```
 [INFO] Starting White Belt Module 02 Lab 02 validation...
-
-[✓] Prerequisites: docker, curl, jq, python3, gh are installed
-[✓] Stack: dora-api container is running
-[✓] Stack: dora-compute container is running
+[✓] Prerequisite: docker is installed
+[✓] Prerequisite: curl is installed
+[✓] Prerequisite: jq is installed
+[✓] Prerequisite: python3 is installed
+[✓] Prerequisite: gh is installed
+[✓] Stack: ufawkesdora-ingestion container is running
+[✓] dora-api DORA metrics (in-process compute): reachable
 [✓] Stack: grafana container is running
+[✓] dora-api Health: reachable
+[✓] Grafana Health: reachable
 [✓] uFawkesAI scripts: emit-dora-event.sh present
 [✓] uFawkesAI scripts: verify-dora-event-in-loki.sh present
-[✓] emit-dora-event.sh: deploy-marker event emitted and queued
+[INFO] Emitting deploy-marker event via emit-dora-event.sh...
+[✓] emit-dora-event.sh: deploy-marker event emitted and has dora_event
+[✓] emit-dora-event.sh: commit_sha present in event
+[INFO] Verifying event reached Loki via verify-dora-event-in-loki.sh...
 [✓] verify-dora-event-in-loki.sh: marker event found in Loki
-[✓] DORA Metrics Dashboard: deploy-marker event visible via Grafana API
+[INFO] Checking DORA Metrics dashboard via Grafana API...
+[✓] Grafana Dashboard: DORA Metrics Dashboard reachable via Grafana API
 
 ==========================================
-Total Tests: 9
-Passed: 9
+Total Tests: 17
+Passed: 17
 Failed: 0
 
 [✓] All tests passed! ✅
@@ -213,8 +222,10 @@ Failed: 0
 
 ```bash
 # From your uFawkesObs checkout:
-make down
+docker compose --profile core --profile dora down
 ```
+
+`make down` does not stop this stack at this version: it runs `docker compose down` without the profiles `make up-dora` started ([uFawkesObs#617](https://github.com/paruff/uFawkesObs/issues/617)).
 
 ---
 
@@ -225,7 +236,7 @@ make down
 | `emit-dora-event.sh` fails with `jq: not found` | `jq` not installed | `apt-get install jq` / `brew install jq` |
 | `verify-dora-event-in-loki.sh` exits 2 (SKIP) | Loki not reachable | `cd ../uFawkesObs && make up-dora && make status` |
 | `verify-dora-event-in-loki.sh` exits 1 (timeout) | Collector not routing to Loki, or Loki not scraping | Check `docker compose logs otel-collector` and `docker compose logs loki` |
-| Dashboard doesn't update | `dora-compute` hasn't recomputed | `docker compose restart dora-compute`, wait ~20s, refresh |
+| Dashboard doesn't update | `dora-api` hasn't recomputed yet (it computes in-process, on an interval) | `docker compose restart dora-api`, wait ~20s, refresh |
 | `gh` PR lookup fails | `gh` not authenticated or no PR for commit | `gh auth login` or supply `--repo` explicitly |
 
 ---
