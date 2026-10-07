@@ -4,7 +4,7 @@
 **Estimated Time**: about 45 minutes in two sessions (an estimate: the first image download is about 3 GB and depends on your connection)
 **Difficulty**: Beginner (you need `git` and Docker, not Kubernetes)
 **Prerequisites**: Read the [Module 0 primer](../../../modules/white-belt/module-00-vibe-coding-to-agentic.md)
-**Runs against**: [uFawkesAI `v2.0.0-rc.3`](https://github.com/paruff/uFawkesAI/releases/tag/v2.0.0-rc.3) — a **pre-release**. This lab moves to `v2.0.0` when that ships ([#37](https://github.com/paruff/uFawkesDojo/issues/37)); only the `AI_TAG` line below changes.
+**Runs against**: [uFawkesAI `v2.0.0`](https://github.com/paruff/uFawkesAI/releases/tag/v2.0.0) and its sandbox image `ghcr.io/paruff/fawkes-space:2.0.0`.
 
 ---
 
@@ -38,7 +38,7 @@ The diagram shows the three documents you write, left to right. Each answers the
 
 ```bash
 mkdir -p ~/dojo-labs && cd ~/dojo-labs
-export AI_TAG=v2.0.0-rc.3
+export AI_TAG=v2.0.0
 git clone -c advice.detachedHead=false --depth 1 --branch "$AI_TAG" \
   https://github.com/paruff/uFawkesAI.git my-first-ai-sdlc
 cd my-first-ai-sdlc
@@ -48,10 +48,7 @@ cd my-first-ai-sdlc
 
 ```
 Cloning into 'my-first-ai-sdlc'...
-warning: refs/tags/v2.0.0-rc.3 ee8a78f0eec4906d253bdb106500da502363eac0 is not a commit!
 ```
-
-The warning is harmless: the tag is an annotated tag, and the clone still succeeds.
 
 Make it your own repo, with its own history:
 
@@ -63,13 +60,13 @@ git commit -q -m "chore: start from uFawkesAI ${AI_TAG}"
 git log --oneline
 ```
 
-**Expected output**: one line, `<hash> chore: start from uFawkesAI v2.0.0-rc.3`.
+**Expected output**: one line, `<hash> chore: start from uFawkesAI v2.0.0`.
 
 **What just happened**: you pinned your starting point to a released tag, not to `main`, so the next person who runs this lab gets the same files you did.
 
 ---
 
-## Step 2 — Pin the sandbox and open it (7 minutes)
+## Step 2 — Check the sandbox pin, then open it (7 minutes)
 
 The devcontainer's `image` line decides which sandbox you get. Look at it:
 
@@ -77,28 +74,13 @@ The devcontainer's `image` line decides which sandbox you get. Look at it:
 grep '"image"' .devcontainer/devcontainer.json
 ```
 
-**Expected output** at `v2.0.0-rc.3`:
-
-```
-  "image": "ghcr.io/paruff/fawkes-space:latest",
-```
-
-`:latest` moves whenever a new image is published, so your sandbox could change under you. Pin it to the tag you cloned:
-
-```bash
-sed -i.bak "s#fawkes-space:latest#fawkes-space:${AI_TAG#v}#" .devcontainer/devcontainer.json
-rm .devcontainer/devcontainer.json.bak
-grep '"image"' .devcontainer/devcontainer.json
-git commit -q -am "chore: pin the CDE image"
-```
-
 **Expected output**:
 
 ```
-  "image": "ghcr.io/paruff/fawkes-space:2.0.0-rc.3",
+  "image": "ghcr.io/paruff/fawkes-space:2.0.0",
 ```
 
-If the line already names `2.0.0` (the final release's template should), there is nothing to change.
+The tag `2.0.0` matches the template tag you cloned. A tag like `:latest` moves whenever a new image is published, so your sandbox could change under you without any change in your repo. If you ever see `:latest` here, change it to a version before you go on. `validate.sh` checks this line.
 
 Start the sandbox, then run the template's setup inside it:
 
@@ -313,7 +295,7 @@ This removes the sandbox container. Your repo stays in `~/dojo-labs/my-first-ai-
 |---|---|
 | `devcontainer: command not found` | Install the CLI: `npm install -g @devcontainers/cli` |
 | `invalid mount config … bind source path does not exist` | Docker cannot see the folder you cloned into. Clone under your home directory (`~/dojo-labs`), not a temp folder |
-| `[✗] CDE image is not pinned` | Redo the `sed` in Step 2, then `git commit -am "chore: pin the CDE image"` |
+| `[✗] CDE image is not pinned` | The `image` line was changed. Restore it with `git checkout -- .devcontainer/devcontainer.json` (Step 2) |
 | `[✗] … is missing` for a harness component | You deleted or moved it. Restore it with `git checkout -- <file>`, or re-clone (Step 1) |
 | `[✗] plan.md's Verification Strategy has no row for: REQ-00N` | Add a table row for that requirement in `plan.md`, with a command that proves it |
 | `fatal: Remote branch … not found in upstream origin` on clone | The tag name is wrong. Check `echo $AI_TAG`, and the [releases page](https://github.com/paruff/uFawkesAI/releases) |

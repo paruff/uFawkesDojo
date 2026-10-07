@@ -38,7 +38,7 @@ This primer introduces the **AI-Native SDLC mindset** that underpins the entire 
 ## Files
 
 - `../modules/white-belt/module-00-vibe-coding-to-agentic.md` — theory primer
-- `lab-01/instructions.md` and `lab-01/validate.sh` — the "Start here" lab (runs against uFawkesAI `v2.0.0-rc.3` until `v2.0.0` ships)
+- `lab-01/instructions.md` and `lab-01/validate.sh` — the "Start here" lab (runs against uFawkesAI `v2.0.0`)
 
 ## Upstream Citation
 
