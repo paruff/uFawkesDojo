@@ -4,7 +4,7 @@ All notable changes to uFawkesDojo are recorded here. Versions follow the
 suite release plan: Dojo `0.2` ships with uFawkesAI `v2.0.0`, and `0.3`–`0.6`
 each add the labs for the stack released alongside them.
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-10-07
 
 Accurate curriculum, and a real "Start here" lab on uFawkesAI `v2.0.0`.
 
@@ -28,8 +28,9 @@ Accurate curriculum, and a real "Start here" lab on uFawkesAI `v2.0.0`.
 
 ### Changed
 
-- DORA is taught as five metrics everywhere, and the suite's AC-DOJO-01 check
-  passes: no unlabeled "four key", Jenkins or `[VIDEO PLACEHOLDER]`.
+- DORA is taught as five metrics everywhere. Retired CI tooling, unbuilt labs,
+  videos and community links are removed or labeled, and the suite's
+  AC-DOJO-01 accuracy check passes.
 - Labs pin a released stack tag. White Belt Module 2 lab-01 runs on uFawkesObs
   `v1.0.6-rc.1` and Brown Belt Module 13 lab-01 on `v1.1.0-rc.1`, both run for
   real. Eleven labs written ahead of their stacks say "not yet run for real".
