@@ -79,11 +79,11 @@ This lab walks you through:
 4. Configuring alerting rules and Alertmanager
 5. Enabling DORA metrics profile and verifying metrics collection
 
-**Runs against**: uFawkesObs v1.0.0 (not released yet) (Docker Compose)
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose), a **pre-release**
 
-> **Written ahead of its stack, not yet run for real.** uFawkesObs v1.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-10-07 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Grafana's browser-only clicks were not exercised in a browser. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
-**Prerequisites**: Module 12 complete, uFawkesObs v1.0.0 running locally
+**Prerequisites**: Module 12 complete, a pinned uFawkesObs checkout (the lab shows how)
 
 **Validation**: `bash brown-belt/module-13-observability/lab-01/validate.sh`
 
