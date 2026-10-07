@@ -48,16 +48,24 @@ cd my-first-ai-sdlc
 
 ```
 Cloning into 'my-first-ai-sdlc'...
+warning: refs/tags/v2.0.0 7a910c53eac6cf61ca7092d80fe19567a183ea51 is not a commit!
 ```
+
+Some versions of git print the warning and some don't. It is harmless: `v2.0.0` is an annotated tag, and the clone still succeeds.
 
 Make it your own repo, with its own history:
 
 ```bash
 rm -rf .git
 git init -q -b main
+git config user.name "$(git config --global user.name)"
+git config user.email "$(git config --global user.email)"
+git config user.email
 ```
 
-No output. You make the first commit in Step 2, from inside the sandbox, so that the repo's hooks check it.
+**Expected output**: your email address. The sandbox does not read your global git settings, so this copies your name and email into the repo's own config, which it does read. If the line is empty, set them first with `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`, then repeat.
+
+You make the first commit in Step 2, from inside the sandbox, so that the repo's hooks check it.
 
 **What just happened**: you pinned your starting point to a released tag, not to `main`, so the next person who runs this lab gets the same files you did.
 

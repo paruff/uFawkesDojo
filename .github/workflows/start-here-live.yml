@@ -58,11 +58,15 @@ jobs:
         if: always()
         run: |
           [ -f start-here-transcript.txt ] || { echo "no transcript was written"; exit 0; }
-          tail_text="$(sed -E 's/\x1b\[[0-9;]*m//g' start-here-transcript.txt | grep -v '^+ ' | tail -150)"
+          # Drop pre-commit's environment-install chatter, which would push the
+          # lines that matter out of the annotation.
+          tail_text="$(sed -E 's/\x1b\[[0-9;]*m//g' start-here-transcript.txt \
+            | grep -v -E '^\+ |\[INFO\] (Initializing|Installing|Once installed|This may take)|^\[INFO\] (Once|This)' \
+            | tail -120)"
           tail_text="${tail_text//'%'/'%25'}"
           tail_text="${tail_text//$'\r'/'%0D'}"
           tail_text="${tail_text//$'\n'/'%0A'}"
-          echo "::notice title=Start here transcript (last 150 lines)::${tail_text}"
+          echo "::notice title=Start here transcript (last 120 lines, install chatter dropped)::${tail_text}"
 
       - name: Upload the transcript
         if: always()
