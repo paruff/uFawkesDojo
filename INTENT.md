@@ -53,16 +53,22 @@ been run, for real").
   by `start-here-live.yml` on every change to the lab and nightly.
 - `white-belt/module-02-dora-metrics/lab-01/` — on uFawkesObs `v1.0.6-rc.1`
   (pre-release pin), re-run in #79.
+- `brown-belt/module-13-observability/lab-01/` — on uFawkesObs
+  `v1.1.0-rc.1` (pre-release pin), run verbatim end to end in #86.
+- `brown-belt/module-14-dora-deep-dive/lab-01/` — partly: Steps 1, 2, 5, 7,
+  the prerequisites and the clean-up, on uFawkesObs `v1.1.0-rc.1` (#90).
+  Steps 3, 4 and 6 (PromQL, the Grafana dashboard, alert rules) are not run
+  and still use pre-1.0 metric names (#43).
 - A nightly live acceptance run (`live-acceptance.yml`) boots a real uFawkesObs
   stack and runs the self-checks of Module 2 labs 01 and 02 and Brown Belt
   13 and 14. It tests the stack's default branch and runs `validate.sh`, not
   the instructions' steps.
 
-**Written, but not yet run for real** (11 labs; see the audit):
+**Written, but not yet run for real** (9 labs; see the audit):
 - White Belt 1, 3 and 4 on uFawkesDevX `v1.0.1`. The tag exists, but it cannot build
   its Backstage image (uFawkesDevX#98), so these labs cannot run yet.
 - Yellow Belt 5–8 on a uFawkesPipe `v2.0.0` that does not exist yet.
-- Brown Belt 13–16 on a uFawkesObs `v1.0.0` that does not exist yet.
+- Brown Belt 15–16 on a uFawkesObs `v1.0.0` that does not exist yet.
 
 **Other real content:**
 - The 20 belt module docs under `modules/<belt>/`. Green Belt has its "why
@@ -111,9 +117,10 @@ been run, for real").
   separate fact, not the resolution of that rename. Both mean Yellow Belt
   Module 5's Jenkins content is stale, regardless of which plane it
   targets.
-- Labs may ship pinned to a labeled pre-release (rc or beta) tag, and Dojo 0.2
-  may ship on uFawkesAI `v2.0.0-rc.3` (owner decision, 2026-10-06). The lab's
-  header says "pre-release", and it is re-pinned when the stable tag ships.
+- Labs may ship pinned to a labeled pre-release (rc or beta) tag (owner
+  decision, 2026-10-06). Dojo `0.2` shipped on the stable uFawkesAI `v2.0.0`
+  once it was tagged (2026-10-07); the "Start here" lab is re-pinned and
+  re-run, verbatim in CI, by `start-here-live.yml`.
 - `uFawkesRes` is deprecated (confirmed). Dojo will not teach it or send
   learners to run it.
 - Labs follow the suite release order (Obs → Pipe → DevX), each pinned to
