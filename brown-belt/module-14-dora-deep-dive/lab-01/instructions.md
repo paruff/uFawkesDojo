@@ -13,7 +13,7 @@
 
 By the end of this lab you will have:
 
-1. Verified uFawkesObs DORA profile is running (dora-api, dora-compute, pushgateway)
+1. Verified uFawkesObs DORA profile is running (`dora-api`, which also computes the metrics)
 2. Sent test deployment events to dora-api
 3. Queried all 5 DORA metrics via PromQL in Grafana
 4. Built a complete DORA dashboard in Grafana with all 5 metrics
@@ -26,9 +26,7 @@ By the end of this lab you will have:
 
 This lab runs against **uFawkesObs v1.0.0** with the **DORA profile** (`make up-dora`) because it provides a complete, self-contained DORA metrics platform in Docker Compose:
 
-- **dora-api** (port 8088) — Receives deployment events, stores in SQLite
-- **dora-compute** — Aggregates events → DORA metrics, exposes Prometheus metrics
-- **pushgateway** (port 9091) — Receives metrics from short-lived jobs
+- **dora-api** (port 8088, container `ufawkesdora-ingestion`) — Receives deployment and rework events, stores them in SQLite, computes the DORA metrics in-process and serves them on `/metrics` for Prometheus to scrape
 - **Prometheus** (port 9090) — Stores time-series, PromQL queries
 - **Grafana** (port 3000) — Dashboards, visualization
 - **Alloy** — Log collection
@@ -91,7 +89,7 @@ cd ~/dojo-labs/uFawkesObs
 make status
 ```
 
-**Expected**: All services healthy including `dora-api`, `dora-compute`, `pushgateway`
+**Expected**: All services up, including `dora-api` (container `ufawkesdora-ingestion`). There is no separate `dora-compute` or Pushgateway container.
 
 ### 1.2 Verify DORA API Health
 
@@ -102,14 +100,14 @@ curl -s http://localhost:8088/health
 
 **Expected**: `{"status":"ok"}` or similar healthy response
 
-### 1.3 Verify Pushgateway
+### 1.3 Verify the DORA metrics endpoint
 
 ```bash
-# Check Pushgateway is accessible
-curl -s http://localhost:9091/metrics | head -20
+# dora-api serves the computed DORA metrics itself
+curl -s http://localhost:8088/metrics | grep '^dora_' | head
 ```
 
-**Expected**: Prometheus metrics output including pushgateway metadata
+**Expected**: `dora_` lines once at least one event has been computed, or no output on a fresh stack. Prometheus scrapes this endpoint directly; there is no Pushgateway.
 
 > ✅ **Checkpoint**: All DORA profile services are running and accessible.
 
@@ -119,40 +117,44 @@ curl -s http://localhost:9091/metrics | head -20
 
 ### 2.1 Send a Successful Deployment Event
 
+Every event uses the deployment-event schema 1.0. `commit_sha` must be a full 40-character SHA; the lab makes one with `printf '%040d'`.
+
 ```bash
 # Send a successful deployment event
-curl -s -X POST http://localhost:8088/event \
+curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
   -H "Content-Type: application/json" \
   -d '{
+    "schema_version": "1.0",
     "event_type": "deployment",
+    "repo": "your-name/dojo-lab",
     "service": "test-service",
     "environment": "production",
+    "commit_sha": "'"$(printf '%040d' 1401)"'",
+    "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
     "status": "success",
-    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
-    "commit_sha": "abc123def456",
-    "deployed_by": "lab-user",
-    "work_type": "feature"
+    "pipeline_url": "https://example.com/ci/1401"
   }'
 ```
 
-**Expected**: JSON response with event ID or success confirmation.
+**Expected**: `{"queued":true,"id":<n>}  HTTP 201`. An event with a missing or extra field is rejected with `HTTP 422`.
 
 ### 2.2 Send Multiple Events
 
 ```bash
 # Send a few more events to build up data
-for i in {1..5}; do
-  curl -s -X POST http://localhost:8088/event \
+for i in 2 3 4 5 6; do
+  curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
     -H "Content-Type: application/json" \
     -d '{
+      "schema_version": "1.0",
       "event_type": "deployment",
-      "service": "test-service-'$i'",
+      "repo": "your-name/dojo-lab",
+      "service": "test-service-'"$i"'",
       "environment": "production",
+      "commit_sha": "'"$(printf '%040d' "$((1400 + i))")"'",
+      "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
       "status": "success",
-      "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
-      "commit_sha": "abc123def456",
-      "deployed_by": "lab-user",
-      "work_type": "feature"
+      "pipeline_url": "https://example.com/ci/'"$((1400 + i))"'"
     }'
   sleep 1
 done
@@ -161,50 +163,68 @@ done
 ### 2.3 Send a Failed Deployment Event
 
 ```bash
-# Send a failed deployment event
-curl -s -X POST http://localhost:8088/event \
+# Send a failed deployment event (status is one of success, failed, rollback)
+curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
   -H "Content-Type: application/json" \
   -d '{
+    "schema_version": "1.0",
     "event_type": "deployment",
+    "repo": "your-name/dojo-lab",
     "service": "failing-service",
     "environment": "production",
+    "commit_sha": "'"$(printf '%040d' 1407)"'",
+    "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
     "status": "failed",
-    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
-    "commit_sha": "fedcba987654",
-    "deployed_by": "lab-user",
-    "work_type": "feature"
+    "pipeline_url": "https://example.com/ci/1407"
   }'
 ```
 
 ### 2.4 Send an Incident Rework Event
 
+Rework is its own event type. It points at the deployment it reworks by that deployment's `commit_sha`, and counts toward the Rework Rate only when `user_visible` is `true`. Send the hotfix deployment first, then the rework event for it:
+
 ```bash
-# Send an incident-driven deployment (rework)
-curl -s -X POST http://localhost:8088/event \
+# The hotfix deployment
+curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
   -H "Content-Type: application/json" \
   -d '{
+    "schema_version": "1.0",
     "event_type": "deployment",
+    "repo": "your-name/dojo-lab",
     "service": "hotfix-service",
     "environment": "production",
+    "commit_sha": "'"$(printf '%040d' 1408)"'",
+    "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
     "status": "success",
-    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
-    "commit_sha": "hotfix123",
-    "deployed_by": "lab-user",
-    "work_type": "incident_rework"
+    "pipeline_url": "https://example.com/ci/1408"
+  }'
+
+# The rework event that marks it as user-visible rework
+curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema_version": "1.0",
+    "event_type": "rework",
+    "repo": "your-name/dojo-lab",
+    "deployment_sha": "'"$(printf '%040d' 1408)"'",
+    "rework_type": "hotfix",
+    "triggered_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
+    "user_visible": true
   }'
 ```
 
 ### 2.5 Trigger DORA Computation
 
-```bash
-# Trigger dora-compute to process events
-docker compose restart dora-compute
+`dora-api` computes the metrics when it starts, then every `DORA_COMPUTE_INTERVAL_SECONDS` (3600 in `.env.example`). Restart it to compute now:
 
-# Wait for computation
+```bash
+cd ~/dojo-labs/uFawkesObs
+docker compose restart dora-api
 sleep 10
+curl -s http://localhost:8088/metrics | grep '^dora_'
 ```
 
-> ✅ **Checkpoint**: Events sent, dora-compute restarted, metrics should be available.
+> ✅ **Checkpoint**: Events sent, dora-api restarted, `dora_` metrics served.
 
 ---
 
@@ -313,24 +333,26 @@ Add heatmap/histogram panels:
 
 ```bash
 # Send 3 failed deployments
-for i in {1..3}; do
-  curl -s -X POST http://localhost:8088/event \
+for i in 1 2 3; do
+  curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
     -H "Content-Type: application/json" \
     -d '{
+      "schema_version": "1.0",
       "event_type": "deployment",
-      "service": "chaos-service-'$i'",
+      "repo": "your-name/dojo-lab",
+      "service": "chaos-service-'"$i"'",
       "environment": "production",
+      "commit_sha": "'"$(printf '%040d' "$((1410 + i))")"'",
+      "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
       "status": "failed",
-      "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
-      "commit_sha": "fail'$i'",
-      "deployed_by": "chaos-user",
-      "work_type": "feature"
+      "pipeline_url": "https://example.com/ci/'"$((1410 + i))"'"
     }'
   sleep 1
 done
 
 # Trigger computation
-docker compose restart dora-compute
+cd ~/dojo-labs/uFawkesObs
+docker compose restart dora-api
 sleep 10
 ```
 
@@ -342,22 +364,35 @@ sleep 10
 ### 5.2 Test Deployment Rework Rate
 
 ```bash
-# Send incident-driven deployment (rework)
-curl -s -X POST http://localhost:8088/event \
+# A second hotfix deployment, and the rework event for it
+curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
   -H "Content-Type: application/json" \
   -d '{
+    "schema_version": "1.0",
     "event_type": "deployment",
+    "repo": "your-name/dojo-lab",
     "service": "hotfix-service",
     "environment": "production",
+    "commit_sha": "'"$(printf '%040d' 1414)"'",
+    "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
     "status": "success",
-    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
-    "commit_sha": "hotfix123",
-    "deployed_by": "lab-user",
-    "work_type": "incident_rework"
+    "pipeline_url": "https://example.com/ci/1414"
+  }'
+curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema_version": "1.0",
+    "event_type": "rework",
+    "repo": "your-name/dojo-lab",
+    "deployment_sha": "'"$(printf '%040d' 1414)"'",
+    "rework_type": "hotfix",
+    "triggered_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
+    "user_visible": true
   }'
 
 # Trigger computation
-docker compose restart dora-compute
+cd ~/dojo-labs/uFawkesObs
+docker compose restart dora-api
 sleep 10
 ```
 
@@ -506,9 +541,9 @@ make init
 | Problem | Cause | Fix |
 |---------|-------|-----|
 | DORA API not responding | dora-api not running | `make up-dora` |
-| No metrics in Prometheus | dora-compute not running | `docker compose restart dora-compute` |
-| No events in dora-api | Event format invalid | Check JSON schema, check dora-api logs |
-| Grafana dashboard empty | No data in Prometheus | Wait for dora-compute, check scrape config |
+| No metrics in Prometheus | dora-api has not computed since your events (it computes at start, then hourly by default) | `docker compose restart dora-api` |
+| An event returns `HTTP 422` | It does not match schema 1.0 (a missing field, an extra field, or a short `commit_sha`) | Compare it with Step 2.1; the response body names the field |
+| Grafana dashboard empty | No data in Prometheus | Restart dora-api (Step 2.5), then check the scrape config |
 | Alert rules not loading | Syntax error | `promtool check config /etc/prometheus/prometheus.yml` |
 
 ---
@@ -519,11 +554,11 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 
 1. What are the 5 DORA metrics and their Elite benchmarks?
 2. How does uFawkesObs collect deployment events?
-3. What does `dora-compute` do?
+3. Where are the DORA metrics computed?
 4. How do you enable the DORA profile in uFawkesObs?
 5. What PromQL query gives you Deployment Frequency per day?
 
-(Suggested answers: 1 = DF/Lead Time/CFR/MTTR/Rework Rate with Elite benchmarks; 2 = POST to dora-api/event; 3 = Aggregates events → DORA metrics, exposes Prometheus metrics; 4 = `make up-dora`; 5 = `sum(rate(dora_deployment_frequency[7d])) * 86400`)
+(Suggested answers: 1 = DF/Lead Time/CFR/MTTR/Rework Rate with Elite benchmarks; 2 = POST to dora-api/event; 3 = inside `dora-api`, which aggregates events into DORA metrics and serves them on `/metrics`; 4 = `make up-dora`; 5 = `sum(rate(dora_deployment_frequency[7d])) * 86400`)
 
 ---
 
@@ -531,9 +566,7 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 
 | Component | Purpose |
 |-----------|---------|
-| `dora-api` | Receives deployment events, stores in SQLite |
-| `dora-compute` | Aggregates events → DORA metrics, exposes Prometheus metrics |
-| `pushgateway` | Receives metrics from short-lived jobs |
+| `dora-api` | Receives deployment and rework events, stores them in SQLite, computes the DORA metrics and serves them on `/metrics` |
 | `Prometheus` | Stores time-series, PromQL queries |
 | `Grafana` | DORA dashboards, visualization |
 | `Alertmanager` | Alert routing from DORA metrics |
@@ -546,8 +579,8 @@ You've now built a complete DORA metrics pipeline with uFawkesObs — from event
 
 1. **5 DORA metrics + Elite**: DF (multiple/day), LT (<1hr), CFR (0-15%), MTTR (<1hr), Rework Rate (lower better)
 2. **Event collection**: POST to `dora-api` at `http://localhost:8088/event` with deployment event JSON
-3. **dora-compute**: Aggregates events from SQLite → computes DORA metrics → exposes Prometheus metrics
-4. **Enable DORA**: `make up-dora` (starts dora-api, dora-compute, pushgateway)
+3. **Where metrics are computed**: in `dora-api`, from the events in SQLite, served on `/metrics` (there is no separate `dora-compute`)
+4. **Enable DORA**: `make up-dora` (starts the core stack plus `dora-api`)
 5. **DF query**: `sum(rate(dora_deployment_frequency[7d])) * 86400`
 
 ---
