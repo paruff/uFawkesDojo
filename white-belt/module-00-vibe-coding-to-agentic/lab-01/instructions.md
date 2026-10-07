@@ -229,7 +229,7 @@ cat > plan.md <<'EOF'
 
 | REQ | Check |
 |---|---|
-| REQ-001 | `bash scripts/hello.sh \| head -1` prints `Hello, ` followed by `whoami` |
+| REQ-001 | `bash scripts/hello.sh \| head -1` prints `Hello, <user>`, where `<user>` is the output of `whoami` |
 | REQ-002 | `bash scripts/hello.sh` prints a `git` and a `node` line; `PATH=/nonexistent bash scripts/hello.sh` exits non-zero |
 EOF
 
