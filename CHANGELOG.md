@@ -35,8 +35,8 @@ Accurate curriculum, and a real "Start here" lab on uFawkesAI `v2.0.0`.
   `v1.0.6-rc.1` and Brown Belt Module 13 lab-01 on `v1.1.0-rc.1`, both run for
   real. Eleven labs written ahead of their stacks say "not yet run for real".
 - Lab instructions describe today's uFawkesObs: `dora-api` computes the DORA
-  metrics itself; there is no `dora-compute` or Pushgateway, and deployment
-  events use schema 1.0.
+  metrics itself and serves them to Prometheus, and deployment events use
+  schema 1.0.
 - The devcontainer uses the shared `fawkes-space:2.0.0` CDE, pinned by digest.
 - Email moved to `ufawkes.dev`, and the site is served at `dojo.ufawkes.dev`.
 
