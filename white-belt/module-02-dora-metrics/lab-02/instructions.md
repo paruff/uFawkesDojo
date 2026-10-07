@@ -204,8 +204,8 @@ Expected output (all checks pass):
 [✓] Grafana Dashboard: DORA Metrics Dashboard reachable via Grafana API
 
 ==========================================
-Total Tests: 17
-Passed: 17
+Total Tests: 16
+Passed: 16
 Failed: 0
 
 [✓] All tests passed! ✅
