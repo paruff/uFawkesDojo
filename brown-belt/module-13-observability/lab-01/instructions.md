@@ -3,9 +3,9 @@
 **Module**: Brown Belt — Module 13: Observability
 **Estimated Time**: 60 minutes
 **Difficulty**: Advanced (Modules 9-12 complete required)
-**Runs against**: uFawkesObs v1.0.0 (not released yet) (Docker Compose)
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose), a **pre-release**
 
-> **Written ahead of its stack, not yet run for real.** uFawkesObs v1.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-10-07 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Grafana's browser-only clicks were not exercised in a browser. The lab moves to the stable tag when uFawkesObs ships it. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -25,7 +25,7 @@ By the end of this lab you will have:
 
 ## Why This Lab Uses uFawkesObs
 
-This lab runs against **uFawkesObs v1.0.0** — the Observability plane of the uFawkes suite — because it provides a complete, production-grade observability stack in Docker Compose:
+This lab runs against **uFawkesObs `v1.1.0-rc.1`** (pre-release) — the Observability plane of the uFawkes suite — because it provides a complete, production-grade observability stack in Docker Compose:
 
 - **Prometheus** — Metrics storage and PromQL query engine
 - **Grafana** — Dashboards, visualization, alerting UI
@@ -42,15 +42,19 @@ No Kubernetes required — runs entirely in Docker Compose on your laptop.
 
 ## Prerequisites
 
-**Required**: uFawkesObs v1.0.0 running locally
+**Required**: a pinned uFawkesObs checkout
 
 ```bash
-# Verify your stack is running
-cd ~/dojo-labs/uFawkesObs
-make status
+mkdir -p ~/dojo-labs && cd ~/dojo-labs
+export OBS_TAG=v1.1.0-rc.1
+git clone -c advice.detachedHead=false --depth 1 --branch "$OBS_TAG" \
+  https://github.com/paruff/uFawkesObs.git
+cd uFawkesObs
+cp .env.example .env
+# Edit .env and replace GRAFANA_ADMIN_PASSWORD's REPLACE_ME with a real value
 ```
 
-**Expected**: All services healthy (prometheus, grafana, loki, tempo, alertmanager, alloy, otel-collector)
+The other `REPLACE_ME` values in `.env` (the Slack and Discord webhooks) can stay as they are.
 
 **Required**: Modules 9-12 completed (understand CI/CD, deployment, security patterns)
 
@@ -94,21 +98,25 @@ Wait for all services to become healthy:
 make status
 ```
 
-**Expected output**: All services showing "healthy" or "running":
+**Expected output**: `make status` prints a `docker compose ps` table with these nine services, then a health list:
 
 ```
-NAME               STATUS
-prometheus         healthy
-grafana            healthy
-loki               healthy
-tempo              healthy
-alertmanager       healthy
-alloy              healthy
-otel-collector     healthy
-node-exporter      healthy
+alertmanager  alloy  grafana  loki  node-exporter
+otel-collector  prometheus  telemetry-generator  tempo
+
+Health endpoints:
+  ✅ Prometheus  :9090
+  ✅ Tempo       :3200
+  ✅ Loki        :3100
+  ✅ Grafana     :3000
+  ✅ Alertmanager:9093
+  ✅ OTel Coll.  :8888
+  ✅ Alloy       :12345
 ```
 
-> ✅ **Checkpoint**: All 8 services healthy. If any service is unhealthy, check logs with `docker compose logs <service>`.
+Tempo and Grafana can show ❌ for about 15 seconds while they start; `./scripts/wait-healthy.sh` above waits for them.
+
+> ✅ **Checkpoint**: All 9 services running and every health endpoint ✅. If any service is unhealthy, check logs with `docker compose logs <service>`.
 
 ---
 
@@ -134,16 +142,16 @@ Login with credentials from your `.env`:
 | **Tempo** | Tempo | `http://tempo:3200` | Traces |
 | **Alertmanager** | Alertmanager | `http://alertmanager:9093` | Alerts |
 
-Click each datasource → **Save & test** → should show "Data source is working"
+Click each datasource → **Save & test**. Prometheus, Loki and Tempo report that they work (checked through Grafana's API). The **Alertmanager** datasource has no health check in the API (it answers "Plugin unavailable"); the UI button was not exercised, so don't be alarmed if that one is not green.
 
-> ✅ **Checkpoint**: All 4 datasources show "Working"
+> ✅ **Checkpoint**: Prometheus, Loki and Tempo show "Working"
 
 ### 2.3 Explore Pre-built Dashboards
 
 1. Click **Dashboards** → **Browse** in the left sidebar
-2. Explore the **General** and **Kubernetes** folders
-3. Open **Node Exporter Full** dashboard → observe host-level metrics
-4. Open **Prometheus Stats** dashboard → observe Prometheus self-metrics
+2. The folders are **Application**, **Platform** and **Services**
+3. Open **Node Exporter** (in Application) → observe host-level metrics
+4. Open **Platform - Prometheus Overview** (in Platform) → observe Prometheus self-metrics
 
 > ✅ **Checkpoint**: You can navigate Grafana and see pre-provisioned dashboards
 
@@ -168,11 +176,12 @@ rate(container_cpu_usage_seconds_total[5m])
 # Container memory usage
 (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100
 
-# HTTP request rate (from demo app)
-rate(http_requests_total[5m])
+# HTTP request rate (Prometheus's own API traffic; the demo app exports traces and
+# logs, not request metrics, so there is no http_requests_total)
+rate(prometheus_http_requests_total[5m])
 
 # Request latency p95
-histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+histogram_quantile(0.95, sum by (le) (rate(prometheus_http_request_duration_seconds_bucket[5m])))
 ```
 
 ### 3.2 Build a Custom Query
@@ -195,7 +204,7 @@ Try building this query step by step:
 
 1. In Grafana, click **+** → **Dashboard** → **Add visualization**
 2. Select **Prometheus** datasource
-3. Enter query: `rate(http_requests_total[5m])`
+3. Enter query: `rate(prometheus_http_requests_total[5m])`
 4. Set **Legend** to `{{job}} - {{instance}}`
 5. Click **Apply** → **Save dashboard** → name it "My First Dashboard"
 
@@ -219,7 +228,7 @@ In Grafana, click **Explore** → select **Loki** datasource
 {compose_project!=""} |= "ERROR"
 
 # Logs from a specific container
-{container_name="otel-collector"} |= "ERROR"
+{compose_service="otel-collector"}
 
 # Parse JSON logs and filter
 {compose_project!=""} | json | level="error"
@@ -321,19 +330,54 @@ EOF
 
 ### 6.2 Apply Alert Rules
 
-```bash
-# Copy to Prometheus config directory
-cp ~/dojo-labs/alert-rules.yml ~/dojo-labs/uFawkesObs/config/prometheus/rules/platform-alerts.yml
+Prometheus reads only the rule files named in `rule_files` in
+`config/prometheus/prometheus.yaml`; it does not scan the `rules/` folder. Copy your
+file in, then add it to that list:
 
-# Reload Prometheus configuration
-curl -X POST http://localhost:9090/-/reload
+```bash
+cd ~/dojo-labs/uFawkesObs
+cp ~/dojo-labs/alert-rules.yml config/prometheus/rules/platform-alerts.yml
+
+python3 - <<'PY'
+import pathlib
+p = pathlib.Path("config/prometheus/prometheus.yaml")
+s = p.read_text()
+last = '  - "/etc/prometheus/rules/ufawkesobs-dora-regression.yml"\n'
+new = s.replace(last, last + '  - "/etc/prometheus/rules/platform-alerts.yml"\n')
+assert new != s, "rule_files line not found"
+with open(p, "r+") as f:  # edit in place: see the warning below
+    f.seek(0); f.write(new); f.truncate()
+PY
+
+curl -s -o /dev/null -w "reload -> HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
 ```
+
+**Expected output**: `reload -> HTTP 200`.
+
+> ⚠️ **Edit that file in place.** `prometheus.yaml` is a single-file mount. If an editor or
+> `sed -i` replaces the file, Prometheus keeps a deleted copy and every reload fails with
+> `HTTP 500` (`open /etc/prometheus/prometheus.yaml: no such file or directory`). Fix it with
+> `docker compose --profile '*' restart prometheus`.
 
 ### 6.3 Verify Alert Rules
 
 1. Open **http://localhost:9090/alerts** (Prometheus Alerts page)
 2. Verify your rules appear: `HighCPUUsage`, `HighMemoryUsage`, `DeploymentFailure`
 3. Check **http://localhost:9093** (Alertmanager) → see routing configuration
+
+To check from the terminal:
+
+```bash
+curl -s http://localhost:9090/api/v1/rules | jq -r '.data.groups[] | select(.name=="platform-alerts") | .rules[].name'
+```
+
+**Expected output**:
+
+```
+HighCPUUsage
+HighMemoryUsage
+DeploymentFailure
+```
 
 > ✅ **Checkpoint**: Alert rules loaded and visible in Prometheus/Alertmanager
 
@@ -343,60 +387,69 @@ curl -X POST http://localhost:9090/-/reload
 
 ### 7.1 Enable DORA Profile
 
+The DORA profile adds to the running stack. You do not need to stop anything first.
+
 ```bash
 cd ~/dojo-labs/uFawkesObs
-
-# Stop current stack
-make down
-
-# Start with DORA profile
 make up-dora
-```
-
-Wait for services to be healthy:
-
-```bash
 ./scripts/wait-healthy.sh
 ```
 
-### 7.2 Verify DORA Services
+> `make down` does not stop this stack at this version: it runs `docker compose down`
+> without the profiles `make up` started
+> ([uFawkesObs#617](https://github.com/paruff/uFawkesObs/issues/617)), so it changes nothing.
+
+### 7.2 Verify the DORA service
 
 ```bash
-make status
+docker ps --format '{{.Names}}' | grep dora
 ```
 
-**Expected**: Additional services running:
-- `dora-api` (port 8088)
-- `dora-compute`
-- `pushgateway` (port 9091)
+**Expected output**: one container, `ufawkesdora-ingestion`. It is the DORA API (port 8088), and it
+computes the metrics itself, so there is no separate `dora-compute` or Pushgateway.
 
-### 7.3 Verify DORA API
+### 7.3 Send a deployment event
 
 ```bash
-# Check DORA API health
 curl -s http://localhost:8088/health
 
-# Send a test deployment event
-curl -s -X POST http://localhost:8088/event \
+curl -s -w "  HTTP %{http_code}\n" -X POST http://localhost:8088/event \
   -H "Content-Type: application/json" \
   -d '{
+    "schema_version": "1.0",
     "event_type": "deployment",
+    "repo": "your-name/dojo-lab",
     "service": "test-service",
     "environment": "production",
+    "commit_sha": "'"$(printf '%040d' 7)"'",
+    "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
     "status": "success",
-    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
-    "commit_sha": "abc123",
-    "deployed_by": "lab-user"
+    "pipeline_url": "https://example.com/ci/7"
   }'
 ```
 
-### 7.4 Trigger DORA Computation
+**Expected output**:
+
+```
+{"status":"ok","queue_depth":0}
+{"queued":true,"id":1}  HTTP 201
+```
+
+An event that leaves out a required field (`schema_version`, `repo`, `deployed_at`,
+`pipeline_url`, a 40-character `commit_sha`) is rejected with `HTTP 422`.
+
+### 7.4 See the metric
+
+The compute loop runs every 15 seconds. Wait about 20 seconds, then:
 
 ```bash
-# Restart dora-compute to process events
-docker compose restart dora-compute
+curl -s http://localhost:8088/metrics | grep '^dora_deployment_frequency'
+```
 
-# Wait a moment, then check Grafana DORA dashboard
+**Expected output**:
+
+```
+dora_deployment_frequency_per_week{team_id="your-name/dojo-lab",tier="low"} 0.23333333333333334
 ```
 
 > ✅ **Checkpoint**: DORA profile enabled and test event processed
@@ -411,45 +464,43 @@ cd /path/to/uFawkesDojo
 bash brown-belt/module-13-observability/lab-01/validate.sh
 ```
 
-**Expected output** (all checks pass):
+**Expected output** (all 11 checks pass):
 
 ```
-[INFO] Starting Brown Belt Module 13 Lab 01 validation...
-
 [✓] Prerequisites: curl, jq, git, make installed
-[✓] uFawkesObs Stack: all 8 services healthy
-[✓] Grafana Datasources: Prometheus, Loki, Tempo, Alertmanager all configured
-[✓] Prometheus Metrics: Queryable via PromQL
-[✓] Loki Logs: Queryable via LogQL
-[✓] Tempo Traces: Searchable via TraceQL
-[✓] Alerting: Prometheus rules loaded, Alertmanager configured
-[✓] DORA Profile: DORA services running, test event processed
+[✓] uFawkesObs Stack: All 8 services healthy (prometheus, grafana, loki, tempo, alertmanager, alloy, otel-collector, node-exporter)
+[✓] Prometheus Metrics: Query successful, 12 targets found
+[✓] Loki Logs: LogQL query successful
+[✓] Tempo Traces: Found traces for telemetry-generator
+[✓] Prometheus Rules: Found 68 alerting rules loaded
+[✓] Alertmanager: Alertmanager API reachable
+[✓] DORA Profile: dora-api healthy and exposing DORA metrics (compute runs in-process)
+[✓] PromQL Queries: All test PromQL queries successful
+[✓] LogQL Queries: All test LogQL queries successful
+[✓] TraceQL Query: TraceQL query successful
 
-==========================================
-Total Tests: 8
-Passed: 8
-Failed: 0
+Total Tests : 11
+Passed      : 11
+Failed      : 0
 
 [✓] All tests passed! ✅
-
-🎉 Congratulations! You've completed Brown Belt Module 13 Lab 01.
-   You've deployed a full observability stack and explored all three pillars.
-   Move on to Module 14: DORA Deep Dive.
 ```
+
+The target count and the rule count can differ a little between runs. Note what this script does
+not check: it passes on a stack you have only started, whether or not your alert rules are loaded
+or your event was processed. Use the commands in Steps 6.3 and 7.4 for that.
 
 ---
 
 ## Clean Up
 
 ```bash
-# Stop the stack
+# Stop the stack and remove its volumes (the profiles matter: plain `make down` leaves it running)
 cd ~/dojo-labs/uFawkesObs
-make down
+docker compose --profile '*' down -v --remove-orphans
 
 # Remove data (optional)
-docker compose down -v
 rm -rf data/
-make init
 ```
 
 ---
@@ -461,9 +512,10 @@ make init
 | Service unhealthy | Config error, port conflict | `docker compose logs <service>` |
 | `make up` fails | Port already in use | `lsof -i :3000` etc., free the port |
 | Grafana datasource not working | Service not ready | Wait for healthcheck, check service logs |
-| No traces in Tempo | Demo app not running | `docker compose --profile apps up -d telemetry-generator` |
-| Alert rules not loading | Config syntax error | Check `promtool check config` |
-| No DORA metrics | DORA profile not enabled | Run `make up-dora` |
+| No traces in Tempo | Stack only just started | Wait a minute and search again; the demo app (`telemetry-generator`) starts with `make up` |
+| Alert rules not loading | The file is not listed in `rule_files` | Add it as in Step 6.2, then reload |
+| Reload returns `HTTP 500` | The config file was replaced, not edited in place | `docker compose --profile '*' restart prometheus` |
+| No DORA metrics | DORA profile not enabled, or the event was rejected | Run `make up-dora`; check the event returned `HTTP 201` |
 
 ---
 
