@@ -55,12 +55,9 @@ Make it your own repo, with its own history:
 ```bash
 rm -rf .git
 git init -q -b main
-git add -A
-git commit -q -m "chore: start from uFawkesAI ${AI_TAG}"
-git log --oneline
 ```
 
-**Expected output**: one line, `<hash> chore: start from uFawkesAI v2.0.0`.
+No output. You make the first commit in Step 2, from inside the sandbox, so that the repo's hooks check it.
 
 **What just happened**: you pinned your starting point to a released tag, not to `main`, so the next person who runs this lab gets the same files you did.
 
@@ -100,7 +97,17 @@ uFawkesAI devcontainer ready — all tools pre-installed
 
 and, from `setup.sh`, ending with `✅  Setup complete!`.
 
-**What just happened**: you started the **sandbox** part of the harness. Your agent (and you) now work inside a container whose tools are fixed by the image tag. `setup.sh` also deleted a `.template` marker file, so `git status` shows it as removed. That is expected.
+Now make the first commit, from inside the sandbox:
+
+```bash
+devcontainer exec --workspace-folder . git add -A
+devcontainer exec --workspace-folder . git commit -q -m "chore: start from uFawkesAI ${AI_TAG}"
+devcontainer exec --workspace-folder . git log --oneline
+```
+
+**Expected output**: the hooks' check lines, then one line, `<hash> chore: start from uFawkesAI v2.0.0`.
+
+**What just happened**: you started the **sandbox** part of the harness. Your agent (and you) now work inside a container whose tools are fixed by the image tag. Its setup installed the repo's git hooks, which run inside the sandbox, so make every commit from there (`devcontainer exec --workspace-folder . git …`). A commit from your own shell would look for those hooks' tools on your machine.
 
 > This lab was run with the devcontainer CLI. VS Code's "Reopen in Container" reads the same `devcontainer.json`, but that path was not run for this lab.
 
@@ -219,8 +226,8 @@ cat > plan.md <<'EOF'
 EOF
 
 cd ../../..
-git add -A
-git commit -q -m "docs: first-feature intent, spec and plan"
+devcontainer exec --workspace-folder . git add -A
+devcontainer exec --workspace-folder . git commit -q -m "docs: first-feature intent, spec and plan"
 ```
 
 You can write these by hand, or ask your agent to draft `spec.md` and `plan.md` from your `intent.md` and then edit them. The check below looks at the documents, not at who wrote them. You do not build the script in this lab.
@@ -228,8 +235,8 @@ You can write these by hand, or ask your agent to draft `spec.md` and `plan.md` 
 Run the template's own chain check:
 
 ```bash
-base=$(git rev-list --max-parents=0 HEAD | tail -1)
-bash scripts/check-artifact-chain.sh "$base"
+devcontainer exec --workspace-folder . bash -lc \
+  'bash scripts/check-artifact-chain.sh "$(git rev-list --max-parents=0 HEAD | tail -1)"'
 ```
 
 **Expected output** ends with:
