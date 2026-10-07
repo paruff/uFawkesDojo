@@ -58,15 +58,20 @@ jobs:
         if: always()
         run: |
           [ -f start-here-transcript.txt ] || { echo "no transcript was written"; exit 0; }
-          # Drop pre-commit's environment-install chatter, which would push the
-          # lines that matter out of the annotation.
-          tail_text="$(sed -E 's/\x1b\[[0-9;]*m//g' start-here-transcript.txt \
+          # GitHub cuts an annotation at about 4 KB, so the ending goes out as
+          # several notices of at most 3500 bytes. pre-commit's
+          # environment-install chatter is dropped first.
+          sed -E 's/\x1b\[[0-9;]*m//g' start-here-transcript.txt \
             | grep -v -E '^\+ |\[INFO\] (Initializing|Installing|Once installed|This may take)|^\[INFO\] (Once|This)' \
-            | tail -120)"
-          tail_text="${tail_text//'%'/'%25'}"
-          tail_text="${tail_text//$'\r'/'%0D'}"
-          tail_text="${tail_text//$'\n'/'%0A'}"
-          echo "::notice title=Start here transcript (last 120 lines, install chatter dropped)::${tail_text}"
+            | tail -c 24000 > transcript-tail.txt
+          split -C 3500 -d transcript-tail.txt part.
+          for f in part.*; do
+            t="$(cat "$f")"
+            t="${t//'%'/'%25'}"
+            t="${t//$'\r'/'%0D'}"
+            t="${t//$'\n'/'%0A'}"
+            echo "::notice title=Start here transcript ${f#part.}::${t}"
+          done
 
       - name: Upload the transcript
         if: always()
