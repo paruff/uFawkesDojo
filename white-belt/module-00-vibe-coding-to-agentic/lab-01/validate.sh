@@ -61,10 +61,10 @@ cd "${LAB_DIR}" || exit 1
 
 # ── 2. Pinned CDE image ──────────────────────────────────────────────────
 image="$(grep -E '^\s*"image"' .devcontainer/devcontainer.json 2> /dev/null | head -1)"
-if echo "${image}" | grep -qE 'ghcr\.io/paruff/fawkes-space:2\.0\.0(-rc\.[0-9]+)?(@sha256:[0-9a-f]{64})?"'; then
+if echo "${image}" | grep -qE 'ghcr\.io/paruff/fawkes-space:2\.0\.0(@sha256:[0-9a-f]{64})?"'; then
   log_ok "CDE image is pinned: $(echo "${image}" | sed -E 's/.*"image": *"([^"]+)".*/\1/')"
 else
-  log_fail "CDE image is not pinned to fawkes-space 2.0.0 (found: ${image:-no image line}) → Step 2: edit .devcontainer/devcontainer.json"
+  log_fail "CDE image is not pinned to fawkes-space 2.0.0 (found: ${image:-no image line}) → Step 2: restore it with git checkout -- .devcontainer/devcontainer.json"
 fi
 
 # ── 3. Six harness components ────────────────────────────────────────────

@@ -17,7 +17,7 @@ By the end of this primer, you will be able to:
 - ✅ Explain why vibe coding doesn't scale for team delivery
 - ✅ Name the six maturity stages from the AI-Native SDLC Playbook
 - ✅ Identify where the uFawkes suite fits in that maturity model
-- ✅ Know your first step: the "Start here" lab on uFawkesAI (pinned to the `v2.0.0-rc.3` pre-release until `v2.0.0` ships)
+- ✅ Know your first step: the "Start here" lab on uFawkesAI (pinned to `v2.0.0`)
 
 ### Why It Matters
 
@@ -41,6 +41,8 @@ You've mastered this primer when you can:
 - Name the six maturity stages and identify where your team sits today
 - Articulate why platform teams must build the platform that makes AI safe for the org
 - Start the "Start here" lab with confidence
+
+**Mastery bar**: the lab's `validate.sh` passes all 14 checks, and you can answer the lab's two recall questions in your own words. Move on to Module 1 when both are true. If a check fails, its line names the step to redo.
 
 ---
 

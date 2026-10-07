@@ -15,7 +15,7 @@ live status is on the
 
 | Phase | Stack release today | Content | Run for real |
 |---|---|---|---|
-| 0.2.1 Accuracy + "Start here" | uFawkesAI `v2.0.0-rc.3` (no `v2.0.0`) | Guide, PR template, Module 0 and its lab merged | "Start here" on `rc.3`; **AC-DOJO-01 fails** (24 lines) |
+| 0.2.1 Accuracy + "Start here" | uFawkesAI `v2.0.0` (tagged 2026-10-07) | Guide, PR template, Module 0 and its lab merged | "Start here" on `v2.0.0`, verbatim in CI (`start-here-live.yml`); AC-DOJO-01 passes |
 | 0.2.2 uFawkesObs | `v1.0.6-rc.1` (no `v1.0.0`) | Module 2 lab-01 re-run (#79); Brown Belt 13–16 written | Module 2 lab-01; M13/M14 `validate.sh` in the nightly only |
 | 0.2.3 uFawkesPipe | `v1.11.1-beta.1` (no `v2.0.0`) | Yellow Belt 5–8 written against `v2.0.0` | none |
 | 0.2.4 uFawkesDevX | `v1.0.1` (stable) | White Belt 1/3/4 written against `v1.0.1` | none. **Blocked:** `v1.0.1` cannot build Backstage (uFawkesDevX#98). SQLite adopted for #57 |
@@ -47,15 +47,16 @@ them. Eleven labs were merged ahead of their stacks without a run (audit F1).
 
 1. Five DORA metrics, retired Jenkins labeling, and removal or labeling of
    unbuilt labs, videos and links (AC-DOJO-01): content done in #76 and #78; the
-   suite's check still fails (Phase 0.2.0 step 2).
+   suite's check passes on `main` since #81.
 2. Extend the authoring guide (AC-DOJO-03): done, items 1–17 (#63, #66).
-3. "Start here" lab (AC-DOJO-02): built and run on `rc.3` (#77). Dojo 0.2 may
-   ship on this pre-release pin (owner decision, 2026-10-06). **Remaining, after
-   0.2:** re-pin to uFawkesAI `v2.0.0` and re-run when it ships (#37).
+3. "Start here" lab (AC-DOJO-02): built and run on `rc.3` (#77), then re-pinned
+   to uFawkesAI `v2.0.0` and run verbatim, devcontainer included, by
+   `start-here-live.yml` (#37). Those runs found four steps that broke on
+   `v2.0.0` and fixed them; see the PR for the transcript.
 4. Align this plan and ufawkes.dev's learn guides: this revision; uFawkes.dev
    #67 is closed.
-5. Release Dojo `0.2` once AC-DOJO-01 passes and AC-DOJO-02 is met on the
-   `rc.3` pin. Announce with
+5. Release Dojo `0.2` once AC-DOJO-01 passes and AC-DOJO-02 is met on
+   `v2.0.0`. Announce with
    uFawkesAI's follow-up post: "now learn it".
 
 ## Phase 0.2.2 — uFawkesObs (Dojo 0.3, after Obs stable)

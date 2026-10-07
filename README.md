@@ -26,7 +26,7 @@ DNS for the custom domain is confirmed — see `CNAME` and
 
 Each module's hands-on lab is a per-lab `instructions.md`:
 
-- **White Belt Module 0 — Start here**: uFawkesAI template + devcontainer (pre-release `v2.0.0-rc.3`) — one intent → spec → plan cycle
+- **White Belt Module 0 — Start here**: uFawkesAI template + devcontainer (`v2.0.0`) — one intent → spec → plan cycle
   [`white-belt/module-00-vibe-coding-to-agentic/lab-01/instructions.md`](white-belt/module-00-vibe-coding-to-agentic/lab-01/instructions.md)
 - **White Belt Module 1**: uFawkesDevX (Docker Compose) — scaffold a service via golden path Cookiecutter template
   [`white-belt/module-01-what-is-idp/lab-01/instructions.md`](white-belt/module-01-what-is-idp/lab-01/instructions.md)

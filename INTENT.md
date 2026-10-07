@@ -25,9 +25,9 @@ Kubernetes earns its operational cost."**
 
 Labs follow the suite's release order and pin a released stack tag, never
 `main`: uFawkesAI (Dojo 0.2), then uFawkesObs, uFawkesPipe and uFawkesDevX.
-**As of 2026-10-06 none of the Obs, Pipe or AI stacks has a stable release**
-(newest: Obs `v1.0.6-rc.1`, Pipe `v1.11.1-beta.1`, AI `v2.0.0-rc.3`), and
-uFawkesDevX is at stable `v1.0.1`. Labs written ahead of a release are marked
+uFawkesAI tagged `v2.0.0` on 2026-10-07 (with `fawkes-space:2.0.0`).
+**As of 2026-10-07 neither Obs nor Pipe has a stable release** (newest: Obs
+`v1.2.0-rc.1`, Pipe `v1.11.1-beta.1`), and uFawkesDevX is at stable `v1.0.1`. Labs written ahead of a release are marked
 "not yet run for real" until they are verified against a tag that exists (see
 the audit below).
 
@@ -49,7 +49,8 @@ been run, for real").
 
 **Run for real, with evidence:**
 - `white-belt/module-00-vibe-coding-to-agentic/lab-01/` ("Start here") — on
-  uFawkesAI `v2.0.0-rc.3` (pre-release pin), 14/14, run verbatim end to end.
+  uFawkesAI `v2.0.0`, 14/14, run verbatim end to end, devcontainer included,
+  by `start-here-live.yml` on every change to the lab and nightly.
 - `white-belt/module-02-dora-metrics/lab-01/` — on uFawkesObs `v1.0.6-rc.1`
   (pre-release pin), re-run in #79.
 - A nightly live acceptance run (`live-acceptance.yml`) boots a real uFawkesObs
