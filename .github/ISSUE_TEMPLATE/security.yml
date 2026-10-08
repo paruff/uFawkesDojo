@@ -2,7 +2,6 @@
 name: 🔒 Security Vulnerability
 description: Report a security vulnerability in uFawkesDojo
 title: "[Security]: "
-labels: ["security"]
 body:
   - type: markdown
     attributes:
