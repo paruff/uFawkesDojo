@@ -1,58 +1,56 @@
-## What does this PR do?
+## What This PR Does
 
-<!-- 1-3 sentence summary -->
+<!-- One sentence. -->
 
----
+## Closes
 
-## If this PR adds or substantially revises a module or lab
-
-Check against [`docs/module-authoring-guide.md`](../docs/module-authoring-guide.md)
-before requesting review:
-
-- [ ] **Every lab step in this PR was run for real**, against real
-      infrastructure, and the output shown is actual output (not a
-      description of what an environment "will provision")
-- [ ] Learners see a worked example before being asked to build their own
-- [ ] Theory-before-practice blocks are short (~5-10 min), not front-loaded
-- [ ] The module teaches only what's needed for its task, not a full
-      feature tour
-- [ ] At least one open-response retrieval question (not just
-      multiple-choice recognition)
-- [ ] If the module runs >90 minutes, it has an explicit spacing/stopping
-      point
-- [ ] Feedback in the lab is immediate and real today (script exit code,
-      dashboard change, HTTP response) — not "will be auto-graded" for a
-      grader that doesn't exist yet
-- [ ] Currency check done: tool names, metric definitions, contact info,
-      and any "Last Updated" footer are current (see
-      [issue #11](https://github.com/paruff/uFawkesDojo/issues/11) for
-      known in-flight changes: Jenkins replaced by Tekton, `fawkes.io` replaced by `ufawkes.dev`)
-- [ ] **Cumulative, spaced retrieval**: module opens with 2–3 recall
-      questions from *earlier* modules, not only the current one
-- [ ] **Interleaving**: Green+ belt modules mix problem types; White/Yellow
-      may block on one tool at a time
-- [ ] **Faded worked examples**: White = full, Yellow/Green = partial,
-      Brown/Black = open problems
-- [ ] **Calibration prompt**: learners predict result/time before lab,
-      compare after (counters illusion of competence)
-- [ ] **Self-regulation supports**: per-sub-session time estimates, "plan
-      your sessions" prompt at belt start, visible progress (done/next)
-- [ ] **Corrective loop**: a failed check points each missed item to the
-      section that teaches it, then retests with different questions — no
-      bare waiting period
-- [ ] **Mastery bar**: the module ends with a check at 80% or higher, and
-      Success Criteria states that bar up front
-- [ ] **Where to next**: every validator failure line names its fix or
-      Troubleshooting entry
-- [ ] **Diagram**: at least one diagram beside the text it explains, with
-      alt text
-
-If any box can't be checked, say why in a comment rather than leaving it
-unchecked silently — some modules have a good reason (e.g. a lab genuinely
-blocked on infrastructure that doesn't exist yet, tracked in its own issue).
+<!-- Issue number(s): Closes #N -->
 
 ---
 
-## Test plan
+## AI-Assisted Review Block
 
-<!-- How did you verify this works? Paste real command output where relevant. -->
+<!-- REQUIRED. Complete before requesting review. Use Copilot or `/review-agents` to help fill this in. -->
+<!-- DORA 2025 (REVIEW-01): Structured review blocks reduce review time by making context explicit. -->
+
+**What does this PR do in one sentence?**
+
+<!-- Ask Copilot: "Summarise this diff in one sentence for a PR description" -->
+
+**What are the top 2–3 failure modes?**
+
+<!-- Ask Copilot: "What are the most likely ways this diff could fail in production?" -->
+
+**What tests cover this change?**
+
+<!-- List test files. If none: explain why, or add tests before requesting review. -->
+
+**Architecture check:**
+
+<!-- Ask Copilot: "Does this diff violate any rules in AGENTS.md or .github/copilot-instructions.md?" -->
+
+- [ ] No secrets or credentials in any changed file
+- [ ] No modifications to AGENTS.md (edit source, not symlinks)
+- [ ] No `--no-verify` or hook bypasses
+- [ ] Changes to `docs/ai-sdlc/**/` include intent → spec → plan chain
+- [ ] `make verify` passes locally before requesting review
+- [ ] Symlinks (CLAUDE.md, .cursorrules, .github/copilot-instructions.md) still point to AGENTS.md
+- [ ] Lab modules follow authoring guide: worked examples, retrieval questions, faded examples
+- [ ] Currency check: tool names, metrics, contact info current (see issue #11)
+- [ ] Lab steps tested for real, not simulated
+
+**What I was NOT sure about (flag for human review):**
+
+<!-- Any judgment call, ambiguous requirement, or edge case you deferred to the reviewer. -->
+
+---
+
+## Checklist
+
+- [ ] `make verify` passes (lint + typecheck + tests + artifact-chain)
+- [ ] PR is < 400 changed lines, OR `large-pr-approved` label has been applied by a human
+- [ ] No secrets or credentials in any changed file
+- [ ] New features are behind a feature flag (if applicable)
+- [ ] `docs/` updated if any public service or utility function changed
+- [ ] Lab modules follow authoring guide (worked examples, retrieval, faded examples, calibration)
+- [ ] Currency check passed (tool names, contact info, `Last Updated` footer current)
