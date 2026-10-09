@@ -14,15 +14,15 @@ body:
     attributes:
       label: Problem Statement
       description: What problem does this solve?
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     id: solution
     attributes:
       label: Proposed Solution
       description: Describe your proposed solution or implementation approach.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: dropdown
     id: component
     attributes:
@@ -34,8 +34,8 @@ body:
         - Backstage
         - Makefile / Scripts
         - Documentation
-      validations:
-        required: true
+    validations:
+      required: true
   - type: checkboxes
     id: copilot
     attributes:
