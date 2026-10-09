@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Dojo `0.2` ships with uFawkesAI `v2.0.0`; `0.3`–`0.6` each add
 the labs for the stack released alongside them.
 
+## [0.2.1](https://github.com/paruff/uFawkesDojo/compare/0.2.0...v0.2.1) (2026-10-09)
+
+
+### Fixed
+
+* **lab:** correct post-0.2.0 review findings ([#92](https://github.com/paruff/uFawkesDojo/issues/92)) ([f336519](https://github.com/paruff/uFawkesDojo/commit/f336519d7e7fb10edb84d71e36b5395ffa7ccfd4))
+* **release:** add missing release-please-config.json; drop dangling labels ([#100](https://github.com/paruff/uFawkesDojo/issues/100)) ([d7d59e3](https://github.com/paruff/uFawkesDojo/commit/d7d59e33f286390e84737642c5a46c13911418cd))
+* **release:** correct manifest to 0.2.0; repair issue-form schema ([#101](https://github.com/paruff/uFawkesDojo/issues/101)) ([95a6845](https://github.com/paruff/uFawkesDojo/commit/95a6845adb547a5c1fe2bbc358611d97453d524a))
+
+
+### Docs
+
+* **changelog:** add Keep a Changelog header and Unreleased section ([#97](https://github.com/paruff/uFawkesDojo/issues/97)) ([4a0ba2f](https://github.com/paruff/uFawkesDojo/commit/4a0ba2f210f9ab516edebb9e63a01d4a6dd99f15))
+* **governance:** add CODE_OF_CONDUCT, SECURITY.md, expand FUNDING.yml ([#95](https://github.com/paruff/uFawkesDojo/issues/95)) ([5c2e04f](https://github.com/paruff/uFawkesDojo/commit/5c2e04fdad3c9fc5c1a8777c5c49df7dff409974))
+* **issue-templates:** add bug_report, feature, security templates ([#99](https://github.com/paruff/uFawkesDojo/issues/99)) ([b9ff6a7](https://github.com/paruff/uFawkesDojo/commit/b9ff6a7ebf91eaf60a532d3845968a1a405c224e))
+* **pr-template:** update standardized PR template ([#98](https://github.com/paruff/uFawkesDojo/issues/98)) ([c5c780d](https://github.com/paruff/uFawkesDojo/commit/c5c780dfbee71446ec6a8ae14a972adf7d5aa115))
+
 ## [Unreleased]
 
 ### Added
