@@ -23,7 +23,38 @@ permissions:
 jobs:
   pre-commit:
     name: Pre-commit hooks
-    uses: paruff/uFawkesPipe/.github/workflows/reusable-preflight.yml@56226a057899ec3407c7a5c6bd5182d88783d2d2 # v1.11.0-beta.1
+    uses: paruff/uFawkesPipe/.github/workflows/reusable-preflight.yml@41f3e92d6fb63b3779595bed3e44333c67d37028 # v1.15.0-beta.1
     with:
+      # The hook stages run in the suite's CI image (ci-pipeline spec R4).
+      ci-image: ghcr.io/paruff/ufawkes-ci@sha256:e85db8b3554da7c3362303d0e1e9681997d78093269b641e3535989f9c66f4da
       pr-size-limit: 0 # this repo had no PR size gate; Pre-flight's default is 400
       commit-format: conventional
+
+  # One aggregate for branch protection (ci-pipeline spec R9). A gate that failed or
+  # was cancelled fails it; one that was skipped by its own condition does not.
+  pipeline-complete:
+    name: "✅ Pipeline Complete"
+    needs: [pre-commit]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+      - name: Every gate passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "gate results: ${RESULTS}"
+          for r in ${RESULTS}; do
+            if [[ "$r" != success && "$r" != skipped ]]; then
+              echo "::error::a gate ended '${r}'"
+              exit 1
+            fi
+          done
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
