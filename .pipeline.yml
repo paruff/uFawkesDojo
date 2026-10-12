@@ -1,0 +1,8 @@
+# Pipeline declaration (uFawkes.dev docs/ai-sdlc/ci-pipeline/spec.md, schema v2).
+# Only what the suite adoption needs so far (paruff/uFawkes.dev#181).
+version: "2"
+repo-type: site-labs
+
+# Steps that report but must not block. Everything else that can fail the build
+# does fail it (spec R5). None here.
+informational: []
