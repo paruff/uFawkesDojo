@@ -3,7 +3,7 @@
 **Module**: White Belt — Module 2: DORA Metrics
 **Estimated Time**: 25 minutes (the dashboard needs up to two minutes to catch up after each event)
 **Difficulty**: Beginner (no Grafana or DORA experience required)
-**Runs against**: [uFawkesObs `v1.0.6-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.6-rc.1) (Docker Compose), not `fawkes`/Kubernetes. This is a **pre-release** pin: uFawkesObs has no stable release yet, and the lab moves to the stable tag when it ships ([#41](https://github.com/paruff/uFawkesDojo/issues/41)).
+**Runs against**: [uFawkesObs `v1.0.0`](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) (Docker Compose), not `fawkes`/Kubernetes. This is the stable release.
 
 ---
 
@@ -41,7 +41,7 @@ DORA metrics before starting.
 
 ```bash
 # In a separate directory from your uFawkesDojo checkout:
-export OBS_TAG=v1.0.6-rc.1
+export OBS_TAG=v1.0.0
 git clone -c advice.detachedHead=false --depth 1 --branch "$OBS_TAG" \
   https://github.com/paruff/uFawkesObs.git
 cd uFawkesObs
