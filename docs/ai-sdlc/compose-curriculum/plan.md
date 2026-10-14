@@ -1,7 +1,7 @@
 # Plan: Teach the uFawkes Compose Suite First
 
 **Traces to:** [`spec.md`](spec.md) → [`intent.md`](intent.md)
-**Status:** Draft | **Revision:** 3 | **State as of:** 2026-10-06
+**Status:** Draft | **Revision:** 3 | **State as of:** 2026-10-14
 **Evidence:** [`audit-2026-10-06.md`](audit-2026-10-06.md)
 
 Phases follow the suite release order. Each phase starts only after its
@@ -16,9 +16,9 @@ live status is on the
 | Phase | Stack release today | Content | Run for real |
 |---|---|---|---|
 | 0.2.1 Accuracy + "Start here" | uFawkesAI `v2.0.0` (tagged 2026-10-07) | Guide, PR template, Module 0 and its lab merged | "Start here" on `v2.0.0`, verbatim in CI (`start-here-live.yml`); AC-DOJO-01 passes |
-| 0.2.2 uFawkesObs | `v1.0.6-rc.1` (no `v1.0.0`) | Module 2 lab-01 re-run (#79); Brown Belt 13–16 written | Module 2 lab-01; M13/M14 `validate.sh` in the nightly only |
-| 0.2.3 uFawkesPipe | `v1.11.1-beta.1` (no `v2.0.0`) | Yellow Belt 5–8 written against `v2.0.0` | none |
-| 0.2.4 uFawkesDevX | `v1.0.1` (stable) | White Belt 1/3/4 written against `v1.0.1` | none. **Blocked:** `v1.0.1` cannot build Backstage (uFawkesDevX#98). SQLite adopted for #57 |
+| 0.2.2 uFawkesObs | `v1.2.0-rc.1` (no stable tag); labs run on `v1.1.0-rc.1` | Module 2 lab-01 re-run (#79, #90); Brown Belt 13–16 written | Module 2 lab-01; M13/M14 `validate.sh` in the nightly only |
+| 0.2.3 uFawkesPipe | `v1.16.0-beta.1` (no `v2.0.0`) | Yellow Belt 5–8 written against `v2.0.0` | none |
+| 0.2.4 uFawkesDevX | `v1.1.0` (stable) | White Belt 1/3/4 written against `v1.0.1` | none. **Blocked:** `v1.1.0` still does not fix Backstage (uFawkesDevX#98, open). SQLite adopted for #57 |
 | 0.2.5 Green Belt framing | none needed | Done (Modules 9–12) | n/a |
 
 "Written" means the lab files exist. It does not mean a learner can follow
