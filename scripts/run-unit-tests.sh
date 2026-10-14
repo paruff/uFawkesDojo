@@ -21,6 +21,7 @@ SUITES=(
   scripts/test-artifact-chain.sh
   scripts/test-dojo-feedback-intent.sh
   scripts/test-doc-dora-freshness.sh
+  scripts/test-check-lab-pins.sh
 )
 
 failed=0

@@ -32,6 +32,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # AC-006: every stack tag a lab names must exist. Labs that say they are
+  # ahead of their stack ("not released yet") warn instead of failing.
+  lab-pins:
+    name: Every tag a lab names exists
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out uFawkesDojo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: scripts/check-lab-pins.sh
+
   white-belt-m02-lab-01:
     name: White Belt M02 Lab 01 — See DORA Metrics Live
     uses: ./.github/workflows/_lab-acceptance.yml
