@@ -27,6 +27,12 @@ on:
           self-checks that read ./.env beside the stack) or "dojo" (repo root).
         type: string
         default: dojo
+      validate_args:
+        description: >
+          Extra arguments for validate.sh. "--stack-only" runs the tier that
+          needs no student artifacts (#73) — it is not a pass for the lab.
+        type: string
+        default: ""
       make_target:
         description: uFawkesOb make target for this lab's documented stack (up-dora or up-full)
         type: string
@@ -171,13 +177,18 @@ jobs:
         env:
           RUN_FROM: ${{ inputs.run_from }}
           VALIDATE_PATH: ${{ inputs.validate_path }}
+          VALIDATE_ARGS: ${{ inputs.validate_args }}
+          # Self-checks that read the stack's .env (Grafana credentials) look
+          # here; the labs' default is ~/dojo-labs/uFawkesObs, not this path.
+          UF_OBS_DIR: ${{ github.workspace }}/uFawkesObs
         run: |
           run_dir="."
           if [ "$RUN_FROM" = "stack" ]; then
             run_dir="uFawkesObs"
           fi
           cd "$run_dir"
-          bash "${GITHUB_WORKSPACE}/${VALIDATE_PATH}" 2>&1 \
+          # shellcheck disable=SC2086 # VALIDATE_ARGS is a fixed flag, or empty
+          bash "${GITHUB_WORKSPACE}/${VALIDATE_PATH}" ${VALIDATE_ARGS} 2>&1 \
             | tee "${GITHUB_WORKSPACE}/lab-validate.log"
 
       - name: Collect stack logs

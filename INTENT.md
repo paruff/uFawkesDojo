@@ -61,8 +61,13 @@ been run, for real").
   and still use pre-1.0 metric names (#43).
 - A nightly live acceptance run (`live-acceptance.yml`) boots a real uFawkesObs
   stack and runs the self-checks of Module 2 labs 01 and 02 and Brown Belt
-  13 and 14. It tests the stack's default branch and runs `validate.sh`, not
-  the instructions' steps.
+  13 and 14 in full, and Brown Belt 15 and 16 as `validate.sh --stack-only`:
+  the stack, and for BB15 the metric its SLIs use, but not the rules, alerts,
+  dashboard or postmortem a student creates. A stack-only pass is not a lab
+  pass. It runs `validate.sh`, not the instructions' steps. The other seven
+  labs (White Belt 1, 3, 4 and Yellow Belt 5-8) are not covered: they target
+  other stacks and verify student artifacts, so they cannot pass on a clean
+  runner without scripting the whole lab (#73).
 
 **Written, but not yet run for real** (9 labs; see the audit):
 - White Belt 1, 3 and 4 on uFawkesDevX `v1.0.1`. The tag exists, but it cannot build

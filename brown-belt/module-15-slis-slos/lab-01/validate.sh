@@ -22,6 +22,18 @@ GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
 ALERTMANAGER_URL="${ALERTMANAGER_URL:-http://localhost:9093}"
 UF_OBS_DIR="${UF_OBS_DIR:-$HOME/dojo-labs/uFawkesObs}"
 
+# --stack-only: the nightly Live Acceptance tier (#73). Checks the stack and
+# the metric the lab's SLIs are built on, and skips everything the student
+# creates (rules, alerts, dashboard). It is not a pass for the lab: the
+# success text says so.
+STACK_ONLY=false
+if [ "${1:-}" = "--stack-only" ]; then
+  STACK_ONLY=true
+elif [ -n "${1:-}" ]; then
+  echo "unknown argument: $1 (only --stack-only is accepted)" >&2
+  exit 2
+fi
+
 # Test results
 TOTAL_TESTS=0
 PASSED_TESTS=0
@@ -124,6 +136,19 @@ prom_value() {
   echo "$out" | jq -r '.data.result[0].value[1] // empty' 2>&1 || log_warning "Could not parse the reply to: $1"
 }
 
+# The lab's SLIs are ratios of this Grafana metric; if the stack stops
+# exporting it the lab cannot work, whatever the student writes.
+check_sli_source_metric() {
+  log_info "Checking the metric the SLIs are built on exists..."
+  local n
+  n=$(prom_value 'count(grafana_http_request_duration_seconds_count)')
+  if [ -n "$n" ] && [ "${n%%.*}" -gt 0 ] 2> /dev/null; then
+    record_test "SLI Source Metric" "PASS" "grafana_http_request_duration_seconds_count has $n series"
+  else
+    record_test "SLI Source Metric" "FAIL" "grafana_http_request_duration_seconds_count missing (got '${n}') — is Prometheus scraping Grafana?"
+  fi
+}
+
 check_rules_loaded() {
   log_info "Checking the SLO rule groups are loaded in Prometheus..."
 
@@ -220,6 +245,10 @@ print_summary() {
   if [ "$FAILED_TESTS" -eq 0 ]; then
     log_success "All tests passed! ✅"
     echo ""
+    if [ "$STACK_ONLY" = "true" ]; then
+      echo "Stack-only tier passed. The student-created checks were not run, so this is not a lab pass."
+      return 0
+    fi
     echo "🎉 Congratulations! You've completed Brown Belt Module 15 Lab 01."
     echo "   You've implemented SLIs, SLOs, Error Budgets with uFawkesObs."
     echo "   You're ready for the Brown Belt Assessment!"
@@ -251,11 +280,16 @@ main() {
 
   check_prerequisites
   check_ufobs_services
-  check_rules_loaded
-  check_sli_recording
-  check_error_budget
-  check_slo_alerts
-  check_grafana_dashboard
+  check_sli_source_metric
+  if [ "$STACK_ONLY" = "true" ]; then
+    log_info "Skipping the rules, alerts and dashboard checks (--stack-only)"
+  else
+    check_rules_loaded
+    check_sli_recording
+    check_error_budget
+    check_slo_alerts
+    check_grafana_dashboard
+  fi
 
   print_summary
 }

@@ -25,6 +25,17 @@ ALERTMANAGER_URL="${ALERTMANAGER_URL:-http://localhost:9093}"
 OTEL_URL="${OTEL_URL:-http://localhost:8888}"
 UF_OBS_DIR="${UF_OBS_DIR:-$HOME/dojo-labs/uFawkesObs}"
 
+# --stack-only: the nightly Live Acceptance tier (#73). Runs the checks that
+# need only the stack and skips the one that needs the student's own artifact
+# (the postmortem). It is not a pass for the lab: the success text says so.
+STACK_ONLY=false
+if [ "${1:-}" = "--stack-only" ]; then
+  STACK_ONLY=true
+elif [ -n "${1:-}" ]; then
+  echo "unknown argument: $1 (only --stack-only is accepted)" >&2
+  exit 2
+fi
+
 # Test results
 TOTAL_TESTS=0
 PASSED_TESTS=0
@@ -242,6 +253,10 @@ print_summary() {
   if [ "$FAILED_TESTS" -eq 0 ]; then
     log_success "All tests passed! ✅"
     echo ""
+    if [ "$STACK_ONLY" = "true" ]; then
+      echo "Stack-only tier passed. The postmortem was not checked, so this is not a lab pass."
+      return 0
+    fi
     echo "🎉 Congratulations! You've completed Brown Belt Module 16 Lab 01."
     echo "   You've executed a full incident response lifecycle with uFawkesObs."
     echo "   Brown Belt Complete! 🎉"
@@ -281,7 +296,11 @@ main() {
   check_loki_logs
   check_tempo_reachable
   check_service_restored
-  check_postmortem_exists
+  if [ "$STACK_ONLY" = "true" ]; then
+    log_info "Skipping the postmortem check (--stack-only)"
+  else
+    check_postmortem_exists
+  fi
 
   print_summary
 }
