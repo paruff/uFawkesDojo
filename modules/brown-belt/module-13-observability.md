@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟤 Brown Belt
 **Duration**: 3-4 hours
-**Prerequisites**: Modules 9-12 complete, uFawkesObs v1.0.0 running locally
+**Prerequisites**: Modules 9-12 complete, uFawkesObs v1.1.0-rc.1 running locally
 **DORA Capabilities**: Observability, Continuous Delivery, Monitoring
 
 ---
@@ -150,7 +150,7 @@ You'll deploy the uFawkesObs stack, explore the pre-built observability componen
 
 **Time Estimate**: 60 minutes
 **Difficulty**: Advanced
-**Prerequisites**: Modules 9-12 complete, uFawkesObs v1.0.0 running locally
+**Prerequisites**: Modules 9-12 complete, uFawkesObs v1.1.0-rc.1 running locally
 
 ➡️ **[Lab 01: Observability Stack with uFawkesObs](brown-belt/module-13-observability/lab-01/instructions.md)**
 
@@ -161,7 +161,7 @@ This lab walks you through:
 3. Configuring alerting rules and Alertmanager
 3. Enabling DORA metrics profile and verifying metrics collection
 
-**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) (Docker Compose)
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose)
 
 **Validation**: `bash brown-belt/module-13-observability/lab-01/validate.sh`
 

@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟤 Brown Belt
 **Estimated Time**: 3-4 hours (30 min theory + 45 min lab + 10 min quiz)
-**Prerequisites**: Module 13 & 14 complete, uFawkesObs v1.0.0 running locally
+**Prerequisites**: Module 13 & 14 complete, uFawkesObs v1.1.0-rc.1 running locally
 **DORA Capability**: Monitoring and Observability, Service Reliability, Data-Driven Decision Making
 
 ---
@@ -82,11 +82,11 @@ This lab walks you through:
 4. Building a Grafana SLO dashboard with error budget visualization
 5. Practicing SLO-driven deployment decisions
 
-**Runs against**: uFawkesObs v1.0.0 (not released yet) (Docker Compose)
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1), a **pre-release** (Docker Compose)
 
-> **Written ahead of its stack, not yet run for real.** uFawkesObs v1.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-10-14 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Grafana's browser-only clicks were not exercised in a browser. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
-**Prerequisites**: Module 13 & 14 complete, uFawkesObs v1.0.0 running
+**Prerequisites**: Module 13 & 14 complete, uFawkesObs v1.1.0-rc.1 running
 
 **Validation**: `bash brown-belt/module-15-slis-slos/lab-01/validate.sh`
 

@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟤 Brown Belt
 **Estimated Time**: 3-4 hours (25 min theory + 60 min lab + 10 min quiz)
-**Prerequisites**: Modules 9-12 complete, uFawkesObs v1.0.0 running locally
+**Prerequisites**: Modules 9-12 complete, uFawkesObs v1.1.0-rc.1 running locally
 **DORA Capability**: Observability, Monitoring, Alerting
 
 ---

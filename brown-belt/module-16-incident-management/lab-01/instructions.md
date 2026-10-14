@@ -3,9 +3,9 @@
 **Module**: Brown Belt — Module 16: Advanced Incident Management
 **Estimated Time**: 45 minutes
 **Difficulty**: Advanced (Modules 13-15 complete required)
-**Runs against**: uFawkesObs v1.0.0 (not released yet) (Docker Compose)
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose), a **pre-release**
 
-> **Written ahead of its stack, not yet run for real.** uFawkesObs v1.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-10-14 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** The incident is real: you stop a container, the stack's own `ServiceDown` alert fires, and you investigate with the stack's own metrics and logs. The commands ran verbatim and the outputs are what they printed (your numbers and times will differ). Grafana's browser-only clicks (Explore) were not exercised: the same queries run through the Prometheus, Loki and Alertmanager APIs. The lab moves to the stable tag when uFawkesObs ships it. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -13,51 +13,34 @@
 
 By the end of this lab you will have:
 
-1. Detected and triaged an incident using uFawkesObs alerting
-2. Investigated root cause using Loki (logs), Tempo (traces), Prometheus (metrics)
-3. Mitigated the incident by applying a fix
-4. Verified resolution through uFawkesObs observability stack
-5. Documented a blameless postmortem using uFawkesObs data
-6. Practiced incident command roles and communication
+1. Caused a real incident and watched the stack detect it (`pending` then `firing`)
+2. Assigned incident roles and kept a timeline as you went
+3. Investigated with metrics (Prometheus), logs (Loki) and the host (Docker), and found why the loudest signal was not the cause
+4. Mitigated, and verified the fix in the same telemetry that found the problem
+5. Written a blameless postmortem from your own timeline
 
 ---
 
 ## Why This Lab Uses uFawkesObs
 
-This lab runs against **uFawkesObs v1.0.0** — the Observability plane of the uFawkes suite — because it provides a complete incident management platform in Docker Compose:
-
-- **Grafana** — War room dashboard, real-time metrics, alerting UI
-- **Prometheus** — Metrics storage, PromQL queries, alerting rules
-- **Loki** — Log aggregation, LogQL queries, log-based alerts
-- **Tempo** — Distributed tracing, TraceQL queries
-- **Alertmanager** — Alert routing, silencing, notification routing
-- **Alloy** — Log/metric collection (replaces Promtail)
-- **OTel Collector** — Telemetry ingestion (OTLP)
-
-No Kubernetes required — runs entirely in Docker Compose on your laptop.
+uFawkesObs ships the whole detect → investigate → verify loop in Docker Compose: **Prometheus** (metrics, alert rules), **Alertmanager** (routing), **Loki** (logs, collected by **Alloy**), **Tempo** (traces) and **Grafana** (one place to look). It also ships a `ServiceDown` alert (`up == 0` for 2 minutes), which is what this lab trips. No Kubernetes required.
 
 ---
 
 ## Prerequisites
 
-**Required**: uFawkesObs v1.0.0 running locally with full stack
+**Required**: the uFawkesObs stack from Module 13, running at `v1.1.0-rc.1`
 
 ```bash
-# Verify your stack is running
 cd ~/dojo-labs/uFawkesObs
 make status
 ```
 
-**Expected**: All services healthy (prometheus, grafana, loki, tempo, alertmanager, alloy, otel-collector, node-exporter)
+**Expected**: every container `Up`, and every health endpoint `✅`.
 
-**Required**: Modules 13, 14, 15 completed (understand observability pipeline, DORA metrics, SLI/SLO)
+**Required**: Modules 13, 14, 15 completed
 
-**Tools required** (already installed from previous modules):
-- `curl` — HTTP client
-- `jq` — JSON processor
-- `git` — version control
-- `make` — build automation
-- `docker` / `docker compose` — container orchestration
+**Tools required**: `curl`, `jq`, `docker compose`
 
 ---
 
@@ -69,302 +52,241 @@ This lab assumes you've read the [Module 16 theory](../README.md#theory--concept
 
 ## Step 1 — Detect & Triage (5 minutes)
 
-### 1.1 Trigger an Incident
+### 1.1 Cause the incident
 
-We'll simulate a SEV1 incident by sending a test alert through Alertmanager.
+Start a notes file now. The timeline for your postmortem is whatever you write down as it happens:
 
 ```bash
-# Send a test alert to Alertmanager
-curl -s -X POST http://localhost:9093/api/v2/alerts \
-  -H "Content-Type: application/json" \
-  -d '[{
-    "labels": {
-      "alertname": "HighErrorRate",
-      "severity": "sev1",
-      "service": "checkout-api",
-      "instance": "checkout-api-1",
-      "job": "checkout-api"
-    },
-    "annotations": {
-      "summary": "High error rate on checkout-api",
-      "description": "Error rate is 25% (threshold: 5%)",
-      "runbook": "https://runbooks.company.com/high-error-rate"
-    },
-    "generatorURL": "http://prometheus:9090/graph?g0.expr=rate(http_requests_total%7Bstatus%3D~%225..%22%5D%5B5m%5D%29+%2F+rate(http_requests_total%5B5m%5D)%3E0.05"
-  }]'
+echo "$(date -u +%H:%M:%S) UTC  incident start: stopping node-exporter" | tee ~/dojo-labs/incident-timeline.txt
+docker compose stop node-exporter
 ```
 
-### 1.2 Observe Alert in Alertmanager
+(You are playing both the person who breaks it and the person who responds. In a real incident you would not know the cause yet. Try to investigate as if you did not.)
 
-1. Open **http://localhost:9093** (Alertmanager UI)
-2. Verify the `HighErrorRate` alert is firing
-3. Note the `service: checkout-api` and `severity: sev1` labels
+### 1.2 Watch the alert arrive
 
-> ✅ **Checkpoint**: Alert is firing in Alertmanager with severity=sev1
+Prometheus scrapes every 15 seconds and the `ServiceDown` rule waits two minutes (`for: 2m`) before firing. Watch the state change:
 
-### 1.3 Observe in Grafana
+```bash
+for i in $(seq 1 150); do
+  s=$(curl -s --data-urlencode 'query=ALERTS{alertname="ServiceDown"}' http://localhost:9090/api/v1/query \
+    | jq -r '.data.result[] | "\(.metric.job) \(.metric.alertstate)"' | tr '\n' ' ')
+  [ "$s" = "${last:-}" ] || { echo "t+${i}s: $s"; last="$s"; }
+  sleep 1
+done
+```
 
-1. Open **http://localhost:3000** (Grafana)
-2. Navigate to **Alerting** → **Alert rules**
-3. Verify the `HighErrorRate` rule is firing
-3. Check the **Alerting** dashboard for active alerts
+**Expected**: roughly `t+26s: node-exporter pending`, then `t+141s: node-exporter firing`. Note both times in your timeline file.
 
-> ✅ **Checkpoint**: Alert visible in both Alertmanager and Grafana
+### 1.3 Observe the alert in Alertmanager
+
+```bash
+curl -s http://localhost:9093/api/v2/alerts \
+  | jq -c '.[] | select(.labels.alertname=="ServiceDown") | {job: .labels.job, severity: .labels.severity, state: .status.state, receivers: [.receivers[].name]}'
+```
+
+**Expected**: `{"job":"node-exporter","severity":"critical","state":"active","receivers":["critical-alerts"]}`. The alert is routed to `critical-alerts` because its severity is `critical`. Open **http://localhost:9093** to see the same alert in the UI.
+
+> ✅ **Checkpoint**: `ServiceDown` is firing in Alertmanager with severity `critical`. You can say how long detection took, and why (the rule's `for: 2m`).
 
 ---
 
 ## Step 2 — Triage & Incident Command (5 minutes)
 
-### 2.1 Assume Incident Commander Role
+### 2.1 Assume the Incident Commander role
 
-In a real incident, you'd:
-1. Acknowledge the alert in Alertmanager
-2. Create a war room channel (e.g., `#incident-2025-10-12-checkout`)
-3. Assemble the team (TL, Comms, Scribe)
-
-For this lab, simulate the role assignment:
+In a real incident you would acknowledge the alert, open a war room channel and bring in a Technical Lead, a Communications Lead and a Scribe. Record the assignment (the heredoc is unquoted, so the time is filled in):
 
 ```bash
-# Record your role assignments
-cat > ~/dojo-labs/incident-roles.md <<'EOF'
-# Incident: HighErrorRate on checkout-api
-# Started: $(date -u +%Y-%m-%dT%H:%M:%SZ) UTC
+cat > ~/dojo-labs/incident-roles.md <<EOF
+# Incident: ServiceDown on node-exporter
+# Declared: $(date -u +%Y-%m-%dT%H:%M:%SZ) UTC
 
 Incident Commander: @you
 Technical Lead: @yourself
 Communications Lead: @yourself
 Scribe: @yourself
 EOF
+echo "$(date -u +%H:%M:%S) UTC  alert acknowledged, roles assigned" >> ~/dojo-labs/incident-timeline.txt
 ```
 
-> ✅ **Checkpoint**: War room "created", roles assigned
+### 2.2 Decide the severity
+
+`critical` is the alert's label, not your judgement. Ask what is broken for users: node-exporter feeds host CPU, memory and disk metrics. No user-facing request fails. Call it **SEV3** (monitoring degraded, no customer impact) and write down why. Severity is the commander's call, and the alert's label is one input to it.
+
+> ✅ **Checkpoint**: Roles assigned and a severity chosen, with a reason.
 
 ---
 
 ## Step 3 — Investigation (15 minutes)
 
-### 3.1 Examine Logs in Loki
+Work from the alert inwards. Add a line to your timeline file as you learn each thing.
 
-**Open Grafana Explore → Loki**
+### 3.1 Metrics: what does Prometheus say?
 
-Run these LogQL queries to investigate:
-
-#### 3.1.1 Check error logs for the affected service
-
-```logql
-{service="checkout-api"} |= "ERROR" | json | level="error"
+```bash
+curl -s --data-urlencode 'query=up == 0' http://localhost:9090/api/v1/query \
+  | jq -c '.data.result[] | {job: .metric.job, instance: .metric.instance}'
+curl -s http://localhost:9090/api/v1/targets \
+  | jq -c '.data.activeTargets[] | select(.labels.job=="node-exporter") | {health, lastError}'
 ```
 
-**What to look for**: Error patterns, stack traces, timestamps
+**Expected**: one target down, `node-exporter`, and an error like `dial tcp: lookup node-exporter on 127.0.0.11:53: no such host`.
 
-#### 3.1.2 Find error rate spike
+Read the error: Docker's DNS no longer knows the name `node-exporter`. A container that crashed and is restarting would usually still resolve. This one is **gone from the network**.
 
-```logql
-sum(rate({service="checkout-api"} |= "ERROR" [5m]))
-/
-sum(rate({service="checkout-api"}[5m]))
+### 3.2 Logs: what did the service say?
+
+Alloy ships every container's logs to Loki. Pull the last lines from the dead container (here with the Loki API; in Grafana use **Explore → Loki** with the same query):
+
+```bash
+curl -s -G http://localhost:3100/loki/api/v1/query_range \
+  --data-urlencode 'query={container="/node-exporter"}' --data-urlencode 'limit=3' \
+  --data-urlencode "start=$(( $(date +%s) - 1800 ))000000000" \
+  | jq -r '.data.result[].values[][1]' | head -3 | cut -c1-200
 ```
 
-**Expected**: Value > 0.05 (5% error rate)
+**Expected**: lines like `level=error ... write: connection reset by peer`. Now count errors across the stack:
 
-#### 3.1.3 Find specific error messages
-
-```logql
-{service="checkout-api"} | json | level="error" | line_format "{{.timestamp}} {{.message}}"
+```bash
+curl -s -G http://localhost:3100/loki/api/v1/query \
+  --data-urlencode 'query=sum by (container) (count_over_time({service_name=~".+"} |~ "(?i)level=error" [30m]))' \
+  | jq -c '[.data.result[] | {container: .metric.container, errors: .value[1]}]'
 ```
 
-> ✅ **Checkpoint**: Identified error patterns in Loki (e.g., database connection timeouts)
+**Expected**: `/node-exporter` has thousands of error lines, far more than anything else.
 
-### 3.2 Explore Traces in Tempo
+**Pause here.** It looks like the cause. It is not: those `connection reset by peer` lines are old (look at the timestamps; they stop when the container stopped) and come from health checks hanging up. A noisy log is not a cause. A log that **ends** is a clue: the container did not log a crash or a panic before it stopped.
 
-**Open Grafana Explore → Tempo**
+### 3.3 Traces: is there a request path to follow?
 
-### 3.2.1 Search for failed traces
-
-```traceql
-{service.name="checkout-api"} && {span.status="error"} | limit 20
+```bash
+curl -s "http://localhost:3200/api/search?limit=5"
 ```
 
-### 3.2.2 Examine a failed trace
+**Expected**: `{"traces":[],"metrics":{...}}`. Nothing in this stack sends traces, so Tempo is empty, and for this incident that is the right answer: a monitoring agent that just vanished has no request path to trace. Know what each pillar can and cannot tell you.
 
-1. Click on a trace with `status=error`
-2. Examine the **span timeline** - look for:
-   - Long duration spans (> 1s)
-   - Spans with `error=true`
-   - Database calls with errors
-   - Downstream service calls failing
+### 3.4 The host: what happened to the container?
 
-### 3.2.3 TraceQL query for errors
-
-```traceql
-{service.name="checkout-api"} && {span.status="error"} | count() by (span.name)
+```bash
+docker compose ps -a node-exporter --format '{{.Name}}  {{.Status}}'
+docker inspect node-exporter --format 'status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} finished={{.State.FinishedAt}}'
 ```
 
-> ✅ **Checkpoint**: Identified failing spans (e.g., database query timeouts)
+**Expected**: `Exited (143)`, `oom=false`, and a `finished` time that matches the moment your logs stop. Exit code 143 is 128 + 15: the container received **SIGTERM** (a polite stop), it was not killed for memory and it did not crash.
 
-### 3.3 Correlate Metrics in Prometheus
+### 3.5 Conclude
 
-**Open Grafana Explore → Prometheus**
+Write the finding in your timeline file: *node-exporter was stopped (SIGTERM, exit 143), not crashed; nothing restarted it.* That is the root cause of the **alert**. The root cause of the **incident**, why it was stopped, is a postmortem question (here: you did it, but a real answer might be a deploy, an operator, or an orchestrator policy).
 
-```promql
-# Error rate for checkout-api
-sum(rate(http_requests_total{service="checkout-api",status=~"5.."}[5m]))
-/
-sum(rate(http_requests_total{service="checkout-api"}[5m]))
-
-# Latency spike
-histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service="checkout-api"}[5m]))
-
-# Database connection pool
-max(pg_stat_activity_count{service="checkout-api"})
-```
-
-> ✅ **Checkpoint**: Correlated logs (errors), traces (spans), metrics (error rate, latency)
+> ✅ **Checkpoint**: You can state what happened, name the evidence (the DNS error, the log that ended, exit 143), and say why the error-count query led you the wrong way.
 
 ---
 
 ## Step 4 — Mitigation & Resolution (10 minutes)
 
-### 4.1 Identify Root Cause
-
-Based on investigation, you determine:
-- **Root cause**: Database connection pool exhausted (max 20 connections, 50 concurrent requests)
-- **Evidence**:
-  - Loki: "connection pool exhausted" errors
-  - Tempo: Spans showing "connection pool exhausted" errors
-  - Prometheus: `pg_pool_used / pg_pool_max = 1.0`
-
-### 4.2 Execute Mitigation
-
-In a real incident, you'd scale the connection pool. For this lab, simulate the fix:
+### 4.1 Restore the service
 
 ```bash
-# Simulate the fix by updating a config (in real life: ConfigMap update + rollout)
-cat > ~/dojo-labs/mitigation.yml <<'EOF'
-# Mitigation: Increase database connection pool from 20 to 100
-# File: config/checkout-api.yaml
-# Change:
-#   pool_size: 20
-# To:
-#   pool_size: 100
-EOF
-
-# Simulate applying the fix (in real life: ConfigMap update + rollout restart)
-echo "Mitigation applied: connection_pool_size 20 -> 100"
-echo "Rolling restart initiated..."
-
-# Wait for rollout (simulated)
-sleep 5
-echo "Rollout complete"
+echo "$(date -u +%H:%M:%S) UTC  mitigation: starting node-exporter" >> ~/dojo-labs/incident-timeline.txt
+docker compose start node-exporter
 ```
 
-### 4.3 Verify Resolution
+### 4.2 Verify in the same telemetry
 
 ```bash
-# Verify error rate drops
-curl -s "http://localhost:9090/api/v1/query?query=sum(rate(http_requests_total{service=\"checkout-api\",status=~\"5..\"}[5m]))/sum(rate(http_requests_total{service=\"checkout-api\"}[5m]))" | jq '.data.result[0].value[1]'
-
-# Check latency recovery
-curl -s "http://localhost:9090/api/v1/query?query=histogram_quantile(0.95,rate(http_request_duration_seconds_bucket{service=\"checkout-api\"}[5m]))" | jq '.data.result[0].value[1]'
+for i in $(seq 1 40); do
+  v=$(curl -s --data-urlencode 'query=up{job="node-exporter"}' http://localhost:9090/api/v1/query | jq -r '.data.result[0].value[1]')
+  [ "$v" = 1 ] && { echo "up=1 at +${i}s"; break; }
+  sleep 1
+done
 ```
 
-> ✅ **Checkpoint**: Error rate < 1%, latency back to normal
+**Expected**: `up=1 at +5s` or thereabouts.
+
+Then wait for the alert itself to clear. It stays `firing` until Prometheus next evaluates the rule:
+
+```bash
+for i in $(seq 1 60); do
+  n=$(curl -s -G http://localhost:9090/api/v1/query --data-urlencode 'query=ALERTS{alertname="ServiceDown",alertstate="firing"}' | jq '.data.result | length')
+  [ "$n" = 0 ] && { echo "ServiceDown cleared"; break; }
+  sleep 2
+done
+echo "$(date -u +%H:%M:%S) UTC  resolved: up=1, alert cleared" >> ~/dojo-labs/incident-timeline.txt
+```
+
+> ✅ **Checkpoint**: `up` is 1 and the alert has cleared. "Fixed" means the telemetry that raised the alarm now says so, not that the command ran.
 
 ---
 
-## Step 5 — Postmortem (5 minutes)
+## Step 5 — Postmortem (10 minutes)
 
-### 5.1 Create Postmortem Document
+Write a blameless postmortem from your timeline file. The template below has `<fill in …>` markers. Replace every one of them; the validation script rejects the file while any remain.
 
-Using the uFawkesObs blameless postmortem template:
+### 5.1 Create the postmortem
 
 ```bash
+cat ~/dojo-labs/incident-timeline.txt
 cat > ~/dojo-labs/postmortem-$(date -u +%Y%m%d).md <<'EOF'
-# Postmortem: Checkout API High Error Rate
+# Postmortem: node-exporter stopped, ServiceDown fired
 
-**Date**: $(date -u +%Y-%m-%d)
-**Duration**: 23 minutes
-**Severity**: SEV1
-**Impact**: 15% of checkout requests failed (500 errors)
+**Date**: <fill in date>
+**Duration**: <fill in minutes from start to resolved>
+**Severity**: <fill in the severity you chose, and why>
+**Impact**: <fill in what stopped working, and for whom>
 
 ## Timeline
 
 | Time (UTC) | Event |
 |------------|-------|
-| 14:22 UTC | Alert fired: HighErrorRate on checkout-api (25% error rate) |
-| 14:23 UTC | Alert acknowledged, war room created |
-| 14:24 UTC | IC assigned, war room created |
-| 14:25 UTC | Investigation started (Loki, Tempo, Prometheus) |
-| 14:30 UTC | Root cause identified: DB connection pool exhausted |
-| 14:32 UTC | Mitigation: Increase DB connection pool from 20 to 100 |
-| 14:35 UTC | ConfigMap updated, rollout initiated |
-| 14:38 UTC | Error rate dropping |
-| 14:40 UTC | Error rate < 1%, latency normal |
-| 14:45 UTC | Incident resolved |
+| <fill in> | Incident start |
+| <fill in> | Alert `pending` |
+| <fill in> | Alert `firing`, routed to `critical-alerts` |
+| <fill in> | Acknowledged, roles assigned |
+| <fill in> | Root cause found |
+| <fill in> | Mitigation applied |
+| <fill in> | Resolved: `up` back to 1 |
 
 ## Root Cause
 
-**Primary**: Database connection pool exhausted (pool=20, peak=50 concurrent requests)
+**Primary**: <fill in: what happened to the container, with the evidence>
 
-**Contributing Factors**:
-1. No connection pool monitoring/alerting
-2. No auto-scaling for connection pool
-3. Load test didn't simulate peak traffic
-4. Connection pool size not reviewed in 6 months
+**Contributing factors**:
+1. <fill in>
 
 ## Root Cause Analysis (5 Whys)
 
-1. **Why** 500 errors? → DB connection pool exhausted
-2. **Why** pool exhausted? → 50 concurrent requests > pool size 20
-3. **Why** pool too small? → Not reviewed since initial deploy
-4. **Why** not monitored? → No alert on pool utilization
-4. **Why** no alert? → Not considered critical metric
+1. **Why** did the alert fire? → <fill in>
+2. **Why** was the target down? → <fill in>
+3. **Why** was the container stopped? → <fill in>
+4. **Why** did nothing restart it? → <fill in>
+5. **Why** is that acceptable (or not)? → <fill in>
 
 ## Resolution
 
-1. Increased pool size from 20 to 100 (ConfigMap update + rollout)
-2. Added connection pool utilization alert (>80% for 5m)
-4. Added pool size to capacity planning checklist
+<fill in: what you did and how you verified it>
 
-## What Went Well ✅
-- Detection: < 1 min (automated alert)
-- Communication: Clear war room, regular updates
-- Mitigation: Correct fix applied quickly (5 min)
-- Resolution: 23 minutes total (within SEV1 target < 30 min)
+## What Went Well
+- <fill in>
 
 ## What Went Wrong
-- No proactive monitoring on connection pool
-- No auto-scaling for DB pool
-- No capacity planning for traffic spikes
+- <fill in: for example, the loudest log was a red herring; detection took two minutes by design>
 
 ## Action Items
 
 | Action | Owner | Deadline | Status |
 |--------|-------|----------|--------|
-| Add connection pool utilization alert (>80% for 5m) | @sre-team | 1 week | ☐ |
-| Implement auto-scaling for DB pool | @infra-team | 2 weeks | ☐ |
-| Load test with 3x expected traffic | @qa-team | 2 weeks | ☐ |
-| Document pool sizing formula | @sre-lead | 1 week | ☐ |
-
----
+| <fill in> | <fill in> | <fill in> | ☐ |
 
 ## Lessons Learned
 
-1. **Monitor resources, not just symptoms** — pool exhaustion caused 500s, but pool usage was invisible
-2. **Auto-scale critical resources** — manual scaling too slow for traffic spikes
-3. **Test at 3x expected load** — peak was 3x average, pool sized for average
-
----
-
-## Follow-up
-
-- **Postmortem review**: Next team meeting
-- **Action item tracking**: GitHub Issues #1234, #1235, #1236
-- **Follow-up review**: 2 weeks
+1. <fill in>
 EOF
 ```
 
-> ✅ **Checkpoint**: Postmortem created with timeline, RCA, action items
+Open the file and fill it in. Write about the system, not about a person: assume everyone acted on what they knew at the time, and ask what let the failure happen.
+
+> ✅ **Checkpoint**: Postmortem written, every placeholder replaced.
 
 ---
 
@@ -372,36 +294,24 @@ EOF
 
 ```bash
 # From your uFawkesDojo checkout
-cd /path/to/uFawkesDojo
-bash brown-belt/module-16-incident-management/lab-01/validate.sh
+UF_OBS_DIR=~/dojo-labs/uFawkesObs bash brown-belt/module-16-incident-management/lab-01/validate.sh
 ```
 
 **Expected output** (all checks pass):
 
 ```
-[INFO] Starting Brown Belt Module 16 Lab 01 validation...
+[✓] Prerequisites: curl, jq, git, make, docker installed
+[✓] uFawkesObs Stack: All 8 core services healthy
+[✓] Alert Pipeline: ServiceDown rule is loaded and Alertmanager answers
+[✓] Grafana Datasources: Prometheus, Loki, Tempo and Alertmanager are configured
+[✓] Loki Logs: <n> node-exporter log lines in the last 24h
+[✓] Tempo: trace search answers (it may well return no traces: see Step 3.3)
+[✓] Service Restored: up{job="node-exporter"} = 1
+[✓] Postmortem Document: postmortem-<date>.md has all 6 sections and no '<fill in' placeholders left
 
-[✓] Prerequisites: curl, jq, git, make installed
-[✓] uFawkesObs Stack: all 12 services healthy
-[✓] Alertmanager: Alert firing (HighErrorRate)
-[✓] Grafana: Datasources configured (Prometheus, Loki, Tempo, Alertmanager)
-[✓] Loki: Error logs queryable
-[✓] Tempo: Traces searchable
-[✓] Prometheus: Metrics queryable
-[✓] Alerting: Rules loaded, firing
-[✓] Grafana Dashboard: Incident dashboard exists
-[✓] Postmortem: Document exists with required sections
-
-==========================================
-Total Tests: 11
-Passed: 11
-Failed: 0
-
-[✓] All tests passed! ✅
-
-🎉 Congratulations! You've completed Brown Belt Module 16 Lab 01.
-   You've executed a full incident response lifecycle.
-   Brown Belt Complete! 🎉
+Total Tests : 8
+Passed      : 8
+Failed      : 0
 ```
 
 ---
@@ -409,18 +319,12 @@ Failed: 0
 ## Clean Up
 
 ```bash
-# Resolve the alert (simulate resolution)
-curl -s -X POST http://localhost:9093/api/v2/alerts \
-  -H "Content-Type: application/json" \
-  -d '[{"status": "resolved", "labels": {"alertname": "HighErrorRate", "service": "checkout-api"}}]'
-
-# Clean up test files
-rm -f ~/dojo-labs/incident-roles.md ~/dojo-labs/mitigation.yml ~/dojo-labs/postmortem-*.md
-
-# Stop the stack (optional)
 cd ~/dojo-labs/uFawkesObs
-make down
+docker compose start node-exporter    # in case it is still stopped
+rm -f ~/dojo-labs/incident-roles.md ~/dojo-labs/incident-timeline.txt ~/dojo-labs/postmortem-*.md
 ```
+
+`make down` does not stop this stack at this version: it runs `docker compose down` without the profiles the stack started with ([uFawkesObs#617](https://github.com/paruff/uFawkesObs/issues/617)). To stop it, use `docker compose --profile '*' down`.
 
 ---
 
@@ -428,11 +332,12 @@ make down
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| Alert not firing | Alert rule syntax error | `promtool check rules /path/to/rules.yml` |
+| Alert never leaves `pending` | The `for: 2m` has not run out | Wait; it fires about two minutes after the first scrape that failed |
+| No `ServiceDown` in Alertmanager | Alert not yet `firing`, or routed elsewhere | `curl -s http://localhost:9093/api/v2/alerts \| jq .`; check Prometheus `/alerts` |
 | No logs in Loki | Alloy not collecting | `docker compose logs alloy` |
-| No traces in Tempo | OTel collector not receiving | `docker compose logs otel-collector` |
-| Grafana datasource not working | Service not ready | Wait for healthcheck, check `make status` |
-| Alert not firing | Rule syntax / threshold | Check rule syntax, `promtool check rules` |
+| Loki query returns nothing | Query window starts after the logs stopped | Widen `start`, or use `[30m]` instead of `[5m]` |
+| Validation: Grafana datasources fail | No Grafana password found | `export GRAFANA_PASSWORD=...` (it is in `.env`) or set `UF_OBS_DIR` |
+| Validation: postmortem fails | A `<fill in` marker is left, or a section is missing | `grep -n 'fill in' ~/dojo-labs/postmortem-*.md` |
 
 ---
 
@@ -441,12 +346,12 @@ make down
 Write your answers down — the act of writing (not just thinking) strengthens retention.
 
 1. What are the 4 ICS roles in incident response?
-2. What uFawkesObs component collects logs and forwards to Loki?
-3. What is the 5 Whys technique?
-4. What makes a postmortem "blameless"?
-5. What is a burn rate of 10x?
+2. Which uFawkesObs component collects container logs and ships them to Loki?
+3. Why did detection take about two minutes, and what would shorten it?
+4. Why was the loudest log line not the root cause?
+5. What makes a postmortem "blameless"?
 
-(Suggested answers: 1=IC, TL, Comms, Scribe; 2=Alloy; 3=Ask "why" 5 times; 4=Focus on systems not people; 5=Consuming budget 10x faster)
+(Suggested answers: 1 = Incident Commander, Technical Lead, Communications Lead, Scribe; 2 = Alloy; 3 = the rule's `for: 2m`; a shorter `for:` detects faster but pages on blips; 4 = it was old noise from health checks, and the useful clue was a log that ended, plus exit code 143; 5 = it looks at systems and process, assumes good intent, and asks what allowed the failure)
 
 ---
 
@@ -454,37 +359,23 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 
 | Component | Purpose |
 |-----------|---------|
-| **Alertmanager** | Alert routing, silencing, notification routing |
-| **Loki** | Log aggregation, LogQL queries |
-| **Tempo** | Distributed tracing, root cause tracing |
-| **Prometheus** | Metrics, PromQL, alerting rules, recording rules |
-| **Grafana** | War room dashboard, visualization, alerting UI |
-| **Alertmanager** | Alert routing, silencing, notifications |
-| **Alloy** | Log/metric collection (replaces Promtail) |
-| **OTel Collector** | Telemetry ingestion (OTLP) |
+| **Prometheus** | `up`, the `ServiceDown` rule, scrape target errors |
+| **Alertmanager** | Routing the alert to `critical-alerts` |
+| **Loki** | The container's logs, and an error count that misled |
+| **Tempo** | Confirming there was no request path to trace |
+| **Alloy** | Collecting container logs into Loki |
+| **Docker** | Exit code 143, the evidence for what happened to the container |
+| **Grafana** | The place you would run the same queries in Explore |
 
 ---
 
 ## What You've Accomplished
 
-🎉 **Congratulations!** You've completed a full incident response lifecycle with uFawkesObs:
-
-- ✅ **Detected** incident via automated alerting
-- ✅ **Triaged** with Incident Command System roles
-- ✅ **Investigated** using Loki (logs), Tempo (traces), Prometheus (metrics)
-- ✅ **Mitigated** root cause with targeted fix
-- ✅ **Verified** resolution through observability stack
-- ✅ **Documented** blameless postmortem with timeline, RCA, action items
-
----
-
-## Retrieval Check Answers
-
-1. **ICS Roles**: Incident Commander, Technical Lead, Communications Lead, Scribe
-2. **Log Collector**: Alloy (replaces Promtail)
-3. **5 Whys**: Ask "why" five times to reach root cause
-4. **Blameless**: Focus on systems/processes, assume good intent, learn not punish
-5. **Burn Rate 10x**: Consuming error budget 10x faster than sustainable
+- ✅ **Detected** a real incident through the stack's own alerting
+- ✅ **Triaged** with ICS roles and a severity you argued for
+- ✅ **Investigated** with metrics, logs and the host, and caught a misleading signal
+- ✅ **Mitigated** and **verified** in the telemetry that raised the alarm
+- ✅ **Documented** a blameless postmortem built from your own timeline
 
 ---
 

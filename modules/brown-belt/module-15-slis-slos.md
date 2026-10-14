@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟤 Brown Belt
 **Duration**: 3-4 hours
-**Prerequisites**: Module 13 (Observability with uFawkesObs) and Module 14 (DORA Metrics Deep Dive) complete, uFawkesObs v1.0.0 running locally
+**Prerequisites**: Module 13 (Observability with uFawkesObs) and Module 14 (DORA Metrics Deep Dive) complete, uFawkesObs v1.1.0-rc.1 running locally
 **DORA Capabilities**: Monitoring and Observability, Service Reliability, Data-Driven Decision Making, Customer Focus
 
 ---
@@ -479,7 +479,7 @@ You'll implement a complete SLI/SLO/Error Budget system for a sample service usi
 
 **Prerequisites**:
 - ✅ Module 13 & 14 complete
-- ✅ uFawkesObs v1.0.0 running locally
+- ✅ uFawkesObs v1.1.0-rc.1 running locally
 - ✅ Module 13 (Observability) and Module 14 (DORA) complete
 
 ➡️ **[Lab 01: Implementing SLIs/SLOs/Error Budgets](brown-belt/module-15-slis-slos/lab-01/instructions.md)**
@@ -492,7 +492,7 @@ This lab walks you through:
 5. Building Grafana SLO dashboard with error budget visualization
 6. Practicing SLO-driven deployment decisions
 
-**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) (Docker Compose)
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose)
 
 **Validation**: `bash brown-belt/module-15-slis-slos/lab-01/validate.sh`
 

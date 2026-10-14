@@ -3,9 +3,9 @@
 **Module**: Brown Belt — Module 15: SLIs, SLOs, and Error Budgets
 **Estimated Time**: 45 minutes
 **Difficulty**: Advanced (Modules 13-14 complete required)
-**Runs against**: uFawkesObs v1.0.0 (not released yet) (Docker Compose)
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose), a **pre-release**
 
-> **Written ahead of its stack, not yet run for real.** uFawkesObs v1.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-10-14 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Every rule, query and command below ran verbatim, and the outputs are what they printed (your numbers will differ). Grafana's browser-only clicks were not exercised: the dashboard is imported through Grafana's API. The lab moves to the stable tag when uFawkesObs ships it. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -13,737 +13,317 @@
 
 By the end of this lab you will have:
 
-1. Created SLI recording rules for a sample service (availability, latency, error rate)
-2. Defined SLO recording rules with targets and time windows
-3. Implemented error budget recording rules with burn rate alerts
-4. Configured multi-window burn rate alerts in Alertmanager
-5. Built a Grafana SLO dashboard with error budget visualization
+1. Written SLI recording rules (availability and latency) for a real service
+2. Set an SLO target and derived its error budget and burn rate
+3. Configured multi-window burn rate alerts
+4. Spent error budget on purpose, and watched the burn rate and the alerts react
+5. Imported a Grafana SLO dashboard
 6. Practiced SLO-driven deployment decisions
 
 ---
 
 ## Why This Lab Uses uFawkesObs
 
-This lab runs against **uFawkesObs v1.0.0** — the Observability plane of the uFawkes suite — because it provides a complete SLI/SLO platform in Docker Compose:
-
-- **Prometheus** — Metrics storage, PromQL queries, recording rules, alerting
-- **Grafana** — SLO dashboards, error budget visualization
-- **Alertmanager** — Alert routing and notification
-- **Alloy** — Log collection (replaces Promtail)
-- **OTel Collector** — Telemetry ingestion (OTLP)
-- **Grafana** — Unified UI for all three pillars
-
-No Kubernetes required — runs entirely in Docker Compose on your laptop.
+uFawkesObs ships Prometheus, Grafana and Alertmanager in Docker Compose, and Prometheus already scrapes every service in it. The stack ships **no SLO rules**, so you write them. The service you measure is **Grafana's own HTTP API**: it is running, it is scraped (`grafana_http_request_duration_seconds_*`), and you can make it fail on demand by stopping Loki, one of its datasources. No Kubernetes required.
 
 ---
 
 ## Prerequisites
 
-**Required**: uFawkesObs v1.0.0 running locally (from Module 13)
+**Required**: the uFawkesObs stack from Module 13, running at `v1.1.0-rc.1`
 
 ```bash
-# Verify your stack is running
 cd ~/dojo-labs/uFawkesObs
 make status
 ```
 
-**Expected**: All services healthy (prometheus, grafana, loki, tempo, alertmanager, alloy, otel-collector)
+**Expected**: every container `Up`, and every health endpoint `✅`.
 
-**Required**: Modules 13 & 14 completed (understand observability pipeline and DORA metrics)
+**Required**: Modules 13 & 14 completed
 
-**Tools required** (already installed from previous modules):
-- `curl` — HTTP client
-- `jq` — JSON processor
-- `git` — version control
-- `make` — build automation
+**Tools required**: `curl`, `jq`, `docker compose`
+
+Set the Grafana password once for this shell (it is in `.env`):
+
+```bash
+export GRAFANA_PASSWORD=$(grep -E '^GRAFANA_ADMIN_PASSWORD=' .env | cut -d= -f2-)
+```
 
 ---
 
 ## Step 0 — Read the Theory First (if you haven't)
 
-This lab assumes you've read the [Module 15 theory](../README.md#theory--concepts-30-minutes) up through "Error Budget Policies". You should be able to name the three pillars of observability, define SLI/SLO/Error Budget, and explain burn rate.
+This lab assumes you've read the [Module 15 theory](../README.md#theory--concepts-30-minutes) up through "Error Budget Policies". You should be able to define SLI, SLO and error budget, and explain burn rate.
 
 ---
 
-## Step 1 — Examine Existing Prometheus Rules (5 minutes)
+## Step 1 — Meet the Service and Its Metrics (5 minutes)
 
-### 1.1 Explore Prometheus Rules Directory
-
-```bash
-cd ~/dojo-labs/uFawkesObs
-ls -la config/prometheus/rules/
-```
-
-**Expected**: You'll see files like `sli-recording.rules.yml`, `slo-recording.rules.yml`, `error-budget.rules.yml`, `slo-alerts.rules.yml`
-
-### 1.2 Examine SLI Recording Rules
+### 1.1 See what the stack already watches
 
 ```bash
-cat config/prometheus/rules/sli-recording.rules.yml
+ls config/prometheus/rules/
 ```
 
-**Key observations**:
-- Recording rules for SLIs (availability, latency, error_rate) at different time windows (1h, 7d, 30d)
-- Uses `rate()` and `histogram_quantile()` for latency percentiles
-- Output metric names follow pattern: `sli:<name>:<window>`
+**Expected**: `ai-rules.yml`, `ufawkesobs-dora-metrics.yml`, `ufawkesobs-dora-regression.yml`, `ufawkesobs-self-monitoring.yml`. Nothing about SLOs. That is your job.
 
-### 1.3 Examine SLO Recording Rules
+### 1.2 Look at the raw material
+
+Grafana counts every HTTP request it answers, by status code, and times it in a histogram:
 
 ```bash
-cat config/prometheus/rules/slo-recording.rules.yml
+curl -s --data-urlencode 'query=sum by (status_code) (grafana_http_request_duration_seconds_count)' \
+  http://localhost:9090/api/v1/query | jq -r '.data.result[] | "\(.metric.status_code)  \(.value[1])"'
 ```
 
-**Key observations**:
-- Recording rules that compute SLO compliance: `slo:<name>:<window>`
-- Compares SLI against target: `sli:availability:30d >= 99.9`
-- Output: 1 (meeting SLO) or 0 (violating SLO)
+**Expected**: one line per status code, for example `200  46` and `302  8`. The numbers are counters since Grafana started.
 
-### 1.4 Examine Error Budget Rules
+An **SLI** is a ratio of good events to all events. Two come out of this data:
 
-```bash
-cat config/prometheus/rules/error-budget.rules.yml
-```
+- **Availability**: requests that did not answer `5xx`, divided by all requests
+- **Latency**: requests answered in 500 ms or less (the `le="0.5"` histogram bucket), divided by all requests
 
-**Key observations**:
-- Error budget remaining: `1 - (SLO - SLI) / (1 - SLO_target)`
-- Burn rate calculations for 1h and 6h windows
-- Remaining budget percentage: `100 * (1 - (SLO - SLI) / (1 - SLO_target))`
-
-### 1.5 Examine SLO Alert Rules
-
-```bash
-cat config/prometheus/rules/slo-alerts.rules.yml
-```
-
-**Key observations**:
-- Multi-window burn rate alerts (1h, 6h, 24h)
-- Fast burn alerts (1h window, high threshold)
-- Slow burn alerts (6h/24h windows, lower threshold)
-- SLO breach alerts (approaching SLO, exhausted budget)
+> ✅ **Checkpoint**: You can see the status-code counters, and say which events are "good" for each SLI.
 
 ---
 
-## Step 2 — Add SLI Recording Rules for a Sample Service (10 minutes)
+## Step 2 — Add SLI Recording Rules (10 minutes)
 
-### 2.1 Create SLI Recording Rules for a Sample Service
-
-We'll create SLI recording rules for a sample "payment-api" service. In uFawkesObs, recording rules are defined in `config/prometheus/rules/`.
+### 2.1 Create the rules file
 
 ```bash
-cat > ~/dojo-labs/sli-recording-payment.yaml <<'EOF'
+cat > config/prometheus/rules/dojo-slo-rules.yml <<'EOF'
 groups:
-  - name: sli_recording_payment_api
-    interval: 30s
+  - name: dojo-sli-recording
+    interval: 15s
     rules:
-      # Availability SLI (1 hour window)
-      - record: sli:payment-api:availability:1h
+      # SLI 1: availability = share of requests that did not answer 5xx
+      - record: sli:grafana_api:availability:ratio_5m
         expr: |
-          sum(rate(http_requests_total{service="payment-api",status!~"5.."}[1h]))
-          /
-          sum(rate(http_requests_total{service="payment-api"}[1h]))
-          * 100
-
-      # Availability SLI (7 day window)
-      - record: sli:payment-api:availability:7d
-        expr: |
-          sum(rate(http_requests_total{service="payment-api",status!~"5.."}[7d]))
-          /
-          sum(rate(http_requests_total{service="payment-api"}[7d]))
-          * 100
-
-      # Availability SLI (30 day window)
-      - record: sli:payment-api:availability:30d
-        expr: |
-          sum(rate(http_requests_total{service="payment-api",status!~"5.."}[30d]))
-          /
-          sum(rate(http_requests_total{service="payment-api"}[30d]))
-          * 100
-
-      # Latency SLI (p95, 1 hour window)
-      - record: sli:payment-api:latency_p95:1h
-        expr: |
-          histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{service="payment-api"}[1h])) by (le)
+          1 - (
+            (sum(rate(grafana_http_request_duration_seconds_count{status_code=~"5.."}[5m])) or vector(0))
+            / sum(rate(grafana_http_request_duration_seconds_count[5m]))
           )
-
-      # Latency SLI (p95, 7 day window)
-      - record: sli:payment-api:latency_p95:7d
+      - record: sli:grafana_api:availability:ratio_1h
         expr: |
-          histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{service="payment-api"}[7d])) by (le)
+          1 - (
+            (sum(rate(grafana_http_request_duration_seconds_count{status_code=~"5.."}[1h])) or vector(0))
+            / sum(rate(grafana_http_request_duration_seconds_count[1h]))
           )
-
-      # Latency SLI (p99, 7 day window)
-      - record: sli:payment-api:latency_p99:7d
+      # SLI 2: latency = share of requests answered in 500 ms or less
+      - record: sli:grafana_api:latency_500ms:ratio_5m
         expr: |
-          histogram_quantile(0.99,
-            sum(rate(http_request_duration_seconds_bucket{service="payment-api"}[7d])) by (le)
-          )
-
-      # Error Rate SLI (7 day window)
-      - record: sli:payment-api:error_rate:7d
-        expr: |
-          sum(rate(http_requests_total{service="payment-api",status=~"5.."}[7d]))
-          /
-          sum(rate(http_requests_total{service="payment-api"}[7d]))
-          * 100
+          sum(rate(grafana_http_request_duration_seconds_bucket{le="0.5"}[5m]))
+          / sum(rate(grafana_http_request_duration_seconds_count[5m]))
 EOF
 ```
 
-### 2.2 Apply the Recording Rules
+The `or vector(0)` matters: with no `5xx` at all the numerator would be empty and the whole SLI would vanish instead of reading 100%.
+
+### 2.2 Apply the rules
+
+Prometheus loads only the files named under `rule_files`:
 
 ```bash
-# Copy to Prometheus rules directory
-cp ~/dojo-labs/sli-recording-payment.yaml ~/dojo-labs/uFawkesObs/config/prometheus/rules/sli-recording-payment-api.yml
-
-# Reload Prometheus configuration
-curl -X POST http://localhost:9090/-/reload
+sed -i.bak 's#^  - "/etc/prometheus/rules/ufawkesobs-dora-regression.yml"#&\n  - "/etc/prometheus/rules/dojo-slo-rules.yml"#' config/prometheus/prometheus.yaml
+docker compose exec -T prometheus promtool check rules /etc/prometheus/rules/dojo-slo-rules.yml
+curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
 ```
 
-### 2.3 Verify Recording Rules
+**Expected**: `SUCCESS: 3 rules found` and `reload HTTP 200`.
+
+### 2.3 Send steady traffic and verify
+
+An SLI needs traffic. Start a background loop that calls Grafana once a second for ten minutes:
 
 ```bash
-# Check that rules are loaded
-curl -s "http://localhost:9090/api/v1/rules" | jq '.data.groups[] | select(.name=="sli_recording_payment_api")'
-
-# Query the recorded SLIs
-curl -s "http://localhost:9090/api/v1/query?query=sli:payment-api:availability:1h" | jq '.data.result'
-curl -s "http://localhost:9090/api/v1/query?query=sli:payment-api:latency_p95:7d" | jq '.data.result'
-curl -s "http://localhost:9090/api/v1/query?query=sli:payment-api:error_rate:7d" | jq '.data.result'
+( for i in $(seq 1 600); do curl -s -o /dev/null -u "admin:$GRAFANA_PASSWORD" http://localhost:3000/api/health; sleep 1; done ) &
 ```
 
-> ✅ **Checkpoint**: SLI recording rules are active and returning values.
+Wait about a minute, then:
+
+```bash
+for q in sli:grafana_api:availability:ratio_5m sli:grafana_api:latency_500ms:ratio_5m; do
+  curl -s --data-urlencode "query=$q" http://localhost:9090/api/v1/query | jq -r '.data.result[0].value[1]'
+done
+```
+
+**Expected**: `1` and `1`. Everything succeeded and everything was fast.
+
+> ✅ **Checkpoint**: Both SLIs read 1 (100%).
 
 ---
 
-## Step 3 — Define SLO Recording Rules (10 minutes)
+## Step 3 — Set the SLO and Derive the Error Budget (10 minutes)
 
-### 3.1 Create SLO Recording Rules
+An **SLO** is a target for an SLI. Choose **99.5%** availability. The **error budget** is what the target leaves over: `1 - 0.995 = 0.5%` of requests may fail. The **burn rate** says how fast you spend it: `(1 - SLI) / (1 - target)`. A burn rate of 1 spends the budget exactly as fast as the window refills it; 10 spends it ten times too fast.
+
+### 3.1 Append the budget rules
 
 ```bash
-cat > ~/dojo-labs/slo-recording-payment.yaml <<'EOF'
-groups:
-  - name: slo_recording_payment_api
-    interval: 1m
+cat >> config/prometheus/rules/dojo-slo-rules.yml <<'EOF'
+
+  - name: dojo-slo-error-budget
+    interval: 15s
     rules:
-      # Availability SLO (99.9% over 30 days)
-      - record: slo:payment-api:availability:30d
-        expr: |
-          sli:payment-api:availability:30d >= 99.9
-
-      # Availability SLO (7 day window)
-      - record: slo:payment-api:availability:7d
-        expr: sli:payment-api:availability:7d >= 99.9
-
-      # Latency SLO (p95 <= 500ms over 7 days)
-      - record: slo:payment-api:latency_p95:7d
-        expr: sli:payment-api:latency_p95:7d <= 500
-
-      # Latency SLO (p99 <= 1000ms over 7 days)
-      - record: slo:payment-api:latency_p99:7d
-        expr: sli:payment-api:latency_p99:7d <= 1000
-
-      # Error Rate SLO (< 0.1% over 30 days)
-      - record: slo:payment-api:error_rate:30d
-        expr: sli:payment-api:error_rate:30d <= 0.1
+      # The SLO target is a number you choose; 99.5% leaves a 0.5% error budget
+      - record: slo:grafana_api:availability:target
+        expr: vector(0.995)
+      # Burn rate: how fast the budget is spent. 1 = exactly on budget.
+      - record: error_budget:grafana_api:availability:burn_rate_5m
+        expr: (1 - sli:grafana_api:availability:ratio_5m) / (1 - slo:grafana_api:availability:target)
+      - record: error_budget:grafana_api:availability:burn_rate_1h
+        expr: (1 - sli:grafana_api:availability:ratio_1h) / (1 - slo:grafana_api:availability:target)
 EOF
+docker compose exec -T prometheus promtool check rules /etc/prometheus/rules/dojo-slo-rules.yml
+curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
 ```
 
-### 3.2 Apply SLO Recording Rules
+**Expected**: `SUCCESS: 6 rules found` and `reload HTTP 200`.
+
+### 3.2 Verify
+
+After about a minute:
 
 ```bash
-cp ~/dojo-labs/slo-recording-payment.yaml ~/dojo-labs/uFawkesObs/config/prometheus/rules/slo-recording-payment-api.yml
-curl -X POST http://localhost:9090/-/reload
+curl -s --data-urlencode 'query=error_budget:grafana_api:availability:burn_rate_5m' \
+  http://localhost:9090/api/v1/query | jq -r '.data.result[0].value[1]'
 ```
 
-### 3.3 Verify SLO Recording Rules
+**Expected**: `0`. No failures, no budget spent.
 
-```bash
-# Check SLO compliance (1 = meeting, 0 = violating)
-curl -s "http://localhost:9090/api/v1/query?query=slo:payment-api:availability:30d" | jq '.data.result'
-curl -s "http://localhost:9090/api/v1/query?query=slo:payment-api:latency_p95:7d" | jq '.data.result'
-curl -s "http://localhost:9090/api/v1/query?query=slo:payment-api:error_rate:30d" | jq '.data.result'
-```
-
-> ✅ **Checkpoint**: All SLOs show `1` (meeting targets) or `0` (violating).
+> ✅ **Checkpoint**: Burn rate reads 0, and you can explain why `0.5%` is the budget.
 
 ---
 
-## Step 4 — Configure Error Budget Recording Rules (10 minutes)
+## Step 4 — Configure Multi-Window Burn Rate Alerts (10 minutes)
 
-### 4.1 Create Error Budget Recording Rules
+One window is a bad alarm: a short one flaps on blips, a long one reacts late. Require **both** windows to burn fast before paging.
+
+### 4.1 Append the alert rules
 
 ```bash
-cat > ~/dojo-labs/error-budget-payment.yaml <<'EOF'
-groups:
-  - name: error_budget_payment_api
-    interval: 1m
+cat >> config/prometheus/rules/dojo-slo-rules.yml <<'EOF'
+
+  - name: dojo-slo-alerts
+    interval: 15s
     rules:
-      # Availability Error Budget Remaining (30d window)
-      - record: error_budget:payment-api:availability:remaining_percent:30d
+      # Multi-window: both the short and the long window must burn fast
+      - alert: DojoAvailabilityFastBurn
         expr: |
-          (
-            100 - (
-              (99.9 - sli:payment-api:availability:30d) / (100 - 99.9) * 100
-            )
-          )
-
-      # Availability Error Budget Consumed
-      - record: error_budget:payment-api:availability:consumed_percent:30d
-        expr: 100 - error_budget:payment-api:availability:remaining_percent:30d
-
-      # Availability Burn Rate (1 hour window)
-      - record: error_budget:payment-api:availability:burn_rate_1h
-        expr: |
-          (100 - sli:payment-api:availability:1h) / (100 - 99.9)
-
-      # Availability Burn Rate (6 hour window)
-      - record: error_budget:payment-api:availability:burn_rate_6h
-        expr: |
-          (100 - sli:payment-api:availability:6h) / (100 - 99.9)
-
-      # Availability Burn Rate (24 hour window)
-      - record: error_budget:payment-api:availability:burn_rate_24h
-        expr: |
-          (100 - sli:payment-api:availability:24h) / (100 - 99.9)
-
-      # Error Rate Error Budget Remaining (30d)
-      - record: error_budget:payment-api:error_rate:remaining_percent:30d
-        expr: |
-          (
-            1 - (sli:payment-api:error_rate:30d / 0.1)
-          ) * 100
-EOF
-```
-
-### 4.2 Apply Error Budget Rules
-
-```bash
-cp ~/dojo-labs/error-budget-payment.yaml ~/dojo-labs/uFawkesObs/config/prometheus/rules/error-budget-payment-api.yml
-curl -X POST http://localhost:9090/-/reload
-```
-
-### 4.3 Verify Error Budget Rules
-
-```bash
-# Check error budget remaining
-curl -s "http://localhost:9090/api/v1/query?query=error_budget:payment-api:availability:remaining_percent:30d" | jq '.data.result'
-
-# Check burn rates
-curl -s "http://localhost:9090/api/v1/query?query=error_budget:payment-api:availability:burn_rate_1h" | jq '.data.result'
-curl -s "http://localhost:9090/api/v1/query?query=error_budget:payment-api:availability:burn_rate_6h" | jq '.data.result'
-```
-
-> ✅ **Checkpoint**: Error budget metrics show reasonable values (e.g., 100% remaining if no errors, burn rates ~1x).
-
----
-
-## Step 5 — Configure Multi-Window Burn Rate Alerts (10 minutes)
-
-### 5.1 Create SLO Alert Rules
-
-```bash
-cat > ~/dojo-labs/slo-alerts-payment.yaml <<'EOF'
-groups:
-  - name: slo_alerts_payment_api
-    interval: 30s
-    rules:
-      # Fast burn alert (1 hour window) - Critical
-      - alert: PaymentAPI_FastBurnRate
-        expr: |
-          error_budget:payment-api:availability:burn_rate_1h > 14.4
-        for: 5m
+          error_budget:grafana_api:availability:burn_rate_5m > 14.4
+          and error_budget:grafana_api:availability:burn_rate_1h > 14.4
+        for: 1m
         labels:
           severity: critical
-          slo: payment-api-availability
         annotations:
-          summary: "Payment API: Critical burn rate (1h) - will exhaust budget in 2 days"
-          description: "Burn rate is {{ $value }}x normal. Budget exhausted in ~2 days."
-
-      # Medium burn alert (6 hour window) - Warning
-      - alert: PaymentAPI_MediumBurnRate
+          summary: "Grafana API is spending its error budget 14x too fast"
+          description: "5m burn rate {{ $value | printf \"%.1f\" }}x"
+      - alert: DojoAvailabilitySlowBurn
         expr: |
-          error_budget:payment-api:availability:burn_rate_6h > 6
-          and
-          error_budget:payment-api:availability:remaining_percent:30d < 50
-        for: 30m
+          error_budget:grafana_api:availability:burn_rate_5m > 1
+          and error_budget:grafana_api:availability:burn_rate_1h > 1
+        for: 2m
         labels:
           severity: warning
-          slo: payment-api-availability
         annotations:
-          summary: "Payment API: High burn rate with low remaining budget"
-          description: "6h burn rate is {{ $value }}x, budget remaining: {{ $value | printf \"%.1f\" }}%"
-
-      # Slow burn alert (24 hour window) - Warning
-      - alert: PaymentAPI_SlowBurnRate
-        expr: |
-          error_budget:payment-api:availability:burn_rate_24h > 2
-          and
-          error_budget:payment-api:availability:remaining_percent:30d < 30
-        for: 1h
-        labels:
-          severity: warning
-          slo: payment-api-availability
-        annotations:
-          summary: "Payment API: Sustained burn rate with low budget"
-          description: "24h burn rate {{ $value }}x, {{ $value }}% budget remaining"
-
-      # SLO breach alert (approaching SLO)
-      - alert: PaymentAPI_SLOApproachingBreach
-        expr: |
-          slo:payment-api:availability:30d == 0
-        for: 1h
-        labels:
-          severity: critical
-          slo: payment-api-availability
-        annotations:
-          summary: "Payment API Availability SLO breached"
-          description: "Availability SLO violated for 30-day window"
-
-      # Error budget exhausted
-      - alert: PaymentAPI_ErrorBudgetExhausted
-        expr: |
-          error_budget:payment-api:availability:remaining_percent:30d <= 0
-        for: 5m
-        labels:
-          severity: critical
-          slo: payment-api-availability
-        annotations:
-          summary: "Payment API Error Budget Exhausted"
-          description: "Error budget exhausted. Deploy freeze in effect per error budget policy."
+          summary: "Grafana API is spending its error budget faster than it earns it"
+          description: "5m burn rate {{ $value | printf \"%.1f\" }}x"
 EOF
+docker compose exec -T prometheus promtool check rules /etc/prometheus/rules/dojo-slo-rules.yml
+curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
 ```
 
-### 5.2 Apply Alert Rules
+**Expected**: `SUCCESS: 8 rules found` and `reload HTTP 200`.
 
-```bash
-cp ~/dojo-labs/slo-alerts-payment.yaml ~/dojo-labs/uFawkesObs/config/prometheus/rules/slo-alerts-payment-api.yml
-curl -X POST http://localhost:9090/-/reload
-```
+(`14.4` is the standard fast-burn threshold: at that rate a 30-day budget is gone in about two days. These windows are short so the lab can show you the result in minutes; production uses longer ones.)
 
-### 5.3 Verify Alert Rules
+### 4.2 Verify
 
-```bash
-# Check alert rules loaded
-curl -s "http://localhost:9090/api/v1/rules" | jq '.data.groups[] | select(.name=="slo_alerts_payment_api")'
+Open **http://localhost:9090/alerts** and find `DojoAvailabilityFastBurn` and `DojoAvailabilitySlowBurn`, both **inactive**.
 
-# Check Alertmanager
-curl -s http://localhost:9093/api/v2/alerts | jq '.[] | select(.labels.alertname | test("PaymentAPI"))'
-```
-
-> ✅ **Checkpoint**: Alert rules loaded and visible in Prometheus/Alertmanager.
+> ✅ **Checkpoint**: Both alerts are loaded and inactive.
 
 ---
 
-## Step 6 — Build Grafana SLO Dashboard (10 minutes)
+## Step 5 — Spend Some Error Budget (10 minutes)
 
-### 6.1 Create Dashboard JSON
-
-```bash
-cat > ~/dojo-labs/slo-dashboard-payment.json <<'EOF'
-{
-  "dashboard": {
-    "title": "SLO Dashboard - Payment API",
-    "tags": ["slo", "payment-api", "error-budget"],
-    "timezone": "utc",
-    "panels": [
-      {
-        "id": 1,
-        "title": "Availability SLO (30d)",
-        "type": "gauge",
-        "targets": [
-          {
-            "expr": "sli:payment-api:availability:30d",
-            "legendFormat": "Current"
-          },
-          {
-            "expr": "99.9",
-            "legendFormat": "SLO Target"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                {"value": 0, "color": "red"},
-                {"value": 99.8, "color": "yellow"},
-                {"value": 99.9, "color": "green"}
-              ]
-            },
-            "unit": "percent",
-            "min": 99,
-            "max": 100
-          },
-        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
-      },
-      {
-        "id": 2,
-        "title": "Error Budget Remaining (30d)",
-        "type": "gauge",
-        "targets": [
-          {
-            "expr": "error_budget:payment-api:availability:remaining_percent:30d",
-            "legendFormat": "Remaining"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                {"value": 0, "color": "red"},
-                {"value": 25, "color": "yellow"},
-                {"value": 50, "color": "green"}
-              ]
-            },
-            "unit": "percent"
-          },
-        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
-      },
-      {
-        "id": 3,
-        "title": "Latency SLO (p95, 7d)",
-        "type": "gauge",
-        "targets": [
-          {
-            "expr": "sli:payment-api:latency_p95:7d / 1000",
-            "legendFormat": "p95 Latency (seconds)"
-          },
-          {
-            "expr": "0.5",
-            "legendFormat": "SLO Target (0.5s)"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                {"value": 0, "color": "green"},
-                {"value": 0.5, "color": "yellow"},
-                {"value": 1.0, "color": "red"}
-              ]
-            },
-            "unit": "s"
-          },
-        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
-      },
-      {
-        "id": 4,
-        "title": "Error Budget Remaining (30d)",
-        "type": "gauge",
-        "targets": [
-          {
-            "expr": "error_budget:payment-api:availability:remaining_percent:30d",
-            "legendFormat": "Remaining %"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                {"value": 0, "color": "red"},
-                {"value": 25, "color": "yellow"},
-                {"value": 50, "color": "green"}
-              ]
-            },
-            "unit": "percent"
-          },
-        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
-      },
-      {
-        "id": 5,
-        "title": "Availability SLO Status (30d)",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "slo:payment-api:availability:30d",
-            "legendFormat": "Meeting SLO"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                {"value": 0, "color": "red"},
-                {"value": 1, "color": "green"}
-              ]
-            },
-            "mappings": [
-              {"type": "value", "options": {"0": {"text": "VIOLATING", "color": "red"}, "1": {"text": "MEETING", "color": "green"}}}
-            ]
-          }
-        },
-        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8}
-      },
-      {
-        "id": 6,
-        "title": "Burn Rate (1h)",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "error_budget:payment-api:availability:burn_rate_1h",
-            "legendFormat": "1h Burn Rate"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                {"value": 0, "color": "green"},
-                {"value": 2, "color": "yellow"},
-                {"value": 14.4, "color": "red"}
-              ]
-            }
-          }
-        },
-        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8}
-      },
-      {
-        "id": 7,
-        "title": "Burn Rate (6h)",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "error_budget:payment-api:availability:burn_rate_6h",
-            "legendFormat": "6h Burn Rate"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "steps": [
-                {"value": 0, "color": "green"},
-                {"value": 2, "color": "yellow"},
-                {"value": 6, "color": "red"}
-              ]
-            }
-          }
-        },
-        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8}
-      },
-      {
-        "id": 8,
-        "title": "Error Budget Remaining (30d)",
-        "type": "graph",
-        "targets": [
-          {
-            "expr": "error_budget:payment-api:availability:remaining_percent:30d",
-            "legendFormat": "Remaining %"
-          },
-          {
-            "expr": "error_budget:payment-api:availability:consumed_percent:30d",
-            "legendFormat": "Consumed %"
-          }
-        ],
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
-      },
-      {
-        "id": 9,
-        "title": "Burn Rate Trend (6h)",
-        "type": "graph",
-        "targets": [
-          {
-            "expr": "error_budget:payment-api:availability:burn_rate_1h",
-            "legendFormat": "1h"
-          },
-          {
-            "expr": "error_budget:payment-api:availability:burn_rate_6h",
-            "legendFormat": "6h"
-          },
-          {
-            "expr": "error_budget:payment-api:availability:burn_rate_24h",
-            "legendFormat": "24h"
-          }
-        ],
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
-      }
-    ],
-    "time": {
-      "from": "now-7d",
-      "to": "now"
-    },
-    "refresh": "30s"
-  },
-  "overwrite": true
-}
-EOF
-```
-
-### 6.2 Import Dashboard
+Stop Loki. Grafana then answers `502` whenever something asks it for Loki data, and each `502` is a failed request:
 
 ```bash
-# Import via Grafana API
-curl -s -X POST http://localhost:3000/api/dashboards/db \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $(cat ~/dojo-labs/uFawkesObs/.env | grep GRAFANA_ADMIN_PASSWORD | cut -d= -f2)" \
-  -d @~/dojo-labs/slo-dashboard-payment.json
+docker compose stop loki
+for i in $(seq 1 130); do
+  curl -s -o /dev/null -u "admin:$GRAFANA_PASSWORD" http://localhost:3000/api/health
+  curl -s -o /dev/null -u "admin:$GRAFANA_PASSWORD" http://localhost:3000/api/datasources/proxy/uid/loki/loki/api/v1/labels
+  sleep 1
+done
 ```
 
-Or import manually:
-1. Open Grafana → **+** → **Import**
-2. Upload `~/dojo-labs/slo-dashboard-payment.json`
-3. Select **Prometheus** datasource
-4. Click **Import**
+That is one good request and one `502` every second, about 130 seconds in all. Then:
 
-> ✅ **Checkpoint**: Dashboard visible with all 9 panels showing SLO status, error budget, burn rates.
+```bash
+for q in sli:grafana_api:availability:ratio_5m error_budget:grafana_api:availability:burn_rate_5m error_budget:grafana_api:availability:burn_rate_1h; do
+  curl -s --data-urlencode "query=$q" http://localhost:9090/api/v1/query | jq -r '.data.result[0].value[1]'
+done
+curl -s --data-urlencode 'query=ALERTS{alertname=~"Dojo.*Burn"}' http://localhost:9090/api/v1/query \
+  | jq -r '.data.result[] | "\(.metric.alertname) \(.metric.alertstate)"'
+```
+
+**Expected** (roughly): availability near `0.74`, burn rates near `50`, and both alerts `firing` (or `pending` for a minute or two first). Your numbers depend on how long the loop ran.
+
+Bring Loki back:
+
+```bash
+docker compose start loki
+```
+
+> ✅ **Checkpoint**: You turned a failure into a number, and the number into an alert.
+
+---
+
+## Step 6 — Import a Grafana SLO Dashboard (5 minutes)
+
+The dashboard JSON sits next to this file: six panels (the two SLIs, the 1h burn rate, the target, burn rate over time, and requests by status code).
+
+```bash
+curl -s -u "admin:$GRAFANA_PASSWORD" -X POST http://localhost:3000/api/dashboards/db \
+  -H 'Content-Type: application/json' \
+  -d @/path/to/uFawkesDojo/brown-belt/module-15-slis-slos/lab-01/slo-dashboard.json
+```
+
+**Expected**: `{"status":"success","uid":"dojo-slo-grafana-api",...}`
+
+Open **http://localhost:3000/d/dojo-slo-grafana-api**. The burn rate panel shows the spike from Step 5.
+
+> ✅ **Checkpoint**: The dashboard shows your SLIs, the target, and the spike.
 
 ---
 
 ## Step 7 — Practice SLO-Driven Decisions (10 minutes)
 
-### 7.1 Scenario: Deploy Decision
-
-**Scenario**: You're about to deploy a new feature to `payment-api`. Current state:
-- Error budget remaining: 60%
-- Burn rate: 1.2x (normal)
-- Time: 2 PM on Tuesday
+Use the live numbers, not a story. Ask the two questions an SLO exists to answer:
 
 ```bash
-# Check current error budget
-curl -s "http://localhost:9090/api/v1/query?query=error_budget:payment-api:availability:remaining_percent:30d" | jq '.data.result'
+# Is the service meeting its SLO right now?
+curl -s --data-urlencode 'query=sli:grafana_api:availability:ratio_1h >= bool slo:grafana_api:availability:target' \
+  http://localhost:9090/api/v1/query | jq -r '.data.result[0].value[1]'
 
-# Check burn rate
-curl -s "http://localhost:9090/api/v1/query?query=error_budget:payment-api:availability:burn_rate_1h" | jq '.data.result'
+# How fast is the budget going?
+curl -s --data-urlencode 'query=error_budget:grafana_api:availability:burn_rate_1h' \
+  http://localhost:9090/api/v1/query | jq -r '.data.result[0].value[1]'
 ```
 
-**Decision Framework**:
-1. Error budget > 25% ✅
-2. Burn rate < 2x ✅
-3. Time: Off-peak hours ✅
-4. Rollback plan exists ✅
+Decide for each case, then check against the framework:
 
-**Decision**: ✅ **DEPLOY** - Sufficient budget, normal burn rate, low-risk timing
+| State | Decision |
+|---|---|
+| SLO met, burn rate under 2 | **Deploy.** Normal risk, normal pace |
+| SLO met, burn rate over 10 | **Hold.** Find the cause first; a deploy now hides it |
+| SLO missed, budget spent | **Freeze deploys.** Reliability work only, until the budget refills |
 
-### 7.2 Scenario: High Burn Rate
+Where were you, by the numbers, right after Step 5? (Burn near 50 and the 1h SLO missed: **freeze**.) Where are you after the traffic has run clean for an hour? (Burn falling toward 0: **deploy** again.)
 
-```bash
-# Simulate increased error rate
-for i in {1..10}; do
-  curl -s "http://localhost:5001/api/payment/fail" > /dev/null &
-done
-
-# Wait for metrics to update
-sleep 30
-
-# Check burn rate
-curl -s "http://localhost:9090/api/v1/query?query=error_budget:payment-api:availability:burn_rate_1h" | jq '.data.result'
-```
-
-**Decision Framework**:
-1. Budget > 25% ✅ but burn rate > 10x ❌
-2. **Decision**: ❌ **HOLD DEPLOY** - Investigate root cause first
-3. Action: Investigate, fix root cause, then deploy
-
-### 7.3 Scenario: Budget Exhausted
-
-```bash
-# Check budget remaining
-curl -s "http://localhost:9090/api/v1/query?query=error_budget:payment-api:availability:remaining_percent:30d" | jq '.data.result[0].value[1]'
-```
-
-**Decision Framework**:
-- Budget < 10% remaining ❌
-- **Decision**: **FREEZE DEPLOYS** - Focus on reliability sprint
-- Action: Root cause analysis, fix reliability issues, rebuild budget
+> ✅ **Checkpoint**: You can state your decision and the number that justifies it.
 
 ---
 
@@ -751,54 +331,41 @@ curl -s "http://localhost:9090/api/v1/query?query=error_budget:payment-api:avail
 
 ```bash
 # From your uFawkesDojo checkout
-cd /path/to/uFawkesDojo
-bash brown-belt/module-15-slis-slos/lab-01/validate.sh
+UF_OBS_DIR=~/dojo-labs/uFawkesObs bash brown-belt/module-15-slis-slos/lab-01/validate.sh
 ```
 
 **Expected output** (all checks pass):
 
 ```
-[INFO] Starting Brown Belt Module 15 Lab 01 validation...
-
 [✓] Prerequisites: curl, jq, git, make installed
-[✓] uFawkesObs Stack: all 8 services healthy
-[✓] Prometheus Rules: SLI recording rules loaded
-[✓] Prometheus Rules: SLO recording rules loaded
-[✓] Prometheus Rules: Error budget rules loaded
-[✓] Prometheus Rules: SLO alert rules loaded
-[✓] SLI Recording: availability, latency, error_rate recording
-[✓] SLO Recording: availability, latency, error_rate SLOs
-[✓] Error Budget: Remaining %, burn rates calculated
-[✓] Alert Rules: Burn rate and SLO breach alerts loaded
-[✓] Grafana Dashboard: SLO dashboard with 9 panels
-[✓] SLO Decision: Deploy/hold logic verified
+[✓] uFawkesObs Stack: All 8 core services healthy
+[✓] SLO Rules: dojo-sli-recording, dojo-slo-error-budget and dojo-slo-alerts are loaded
+[✓] SLI Recording: availability=<value> latency_500ms=<value>
+[✓] Error Budget: target=0.995 burn_rate_1h=<value>
+[✓] SLO Alerts: DojoAvailabilityFastBurn and DojoAvailabilitySlowBurn are loaded
+[✓] Grafana SLO Dashboard: dojo-slo-grafana-api has 6 panels
 
-==========================================
-Total Tests: 11
-Passed: 11
-Failed: 0
-
-[✓] All tests passed! ✅
-
-🎉 Congratulations! You've completed Brown Belt Module 15 Lab 01.
-   You've implemented SLIs, SLOs, Error Budgets with uFawkesObs.
-   You're ready for the Brown Belt Assessment!
+Total Tests : 7
+Passed      : 7
+Failed      : 0
 ```
+
+The SLI and burn rate checks need traffic in the last few minutes: keep the Step 2.3 loop running, or restart it.
 
 ---
 
 ## Clean Up
 
 ```bash
-# Remove custom rules (optional - they'll be cleaned on next make up)
-rm ~/dojo-labs/uFawkesObs/config/prometheus/rules/sli-recording-payment-api.yml
-rm ~/dojo-labs/uFawkesObs/config/prometheus/rules/slo-recording-payment-api.yml
-rm ~/dojo-labs/uFawkesObs/config/prometheus/rules/error-budget-payment-api.yml
-rm ~/dojo-labs/uFawkesObs/config/prometheus/rules/slo-alerts-payment-api.yml
-
-# Reload Prometheus
-curl -X POST http://localhost:9090/-/reload
+cd ~/dojo-labs/uFawkesObs
+docker compose start loki    # in case you stopped it and did not restart it
+rm config/prometheus/rules/dojo-slo-rules.yml
+mv config/prometheus/prometheus.yaml.bak config/prometheus/prometheus.yaml
+curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
+curl -s -u "admin:$GRAFANA_PASSWORD" -X DELETE http://localhost:3000/api/dashboards/uid/dojo-slo-grafana-api
 ```
+
+(`mv ... .bak` restores the original file. If you also did Module 14 Step 6, its `.bak` may be the one you are holding: keep the stack's original `prometheus.yaml` from git with `git checkout config/prometheus/prometheus.yaml` instead.)
 
 ---
 
@@ -806,11 +373,12 @@ curl -X POST http://localhost:9090/-/reload
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| Recording rules not loading | Syntax error in YAML | `promtool check rules /path/to/rules.yml` |
-| Metrics not appearing | Prometheus not scraping | Check `prometheus.yml` scrape config |
-| SLO showing 0 | SLI not meeting target | Check SLI query, verify metrics exist |
-| Alert not firing | `for:` duration not met | Wait for duration, check `for:` clause |
-| Dashboard empty | Datasource not selected | Select Prometheus datasource in panel |
+| Rules not loading | Syntax error, or file missing from `rule_files` | `docker compose exec -T prometheus promtool check rules /etc/prometheus/rules/dojo-slo-rules.yml`, then check `prometheus.yaml` |
+| SLI query returns nothing | No traffic in the last 5 minutes | Restart the Step 2.3 loop and wait a minute |
+| Availability reads 1 after Step 5 | Loki was not stopped, or the proxy call failed to reach Grafana | `docker compose ps loki`; check the `curl` prints no connection error |
+| Alert stays `pending` | The `for:` wait has not run out | Keep the failing traffic going for the full `for:` duration |
+| Dashboard import returns 401 | Wrong Grafana password | Re-run the `export GRAFANA_PASSWORD=...` line from Prerequisites |
+| Dashboard panels empty | No traffic yet | Wait a minute with the Step 2.3 loop running |
 
 ---
 
@@ -818,13 +386,13 @@ curl -X POST http://localhost:9090/-/reload
 
 Write your answers down — the act of writing (not just thinking) strengthens retention.
 
-1. What is the formula for error budget?
+1. What is the error budget for a 99.5% availability SLO?
 2. How do you calculate burn rate?
-3. What does a burn rate of 10x mean?
-4. What are the three key SLIs for most services?
-5. What's the purpose of multi-window SLOs?
+3. What does a burn rate of 10 mean?
+4. Which events were "good" for each of this lab's two SLIs?
+5. Why does an alert require both a 5-minute and a 1-hour window to burn?
 
-(Suggested answers: 1 = 100% - SLO; 2 = (Error Rate / Error Budget) × Time Window; 3 = Consuming budget 10x faster than sustainable; 4 = Availability, Latency, Error Rate; 5 = Early warning of SLO violations)
+(Suggested answers: 1 = 0.5% of requests may fail; 2 = (1 - SLI) / (1 - SLO target); 3 = the budget is being spent ten times faster than the window refills it; 4 = availability: answered with anything but 5xx; latency: answered in 500 ms or less; 5 = the short window makes it react fast, the long window stops a brief blip paging anyone)
 
 ---
 
@@ -832,13 +400,10 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 
 | File | Purpose |
 |------|---------|
-| `sli-recording-payment-api.yml` | SLI recording rules (availability, latency, error rate) |
-| `slo-recording-payment-api.yml` | SLO compliance recording rules |
-| `error-budget-payment-api.yml` | Error budget remaining, burn rates |
-| `slo-alerts-payment-api.yml` | Multi-window burn rate alerts |
-| `slo-dashboard-payment.json` | Grafana dashboard with 9 panels |
+| `config/prometheus/rules/dojo-slo-rules.yml` | SLI recording rules, SLO target and burn rates, multi-window burn alerts |
+| `slo-dashboard.json` | Grafana dashboard with 6 panels (imported through the API) |
 
-You've now implemented a complete SLI/SLO/Error Budget system with uFawkesObs — from metric collection to alerting to visualization. This is the foundation for data-driven reliability engineering!
+You've now implemented a complete SLI/SLO/Error Budget loop on a real service: metric to ratio, ratio to budget, budget to alert, alert to decision.
 
 ---
 

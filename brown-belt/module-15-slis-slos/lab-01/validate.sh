@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://localhost:9090}"
 GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
 ALERTMANAGER_URL="${ALERTMANAGER_URL:-http://localhost:9093}"
-UF_OBS_DIR="${UF_OBS_DIR:-~/dojo-labs/uFawkesObs}"
+UF_OBS_DIR="${UF_OBS_DIR:-$HOME/dojo-labs/uFawkesObs}"
 
 # Test results
 TOTAL_TESTS=0
@@ -69,7 +69,7 @@ check_prerequisites() {
   if [ ${#missing[@]} -eq 0 ]; then
     record_test "Prerequisites" "PASS" "curl, jq, git, make installed"
   else
-    record_test "Prerequisites" "FAIL" "Missing: ${missing[*]} — install jq (brew/apt), pip install cookiecutter"
+    record_test "Prerequisites" "FAIL" "Missing: ${missing[*]} — install jq (brew install jq / apt install jq)"
   fi
 }
 
@@ -94,7 +94,7 @@ check_ufobs_services() {
 
     if docker ps --filter "name=^${container}$" --filter "status=running" --format '{{.Names}}' 2> /dev/null | grep -q "^${container}$"; then
       local health
-      health=$(docker inspect --format '{{.State.Health.Status}}' "${container}" 2> /dev/null || echo "none")
+      health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "${container}" 2> /dev/null || echo "none")
       if [ "$health" = "healthy" ] || [ "$health" = "none" ]; then
         log_success "  $label ($container): running${health:+ (health: $health)}"
       else
@@ -114,237 +114,96 @@ check_ufobs_services() {
   fi
 }
 
-check_prometheus_rules() {
-  log_info "Checking Prometheus recording/alert rules..."
+prom_value() {
+  # First sample of an instant query, or empty. Logs the failure instead of hiding it.
+  local out
+  if ! out=$(curl -s --max-time 10 --data-urlencode "query=$1" "${PROMETHEUS_URL}/api/v1/query" 2>&1); then
+    log_warning "Prometheus query failed to run: $1 ($out)"
+    return 0
+  fi
+  echo "$out" | jq -r '.data.result[0].value[1] // empty' 2>&1 || log_warning "Could not parse the reply to: $1"
+}
 
-  local rules=(
-    "sli-recording:SLI Recording Rules"
-    "slo-recording:SLO Recording Rules"
-    "error-budget:Error Budget Rules"
-    "slo-alerts:SLO Alert Rules"
-  )
+check_rules_loaded() {
+  log_info "Checking the SLO rule groups are loaded in Prometheus..."
 
-  local all_pass=true
-  for entry in "${rules[@]}"; do
-    local name="${entry%%:*}"
-    local label="${entry##*:}"
-
-    local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/rules" 2> /dev/null || echo "000")
-
-    if [ "$http_code" = "200" ]; then
-      local body
-      body=$(curl -s --max-time 10 "${PROMETHEUS_URL}/api/v1/rules" 2> /dev/null || echo "")
-      if echo "$body" | jq -e ".data.groups[] | select(.name == \"${name}\")" > /dev/null 2>&1; then
-        record_test "$label" "PASS" "${label} loaded in Prometheus"
-      else
-        record_test "$label" "FAIL" "${label} not found in Prometheus rules"
-        all_pass=false
-      fi
-    else
-      record_test "$label" "FAIL" "Prometheus rules API returned HTTP $http_code"
-      all_pass=false
-    fi
+  local groups missing=()
+  groups=$(curl -s --max-time 10 "${PROMETHEUS_URL}/api/v1/rules" 2>&1 | jq -r '.data.groups[].name' 2>&1 || true)
+  for g in dojo-sli-recording dojo-slo-error-budget dojo-slo-alerts; do
+    echo "$groups" | grep -qx "$g" || missing+=("$g")
   done
 
-  if [ "$all_pass" = "true" ]; then
-    record_test "Prometheus Rules" "PASS" "All rule groups loaded"
+  if [ ${#missing[@]} -eq 0 ]; then
+    record_test "SLO Rules" "PASS" "dojo-sli-recording, dojo-slo-error-budget and dojo-slo-alerts are loaded"
+  else
+    record_test "SLO Rules" "FAIL" "Missing rule groups: ${missing[*]} — is dojo-slo-rules.yml listed under rule_files, and did you reload Prometheus?"
   fi
 }
 
 check_sli_recording() {
-  log_info "Checking SLI recording rules..."
+  log_info "Checking the SLI recording rules produce values..."
 
-  local slis=(
-    "sli:availability:1h"
-    "sli:availability:7d"
-    "sli:availability:30d"
-    "sli:latency_p95:1h"
-    "sli:payment-api:latency_p95:7d"
-    "sli:payment-api:error_rate:7d"
-  )
+  local avail latency
+  avail=$(prom_value 'sli:grafana_api:availability:ratio_5m')
+  latency=$(prom_value 'sli:grafana_api:latency_500ms:ratio_5m')
 
-  local all_pass=true
-  for sli in "${slis[@]}"; do
-    local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${sli}" 2> /dev/null || echo "000")
-
-    if [ "$http_code" = "200" ]; then
-      local body
-      body=$(curl -s --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${sli}" 2> /dev/null || echo "")
-      if echo "$body" | jq -e '.status == "success" and (.data.result | length > 0)' > /dev/null 2>&1; then
-        log_success "  SLI $sli: recording active"
-      else
-        log_error "  $sli: no data returned"
-        all_pass=false
-      fi
-    else
-      log_error "  $sli: HTTP $http_code"
-      all_pass=false
-    fi
-  done
-
-  if [ "$all_pass" = "true" ]; then
-    record_test "SLI Recording" "PASS" "All SLI recording rules producing data"
+  if [ -n "$avail" ] && [ -n "$latency" ]; then
+    record_test "SLI Recording" "PASS" "availability=$avail latency_500ms=$latency"
   else
-    record_test "SLI Recording" "FAIL" "One or more SLI recording rules not producing data"
-  fi
-}
-
-check_slo_recording() {
-  log_info "Checking SLO recording rules..."
-
-  local slos=(
-    "slo:availability:30d"
-    "slo:payment-api:availability:30d"
-    "slo:payment-api:latency_p95:7d"
-    "slo:payment-api:error_rate:30d"
-  )
-
-  local all_pass=true
-  for slo in "${slos[@]}"; do
-    local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${slo}" 2> /dev/null || echo "000")
-
-    if [ "$http_code" = "200" ]; then
-      local body
-      body=$(curl -s --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${slo}" 2> /dev/null || echo "")
-      local value
-      value=$(echo "$body" | jq -r '.data.result[0].value[1]' 2> /dev/null || echo "")
-      if [ -n "$value" ] && [ "$value" != "null" ]; then
-        log_success "  $slo: value = $value"
-      else
-        log_warning "  $slo: no value (may be 0 if SLO violated)"
-      fi
-    else
-      log_error "  $slo: HTTP $http_code"
-      all_pass=false
-    fi
-  done
-
-  if [ "$all_pass" = "true" ]; then
-    record_test "SLO Recording" "PASS" "All SLO recording rules producing values"
-  else
-    record_test "SLO Recording" "FAIL" "One or more SLO recording rules not producing values"
+    record_test "SLI Recording" "FAIL" "No SLI value yet — send traffic (Step 2.3) and wait about a minute"
   fi
 }
 
 check_error_budget() {
-  log_info "Checking error budget calculations..."
+  log_info "Checking the error budget rules produce values..."
 
-  local metrics=(
-    "error_budget:availability:remaining_percent:30d"
-    "error_budget:availability:burn_rate_1h"
-    "error_budget:payment-api:availability:remaining_percent:30d"
-    "error_budget:payment-api:availability:burn_rate_1h"
-  )
+  local target burn
+  target=$(prom_value 'slo:grafana_api:availability:target')
+  burn=$(prom_value 'error_budget:grafana_api:availability:burn_rate_1h')
 
-  local all_pass=true
-  for metric in "${metrics[@]}"; do
-    local encoded
-    encoded=$(echo "$metric" | jq -sRr @uri)
-    local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || echo "000")
-
-    if [ "$http_code" = "200" ]; then
-      local body
-      body=$(curl -s --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || echo "")
-      if echo "$body" | jq -e '.status == "success" and (.data.result | length > 0)' > /dev/null 2>&1; then
-        local value
-        value=$(echo "$body" | jq -r '.data.result[0].value[1]' 2> /dev/null || echo "0")
-        log_success "  $metric: $value"
-      else
-        log_error "  $metric: no data returned"
-        all_pass=false
-      fi
-    else
-      log_error "  $metric: HTTP $http_code"
-      all_pass=false
-    fi
-  done
-
-  if [ "$all_pass" = "true" ]; then
-    record_test "Error Budget Metrics" "PASS" "All error budget metrics queryable"
+  if [ "$target" = "0.995" ] && [ -n "$burn" ]; then
+    record_test "Error Budget" "PASS" "target=$target burn_rate_1h=$burn"
   else
-    record_test "Error Budget Metrics" "FAIL" "One or more error budget metrics not queryable"
+    record_test "Error Budget" "FAIL" "target='${target}' burn_rate_1h='${burn}' — expected target 0.995 and a burn rate"
   fi
 }
 
 check_slo_alerts() {
-  log_info "Checking SLO alert rules..."
+  log_info "Checking the burn rate alerts are loaded..."
 
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/rules" 2> /dev/null || echo "000")
+  local names
+  names=$(curl -s --max-time 10 "${PROMETHEUS_URL}/api/v1/rules?type=alert" 2>&1 | jq -r '.data.groups[].rules[].name' 2>&1 || true)
 
-  if [ "$http_code" = "200" ]; then
-    local body
-    body=$(curl -s --max-time 10 "${PROMETHEUS_URL}/api/v1/rules" 2> /dev/null || echo "")
-
-    local slo_alerts
-    slo_alerts=$(echo "$body" | jq '.data.groups[] | select(.name | test("slo|burn")) | .rules | length' 2> /dev/null | awk '{sum+=$1} END {print sum}' || echo 0)
-
-    if [ -n "$slo_alerts" ] && [ "$slo_alerts" -gt 0 ]; then
-      record_test "SLO Alert Rules" "PASS" "Found $slo_alerts SLO/burn rate alert rules"
-    else
-      record_test "SLO Alert Rules" "FAIL" "No SLO/burn rate alert rules found"
-    fi
+  if echo "$names" | grep -qx "DojoAvailabilityFastBurn" && echo "$names" | grep -qx "DojoAvailabilitySlowBurn"; then
+    record_test "SLO Alerts" "PASS" "DojoAvailabilityFastBurn and DojoAvailabilitySlowBurn are loaded"
   else
-    record_test "SLO Alert Rules" "FAIL" "Could not fetch rules from Prometheus (HTTP $http_code)"
+    record_test "SLO Alerts" "FAIL" "Burn rate alerts not found — check dojo-slo-rules.yml and reload Prometheus"
   fi
 }
 
 check_grafana_dashboard() {
-  log_info "Checking Grafana SLO dashboard..."
+  log_info "Checking the Grafana SLO dashboard..."
 
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${GRAFANA_URL}/api/search?query=slo" 2> /dev/null || echo "000")
-
-  if [ "$http_code" = "200" ]; then
-    local body
-    body=$(curl -s --max-time 10 "${GRAFANA_URL}/api/search?query=slo" 2> /dev/null || echo "[]")
-    local count
-    count=$(echo "$body" | jq 'length' 2> /dev/null || echo 0)
-
-    if [ "$count" -ge 1 ]; then
-      record_test "Grafana SLO Dashboard" "PASS" "Found $count SLO dashboard(s)"
-    else
-      record_test "Grafana SLO Dashboard" "FAIL" "No SLO dashboards found — import dashboard from lab"
-    fi
-  else
-    record_test "Grafana SLO Dashboard" "FAIL" "Grafana API returned HTTP $http_code"
+  local user pass body obs_dir
+  user="${GRAFANA_USER:-admin}"
+  pass="${GRAFANA_PASSWORD:-}"
+  obs_dir="${UF_OBS_DIR/#\~/$HOME}"
+  if [ -z "$pass" ] && [ -f "$obs_dir/.env" ]; then
+    pass=$(grep -E '^GRAFANA_ADMIN_PASSWORD=' "$obs_dir/.env" | cut -d= -f2- || true)
   fi
-}
+  if [ -z "$pass" ]; then
+    record_test "Grafana SLO Dashboard" "FAIL" "No Grafana password: set GRAFANA_PASSWORD, or point UF_OBS_DIR at your uFawkesObs checkout"
+    return
+  fi
 
-check_promql_queries() {
-  log_info "Testing DORA/SLO PromQL queries..."
+  body=$(curl -s --max-time 10 -u "${user}:${pass}" "${GRAFANA_URL}/api/dashboards/uid/dojo-slo-grafana-api" 2>&1 || true)
+  local panels
+  panels=$(echo "$body" | jq -r '.dashboard.panels | length' 2>&1 || echo 0)
 
-  local queries=(
-    "sli:availability:30d"
-    "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))"
-    "dora_change_failure_rate"
-    "dora_deployment_frequency"
-    "dora_lead_time_seconds"
-  )
-
-  local all_pass=true
-  for query in "${queries[@]}"; do
-    local encoded
-    encoded=$(echo "$query" | jq -sRr @uri)
-    local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || echo "000")
-
-    if [ "$http_code" = "200" ]; then
-      log_success "  PromQL OK: $query"
-    else
-      log_error "  PromQL FAILED: $query (HTTP $http_code)"
-      all_pass=false
-    fi
-  done
-
-  if [ "$all_pass" = "true" ]; then
-    record_test "PromQL Queries" "PASS" "All DORA/SLO PromQL queries successful"
+  if [ "$panels" = "6" ]; then
+    record_test "Grafana SLO Dashboard" "PASS" "dojo-slo-grafana-api has 6 panels"
   else
-    record_test "PromQL Queries" "FAIL" "One or more PromQL queries failed"
+    record_test "Grafana SLO Dashboard" "FAIL" "Dashboard dojo-slo-grafana-api not found with 6 panels (got '${panels}') — import it in Step 6"
   fi
 }
 
@@ -370,8 +229,8 @@ print_summary() {
     echo ""
     echo "Please review the failures above. Common fixes:"
     echo "  - Run 'make up' in uFawkesObs if services aren't healthy"
-    echo "  - Re-run cookiecutter and customize .fawkespipe.yml with SLO config"
-    echo "  - Push to Git to trigger pipeline: git push origin main"
+    echo "  - Confirm dojo-slo-rules.yml is listed under rule_files, then reload Prometheus"
+    echo "  - Send traffic (Step 2.3) so the SLI rules have data"
     echo "  - Check Grafana dashboard: http://localhost:3000"
     echo "  - See lab-01/instructions.md Troubleshooting for more"
     return 1
@@ -392,13 +251,11 @@ main() {
 
   check_prerequisites
   check_ufobs_services
-  check_prometheus_rules
+  check_rules_loaded
   check_sli_recording
-  check_slo_recording
   check_error_budget
   check_slo_alerts
   check_grafana_dashboard
-  check_promql_queries
 
   print_summary
 }

@@ -5,7 +5,7 @@
 **Difficulty**: Advanced (Module 13 complete required)
 **Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) — a **pre-release**, the same checkout as Module 13 — with the DORA profile
 
-> **Partly run for real.** Steps 1, 2, 5 and 7, the prerequisite check and the clean-up were run verbatim against `v1.1.0-rc.1` on 2026-10-07, and their expected output is what they printed. Steps 3, 4 and 6 (PromQL, the Grafana dashboard and the alert rules) were not run, and still use metric names from before uFawkesObs 1.0. The stack serves `dora_deployment_frequency_per_week`, `dora_lead_time_p50_hours`, `dora_lead_time_p95_hours`, `dora_fdrt_p50_hours`, `dora_cfr_pct` and `dora_rework_rate_pct`, all gauges. Rewriting those steps is [#43](https://github.com/paruff/uFawkesDojo/issues/43). See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-10-14 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Every step ran verbatim: the events, the PromQL in Prometheus's HTTP API, the dashboard queries through Grafana's datasource API, and the alert rules (loaded, then checked as `pending` or `inactive`). Grafana's browser-only clicks (building and saving the dashboard) were not exercised in a browser. The lab moves to the stable tag when uFawkesObs ships it. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -259,49 +259,54 @@ One failed deployment in nine is a change failure rate of 0.111, and one user-vi
 
 ### 3.1 Access Prometheus
 
-Open **http://localhost:9090** (Prometheus UI)
+Open **http://localhost:9090** (Prometheus UI) and use the **Graph** tab. Prometheus scrapes `dora-api` every 15 seconds, so give it a minute after the restart in Step 2.5.
 
 ### 3.2 Query Each DORA Metric
 
-Test these PromQL queries in Prometheus Graph tab:
+`dora-api` publishes one gauge per metric, labelled by `team_id` and `tier`. There are no histograms and no `rate()` to take: the gauge is already the answer. Run each query:
 
 #### Deployment Frequency
 ```promql
-# Deployments per day (last 7 days)
-sum(increase(dora_deployment_frequency[7d])) / 7
+# Deployments per week
+dora_deployment_frequency_per_week
+
+# Deployments per day
+dora_deployment_frequency_per_week / 7
 ```
 
 #### Lead Time for Changes
 ```promql
-# Average lead time (seconds)
-avg(dora_lead_time_seconds)
-
-# P95 lead time (hours)
-histogram_quantile(0.95, rate(dora_lead_time_seconds_bucket[7d])) / 3600
+dora_lead_time_p50_hours
+dora_lead_time_p95_hours
 ```
+
+These return **nothing** on this lab's data. Lead time needs `first_commit_at` or `pr_merged_at` on the deployment event, and the events you sent carry neither. An empty result here means "no input", not "zero hours".
 
 #### Change Failure Rate
 ```promql
-# Change Failure Rate (%)
-dora_change_failure_rate * 100
+# A ratio, 0.0 to 1.0, despite the "_pct" name
+dora_cfr_pct
+
+# As a percentage
+dora_cfr_pct * 100
 ```
 
-#### Mean Time to Restore (MTTR)
+#### Failed Deployment Recovery Time (FDRT)
 ```promql
-# Average MTTR (minutes)
-avg(dora_mttr_seconds) / 60
+# Median hours from a failed deployment to the next success of the same repo
+dora_fdrt_p50_hours
 
-# P95 MTTR (minutes)
-histogram_quantile(0.95, rate(dora_mttr_seconds_bucket[7d])) / 60
+# In minutes
+dora_fdrt_p50_hours * 60
 ```
 
 #### Deployment Rework Rate
 ```promql
-# Rework rate (%)
-dora_rework_rate * 100
+# A ratio, 0.0 to 1.0, despite the "_pct" name
+dora_rework_rate_pct * 100
 ```
 
-> ✅ **Checkpoint**: All 5 DORA metrics return values in Prometheus.
+> ✅ **Checkpoint**: Four of the five metrics return a value, and you can say why lead time does not.
 
 ---
 
@@ -310,47 +315,32 @@ dora_rework_rate * 100
 ### 4.1 Create a New Dashboard
 
 1. In Grafana (**http://localhost:3000**), click **+** → **Dashboard** → **Add visualization**
-2. Select **Prometheus** datasource
+2. Select the **Prometheus** datasource
 
 ### 4.2 Build the Executive Summary Row
 
-Create 5 stat panels in a row:
+Create 4 stat panels in a row. Each query is the gauge from Step 3, so there is nothing to aggregate:
 
 | Panel | Title | Query | Type | Thresholds |
 |-------|-------|-------|------|------------|
-| 1 | Deployment Frequency | `sum(rate(dora_deployment_frequency[7d])) * 86400` | Stat | Green: >1/day, Yellow: >0.1/day, Red: ≤0.1 |
-| 2 | Lead Time (P95) | `histogram_quantile(0.95, rate(dora_lead_time_seconds_bucket[7d])) / 3600` | Stat | Green: <1h, Yellow: <4h, Red: >4h |
-| 3 | Change Failure Rate | `dora_change_failure_rate * 100` | Gauge | Green: <15%, Yellow: <30%, Red: >30% |
-| 4 | MTTR (Avg) | `avg(dora_mttr_seconds) / 60` | Stat | Green: <60m, Yellow: <240m, Red: >240m |
-| 5 | Rework Rate | `dora_rework_rate * 100` | Gauge | Green: <10%, Yellow: <25%, Red: >25% |
+| 1 | Deployment Frequency (per week) | `dora_deployment_frequency_per_week` | Stat | Red: <1, Yellow: ≥1, Green: ≥7 |
+| 2 | Change Failure Rate | `dora_cfr_pct * 100` (unit: percent) | Gauge | Green: <15, Yellow: <30, Red: ≥30 |
+| 3 | Recovery Time (FDRT p50, minutes) | `dora_fdrt_p50_hours * 60` | Stat | Green: <60, Yellow: <240, Red: ≥240 |
+| 4 | Rework Rate | `dora_rework_rate_pct * 100` (unit: percent) | Gauge | Green: <10, Yellow: <25, Red: ≥25 |
+
+Add a fifth panel for Lead Time (`dora_lead_time_p95_hours`) if you like. It shows "No data" until events carry `first_commit_at`; leave it there on purpose, so the dashboard says so instead of hiding the gap.
 
 ### 4.3 Add Trend Panels
 
-Add time series panels below the stat row:
+Add a time series panel for each of the same queries. Because each metric is a gauge, the trend is the same query drawn over time. After the Step 5 events you will see CFR and Rework Rate step up.
 
-| Panel | Title | Query | Type |
-|-------|-------|-------|------|
-| 1 | Deployment Frequency Trend | `sum(rate(dora_deployment_frequency[1d])) * 86400` | Time Series |
-| 2 | Lead Time Trend (P50/P95) | `histogram_quantile(0.50, rate(dora_lead_time_seconds_bucket[1d])) / 3600` + P95 | Time Series |
-| 3 | CFR Trend | `dora_change_failure_rate * 100` | Time Series |
-| 3 | MTTR Trend | `avg(dora_mttr_seconds) / 60` | Time Series |
-
-### 4.3 Add Distribution Panels
-
-Add heatmap/histogram panels:
-
-| Panel | Title | Query | Type |
-|-------|-------|-------|------|
-| 1 | Lead Time Distribution | `sum(rate(dora_lead_time_seconds_bucket[7d])) by (le)` | Heatmap |
-| 2 | MTTR Distribution | `sum(rate(dora_mttr_seconds_bucket[7d])) by (le)` | Heatmap |
-
-### 4.3 Save Dashboard
+### 4.4 Save Dashboard
 
 1. Click **Save dashboard**
 2. Name: **"DORA Metrics - Platform Performance"**
 3. Tags: `dora`, `metrics`, `platform`
 
-> ✅ **Checkpoint**: Dashboard created with all 5 DORA metrics visible.
+> ✅ **Checkpoint**: Dashboard saved with a panel for each DORA metric that has data.
 
 ---
 
@@ -386,7 +376,7 @@ sleep 10
 ### 5.2 Verify CFR Increase
 
 1. In Grafana dashboard, observe **Change Failure Rate** gauge
-2. Should show increased CFR (was ~0%, now >0%)
+2. Should show a higher CFR than before (three more failures)
 
 ### 5.2 Test Deployment Rework Rate
 
@@ -426,7 +416,7 @@ sleep 10
 ### 5.3 Verify Rework Rate
 
 1. In Grafana, observe **Deployment Rework Rate** gauge
-2. Should show >0% (was 0%, now >0%)
+2. Should show a higher Rework Rate than before
 
 > ✅ **Checkpoint**: Failure and rework scenarios tested, metrics updated.
 
@@ -434,78 +424,87 @@ sleep 10
 
 ## Step 6 — Configure DORA Alerting (10 minutes)
 
-### 6.1 Create DORA Alert Rules
+The stack already ships DORA alerts (`ufawkesobs_dora_alerts`, thirty-day windows). Open **http://localhost:9090/alerts** and find them first. They watch the 30-day recording rules and wait days (`for: 7d`) before firing, which is right for production and useless in a lab. Here you add your own, short-window set on the live gauges.
 
-Create alert rule file:
+### 6.1 Create the Alert Rules File
+
+Rules go in the stack's rules directory, which Prometheus mounts read-only:
 
 ```bash
-cat > ~/dojo-labs/dora-alerts.yml <<'EOF'
+cat > ~/dojo-labs/uFawkesObs/config/prometheus/rules/dojo-dora-alerts.yml <<'EOF'
 groups:
-  - name: dora-alerts
+  - name: dojo-dora-alerts
     interval: 60s
     rules:
-      - alert: HighDeploymentFrequency
-        expr: sum(rate(dora_deployment_frequency[1d])) * 86400 < 1
+      - alert: DojoDeploymentFrequencyLow
+        expr: dora_deployment_frequency_per_week < 7
         for: 1h
         labels:
           severity: warning
         annotations:
-          summary: "Deployment frequency dropped below 1/day"
-          description: "Current DF: {{ $value }}/day — below elite threshold"
+          summary: "Deployment frequency below one per day"
+          description: "{{ $labels.team_id }} deploys {{ $value | printf \"%.1f\" }} times a week"
 
-      - alert: HighLeadTime
-        expr: histogram_quantile(0.95, rate(dora_lead_time_seconds_bucket[1h])) / 3600 > 4
+      - alert: DojoLeadTimeHigh
+        expr: dora_lead_time_p95_hours > 4
         for: 30m
         labels:
           severity: warning
         annotations:
-          summary: "P95 Lead Time exceeds 4 hours"
-          description: "P95 lead time is {{ $value | printf \"%.1f\" }} hours"
+          summary: "P95 lead time exceeds 4 hours"
+          description: "{{ $labels.team_id }} P95 lead time is {{ $value | printf \"%.1f\" }} hours"
 
-      - alert: HighChangeFailureRate
-        expr: dora_change_failure_rate > 0.15
+      - alert: DojoChangeFailureRateHigh
+        expr: dora_cfr_pct > 0.15
         for: 30m
         labels:
           severity: critical
         annotations:
-          summary: "Change Failure Rate exceeds 15%"
-          description: "CFR is {{ $value | printf \"%.1f\" }}% — above elite threshold (15%)"
+          summary: "Change failure rate exceeds 15%"
+          description: "{{ $labels.team_id }} CFR is {{ $value | humanizePercentage }}"
 
-      - alert: HighMTTR
-        expr: avg(dora_mttr_seconds) / 60 > 60
+      - alert: DojoRecoveryTimeHigh
+        expr: dora_fdrt_p50_hours > 1
         for: 30m
         labels:
           severity: warning
         annotations:
-          summary: "MTTR exceeds 60 minutes"
-          description: "Average MTTR is {{ $value | printf \"%.1f\" }} minutes"
+          summary: "Median recovery time exceeds 1 hour"
+          description: "{{ $labels.team_id }} median FDRT is {{ $value | printf \"%.2f\" }} hours"
 
-      - alert: HighReworkRate
-        expr: dora_rework_rate > 0.25
+      - alert: DojoReworkRateHigh
+        expr: dora_rework_rate_pct > 0.25
         for: 1h
         labels:
           severity: warning
         annotations:
-          summary: "Deployment Rework Rate exceeds 25%"
-          description: "Rework rate is {{ $value | printf \"%.1f\" }}%"
+          summary: "Rework rate exceeds 25%"
+          description: "{{ $labels.team_id }} rework rate is {{ $value | humanizePercentage }}"
 EOF
 ```
 
-### 6.2 Apply Alert Rules
+### 6.2 Apply the Alert Rules
+
+Prometheus loads only the files named under `rule_files`, so a file dropped into the directory does nothing until you list it:
 
 ```bash
-# Copy to Prometheus rules directory
-cp ~/dojo-labs/dora-alerts.yml ~/dojo-labs/uFawkesObs/config/prometheus/rules/dora-alerts.yml
+cd ~/dojo-labs/uFawkesObs
 
-# Reload Prometheus
-curl -X POST http://localhost:9090/-/reload
+# Add the file to rule_files, after the dora-regression entry
+sed -i.bak 's#^  - "/etc/prometheus/rules/ufawkesobs-dora-regression.yml"#&\n  - "/etc/prometheus/rules/dojo-dora-alerts.yml"#' config/prometheus/prometheus.yaml
+
+# Check the rules, then reload
+docker compose exec -T prometheus promtool check rules /etc/prometheus/rules/dojo-dora-alerts.yml
+curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
 ```
+
+**Expected**: `SUCCESS: 5 rules found` and `reload HTTP 200`. Delete `prometheus.yaml.bak` afterwards.
 
 ### 6.3 Verify Alert Rules
 
 1. Open **http://localhost:9090/alerts** (Prometheus Alerts page)
-2. Verify `dora-alerts` group appears with 5 rules
-3. Check **http://localhost:9093** (Alertmanager) → Alerts tab
+2. Verify the `dojo-dora-alerts` group appears with 5 rules. With the Step 5 events sent, `DojoChangeFailureRateHigh` and `DojoDeploymentFrequencyLow` read **pending** (the condition is true, the `for:` wait has not run out). The other three read **inactive**; lead time stays inactive because it has no data, and no data means no alert.
+3. Check **http://localhost:9093** (Alertmanager) → Alerts tab. It stays empty until a rule leaves *pending* and fires.
 
 > ✅ **Checkpoint**: DORA alert rules loaded and visible.
 

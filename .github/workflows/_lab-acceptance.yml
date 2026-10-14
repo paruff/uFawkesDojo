@@ -5,8 +5,8 @@
 # lab by live-acceptance.yml, so each lab gets an isolated stack — a failure
 # in one lab can't mask or fake a result in another.
 #
-# The stack setup mirrors the labs' documented flow exactly: clone the ref
-# the lab's clone command uses (default branch), `cp .env.example .env`,
+# The stack setup mirrors the labs' documented flow exactly: clone the tag
+# the lab pins on its "Runs against" line (AC-007), `cp .env.example .env`,
 # `make <target>`, steady state, then the lab's own self-check.
 name: _Lab Acceptance (reusable)
 
@@ -78,10 +78,22 @@ jobs:
       - name: Check out uFawkesDojo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Check out uFawkesObs (default branch — the ref the labs clone)
+      # AC-007: test the tag the lab tells students to run, not whatever main
+      # holds tonight. The pin is read from the lab's own "Runs against" line.
+      - name: Resolve the uFawkesObs tag the lab pins
+        id: pin
+        env:
+          VALIDATE_PATH: ${{ inputs.validate_path }}
+        run: |
+          tag=$(scripts/check-lab-pins.sh --print "$(dirname "$VALIDATE_PATH")/instructions.md" uFawkesObs)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Lab pins uFawkesObs $tag"
+
+      - name: Check out uFawkesObs at the lab's pinned tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: paruff/uFawkesObs
+          ref: ${{ steps.pin.outputs.tag }}
           path: uFawkesObs
 
       - name: Check out uFawkesAI
