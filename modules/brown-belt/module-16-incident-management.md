@@ -3,7 +3,7 @@
 **Belt Level**: 🟤 Brown Belt
 **Duration**: 60 minutes
 **Difficulty**: Advanced
-**Prerequisites**: Modules 13, 14, 15 complete, uFawkesObs v1.0.0 running with DORA profile
+**Prerequisites**: Modules 13, 14, 15 complete, uFawkesObs v1.1.0-rc.1 running with DORA profile
 **DORA Capabilities**: Mean Time to Restore (MTTR) - Elite level, Incident Management Process, Postmortem Culture, Learning Organization
 
 ---
@@ -398,7 +398,7 @@ You'll conduct a complete incident response simulation from detection through po
 - ✅ Module 13 (Observability) complete
 - ✅ Module 14 (DORA Metrics) complete
 - ✅ Module 15 (SLI/SLO/Error Budgets) complete
-- ✅ uFawkesObs v1.0.0 running with DORA profile (`make up-dora`)
+- ✅ uFawkesObs v1.1.0-rc.1 running with DORA profile (`make up-dora`)
 
 **Tools**: `curl`, `jq`, `git`, `make`, `docker`, `kubectl` (for simulation)
 

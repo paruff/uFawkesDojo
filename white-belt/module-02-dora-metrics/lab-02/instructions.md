@@ -4,7 +4,7 @@
 **Estimated Time**: 15 minutes
 **Difficulty**: Beginner (no CI/CD pipeline experience required)
 **Prerequisites**: Lab 01 completed (uFawkesObs stack running, `dora-api` reachable on port 8088)
-**Runs against**: uFawkesObs (Docker Compose) + uFawkesAI scripts
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (the Lab 01 checkout, Docker Compose) + uFawkesAI scripts
 
 ---
 

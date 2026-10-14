@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟤 Brown Belt
 **Duration**: 3-4 hours
-**Prerequisites**: Module 13 (Observability with uFawkesObs) complete, uFawkesObs v1.0.0 running with DORA profile enabled
+**Prerequisites**: Module 13 (Observability with uFawkesObs) complete, uFawkesObs v1.1.0-rc.1 running with DORA profile enabled
 **DORA Capabilities**: All five DORA metrics, Monitoring & Observability, Data-Driven Decision Making
 
 ---
@@ -251,7 +251,7 @@ You'll enable the uFawkesObs DORA profile, send test events, and build a complet
 
 **Prerequisites**:
 - ✅ Module 13 (Observability with uFawkesObs) complete
-- ✅ uFawkesObs v1.0.0 running locally with DORA profile enabled (`make up-dora`)
+- ✅ uFawkesObs v1.1.0-rc.1 running locally with DORA profile enabled (`make up-dora`)
 
 **Tools required**: `curl`, `jq`, `git`, `make`
 
@@ -271,7 +271,7 @@ This lab walks you through:
 4. **Building Executive Dashboard** — Create executive summary dashboard
 4. **Validation** — Run validation script checking all metrics
 
-**Runs against**: [uFawkesObs v1.0.0](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.0) with DORA profile
+**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) with DORA profile
 
 **Validation**: `bash brown-belt/module-14-dora-deep-dive/lab-01/validate.sh`
 

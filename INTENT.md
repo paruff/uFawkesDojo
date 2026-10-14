@@ -51,7 +51,7 @@ been run, for real").
 - `white-belt/module-00-vibe-coding-to-agentic/lab-01/` ("Start here") — on
   uFawkesAI `v2.0.0`, 14/14, run verbatim end to end, devcontainer included,
   by `start-here-live.yml` on every change to the lab and nightly.
-- `white-belt/module-02-dora-metrics/lab-01/` — on uFawkesObs `v1.0.6-rc.1`
+- `white-belt/module-02-dora-metrics/lab-01/` — on uFawkesObs `v1.1.0-rc.1`
   (pre-release pin), re-run in #79.
 - `brown-belt/module-13-observability/lab-01/` — on uFawkesObs
   `v1.1.0-rc.1` (pre-release pin), run verbatim end to end in #86.
