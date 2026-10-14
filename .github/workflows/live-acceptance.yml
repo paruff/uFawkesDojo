@@ -8,12 +8,17 @@
 # the run — a lab that rots when the stack it targets changes turns this
 # workflow red instead of rotting quietly.
 #
-# Deliberately NOT wired here (not silently skipped): the nine labs whose
-# self-check verifies student artifacts created by *completing* the lab —
-# White Belt 01/03/04, Yellow Belt 05-08 (scaffolded services, pipelines,
-# repos) and Brown Belt 15/16 (learner-created recording rules, injected
-# failures, postmortem docs). Their checks cannot pass on a clean runner
-# without scripting the whole lab flow — tracked in #73.
+# Stack-only tier (#73): Brown Belt 15 and 16 run `validate.sh --stack-only`.
+# That checks the stack and, for BB15, the metric the SLIs are built on, and
+# skips what the student creates (rules, alerts, dashboard, postmortem). It
+# catches stack rot in those labs; it is NOT a lab pass. Their table rows say
+# "stack-only".
+#
+# Deliberately NOT wired here (not silently skipped): the seven labs that do
+# not target the uFawkesObs stack or only verify student artifacts — White
+# Belt 01/03/04 and Yellow Belt 05-08 (scaffolded services, pipelines, repos on
+# other stacks). Their checks cannot pass on a clean runner without scripting
+# the whole lab flow — see #73 and docs/live-checks.md.
 name: Live Acceptance (Nightly)
 
 on:
@@ -84,6 +89,26 @@ jobs:
       make_target: up-dora
       artifact_name: bb-m14-lab-01
 
+  brown-belt-m15-lab-01:
+    name: Brown Belt M15 Lab 01 — SLIs and SLOs (stack-only)
+    uses: ./.github/workflows/_lab-acceptance.yml
+    with:
+      lab_name: Brown Belt M15 Lab 01 — SLIs and SLOs (stack-only)
+      validate_path: brown-belt/module-15-slis-slos/lab-01/validate.sh
+      validate_args: --stack-only
+      make_target: up-dora
+      artifact_name: bb-m15-lab-01
+
+  brown-belt-m16-lab-01:
+    name: Brown Belt M16 Lab 01 — Incident Management (stack-only)
+    uses: ./.github/workflows/_lab-acceptance.yml
+    with:
+      lab_name: Brown Belt M16 Lab 01 — Incident Management (stack-only)
+      validate_path: brown-belt/module-16-incident-management/lab-01/validate.sh
+      validate_args: --stack-only
+      make_target: up-dora
+      artifact_name: bb-m16-lab-01
+
   summary:
     name: Live Acceptance Summary
     runs-on: ubuntu-24.04
@@ -96,6 +121,8 @@ jobs:
       - white-belt-m02-lab-02
       - brown-belt-m13-lab-01
       - brown-belt-m14-lab-01
+      - brown-belt-m15-lab-01
+      - brown-belt-m16-lab-01
     steps:
       - name: Write per-lab result table
         env:
@@ -103,6 +130,8 @@ jobs:
           WB02: ${{ needs.white-belt-m02-lab-02.result }}
           BB13: ${{ needs.brown-belt-m13-lab-01.result }}
           BB14: ${{ needs.brown-belt-m14-lab-01.result }}
+          BB15: ${{ needs.brown-belt-m15-lab-01.result }}
+          BB16: ${{ needs.brown-belt-m16-lab-01.result }}
         run: |
           {
             echo "## Live Acceptance (Nightly)"
@@ -115,4 +144,6 @@ jobs:
             echo "| White Belt M02 Lab 02 — Emit and See It in Grafana | ${WB02} |"
             echo "| Brown Belt M13 Lab 01 — Observability Stack | ${BB13} |"
             echo "| Brown Belt M14 Lab 01 — DORA Metrics Deep Dive | ${BB14} |"
+            echo "| Brown Belt M15 Lab 01 — SLIs and SLOs (stack-only) | ${BB15} |"
+            echo "| Brown Belt M16 Lab 01 — Incident Management (stack-only) | ${BB16} |"
           } >> "$GITHUB_STEP_SUMMARY"
