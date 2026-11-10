@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟤 Brown Belt
 **Estimated Time**: 60 minutes (20 min theory + 45 min lab + 10 min quiz)
-**Prerequisites**: Module 13 (Observability), Module 14 (DORA), Module 15 (SLIs/SLOs) complete, uFawkesObs v1.1.0-rc.1 running
+**Prerequisites**: Module 13 (Observability), Module 14 (DORA), Module 15 (SLIs/SLOs) complete, uFawkesObs v1.0.1 running
 **DORA Capability**: Mean Time to Restore (MTTR) - Elite level, Incident Management Process, Postmortem Culture, Learning Organization
 
 ---
@@ -84,9 +84,9 @@ This lab walks you through a complete incident response simulation:
 6. Resolution & verification (Grafana/Prometheus/Loki)
 7. Postmortem (timeline, RCA, action items in uFawkesObs format)
 
-**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1), a **pre-release** (Docker Compose)
+**Runs against**: [uFawkesObs `v1.0.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.1) (Docker Compose)
 
-> **Run for real on 2026-10-14 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Grafana's browser-only clicks were not exercised in a browser. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-10 against `v1.0.1` (stable), from a fresh clone, through the stack's APIs.** Grafana's browser-only clicks were not exercised in a browser. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 **Prerequisites**: Module 13 (Observability), Module 14 (DORA), Module 15 (SLI/SLO) complete
 

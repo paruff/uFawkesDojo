@@ -3,9 +3,9 @@
 **Module**: Brown Belt — Module 16: Advanced Incident Management
 **Estimated Time**: 45 minutes
 **Difficulty**: Advanced (Modules 13-15 complete required)
-**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose), a **pre-release**
+**Runs against**: [uFawkesObs `v1.0.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.1) (Docker Compose)
 
-> **Run for real on 2026-10-14 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** The incident is real: you stop a container, the stack's own `ServiceDown` alert fires, and you investigate with the stack's own metrics and logs. The commands ran verbatim and the outputs are what they printed (your numbers and times will differ). Grafana's browser-only clicks (Explore) were not exercised: the same queries run through the Prometheus, Loki and Alertmanager APIs. The lab moves to the stable tag when uFawkesObs ships it. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-10 against `v1.0.1` (stable), from a fresh clone, through the stack's APIs.** The incident is real: you stop a container, the stack's own `ServiceDown` alert fires, and you investigate with the stack's own metrics and logs. The commands ran and the outputs are what they printed (your numbers and times will differ). `validate.sh` passed 8/8. Grafana's browser-only clicks (Explore) were not exercised: the same queries run through the Prometheus, Loki and Alertmanager APIs. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -29,7 +29,7 @@ uFawkesObs ships the whole detect → investigate → verify loop in Docker Comp
 
 ## Prerequisites
 
-**Required**: the uFawkesObs stack from Module 13, running at `v1.1.0-rc.1`
+**Required**: the uFawkesObs stack from Module 13, running at `v1.0.1`
 
 ```bash
 cd ~/dojo-labs/uFawkesObs
@@ -76,7 +76,7 @@ for i in $(seq 1 150); do
 done
 ```
 
-**Expected**: roughly `t+26s: node-exporter pending`, then `t+141s: node-exporter firing`. Note both times in your timeline file.
+**Expected**: roughly `t+45s: node-exporter pending`, then `t+159s: node-exporter firing`. Note both times in your timeline file.
 
 ### 1.3 Observe the alert in Alertmanager
 
@@ -146,7 +146,7 @@ curl -s -G http://localhost:3100/loki/api/v1/query_range \
   | jq -r '.data.result[].values[][1]' | head -3 | cut -c1-200
 ```
 
-**Expected**: lines like `level=error ... write: connection reset by peer`. Now count errors across the stack:
+**Expected**: lines like `level=ERROR ... write: broken pipe`. Now count errors across the stack:
 
 ```bash
 curl -s -G http://localhost:3100/loki/api/v1/query \
@@ -154,17 +154,18 @@ curl -s -G http://localhost:3100/loki/api/v1/query \
   | jq -c '[.data.result[] | {container: .metric.container, errors: .value[1]}]'
 ```
 
-**Expected**: `/node-exporter` has thousands of error lines, far more than anything else.
+**Expected**: `/node-exporter` has hundreds of error lines (925 in the run), far more than anything else (single digits).
 
-**Pause here.** It looks like the cause. It is not: those `connection reset by peer` lines are old (look at the timestamps; they stop when the container stopped) and come from health checks hanging up. A noisy log is not a cause. A log that **ends** is a clue: the container did not log a crash or a panic before it stopped.
+**Pause here.** It looks like the cause. It is not: those `broken pipe` lines are old (look at the timestamps; they stop when the container stopped) and come from health checks hanging up. A noisy log is not a cause. A log that **ends** is a clue: the container did not log a crash or a panic before it stopped.
 
 ### 3.3 Traces: is there a request path to follow?
 
 ```bash
-curl -s "http://localhost:3200/api/search?limit=5"
+curl -s "http://localhost:3200/api/search/tag/service.name/values" | jq -c .tagValues
+curl -s -G http://localhost:3200/api/search --data-urlencode 'tags=service.name=node-exporter' --data-urlencode limit=5 | jq -c .traces
 ```
 
-**Expected**: `{"traces":[],"metrics":{...}}`. Nothing in this stack sends traces, so Tempo is empty, and for this incident that is the right answer: a monitoring agent that just vanished has no request path to trace. Know what each pillar can and cannot tell you.
+**Expected**: `["telemetry-generator"]`, then `[]`. `make up` starts a demo app that sends traces, so Tempo is not empty, but only that app is in it. Nothing traces node-exporter, and for this incident that is the right answer: a monitoring agent that just vanished has no request path to trace. Know what each pillar can and cannot tell you.
 
 ### 3.4 The host: what happened to the container?
 
@@ -305,7 +306,7 @@ UF_OBS_DIR=~/dojo-labs/uFawkesObs bash brown-belt/module-16-incident-management/
 [✓] Alert Pipeline: ServiceDown rule is loaded and Alertmanager answers
 [✓] Grafana Datasources: Prometheus, Loki, Tempo and Alertmanager are configured
 [✓] Loki Logs: <n> node-exporter log lines in the last 24h
-[✓] Tempo: trace search answers (it may well return no traces: see Step 3.3)
+[✓] Tempo: trace search answers (it has no traces for node-exporter: see Step 3.3)
 [✓] Service Restored: up{job="node-exporter"} = 1
 [✓] Postmortem Document: postmortem-<date>.md has all 6 sections and no '<fill in' placeholders left
 
