@@ -3,9 +3,9 @@
 **Module**: Brown Belt — Module 14: DORA Metrics Deep Dive
 **Estimated Time**: 60 minutes
 **Difficulty**: Advanced (Module 13 complete required)
-**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) — a **pre-release**, the same checkout as Module 13 — with the DORA profile
+**Runs against**: [uFawkesObs `v1.0.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.1) (Docker Compose), the same checkout as Module 13, with the DORA profile
 
-> **Run for real on 2026-10-14 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Every step ran verbatim: the events, the PromQL in Prometheus's HTTP API, the dashboard queries through Grafana's datasource API, and the alert rules (loaded, then checked as `pending` or `inactive`). Grafana's browser-only clicks (building and saving the dashboard) were not exercised in a browser. The lab moves to the stable tag when uFawkesObs ships it. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-10 against `v1.0.1` (stable), from a fresh clone.** Steps 1 to 7 and `validate.sh` (9/9) were run: the events, the PromQL in Prometheus's HTTP API, the Grafana datasources through its API, and the alert rules (loaded, then checked as `pending` or `inactive`). Grafana's browser-only clicks (building and saving the dashboard) were not exercised in a browser. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -493,12 +493,15 @@ cd ~/dojo-labs/uFawkesObs
 # Add the file to rule_files, after the dora-regression entry
 sed -i.bak 's#^  - "/etc/prometheus/rules/ufawkesobs-dora-regression.yml"#&\n  - "/etc/prometheus/rules/dojo-dora-alerts.yml"#' config/prometheus/prometheus.yaml
 
-# Check the rules, then reload
+# Check the rules, then restart Prometheus
 docker compose exec -T prometheus promtool check rules /etc/prometheus/rules/dojo-dora-alerts.yml
-curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
+docker compose restart prometheus
+sleep 30
 ```
 
-**Expected**: `SUCCESS: 5 rules found` and `reload HTTP 200`. Delete `prometheus.yaml.bak` afterwards.
+**Expected**: `SUCCESS: 5 rules found`. Delete `prometheus.yaml.bak` afterwards.
+
+Restart Prometheus rather than reloading it: `sed -i` replaces the file, and the container's single-file bind mount keeps pointing at the old one, so `/-/reload` re-reads the old rule list and your group never appears.
 
 ### 6.3 Verify Alert Rules
 
@@ -527,7 +530,7 @@ bash brown-belt/module-14-dora-deep-dive/lab-01/validate.sh
 [✓] DORA Event Ingestion: Event accepted by dora-api (HTTP 201)
 [✓] DORA Metrics Query: All 5 DORA metrics queryable via PromQL
 [✓] Grafana DORA Dashboard: Found 2 DORA dashboard(s)
-[✓] DORA Alert Rules: Found 32 DORA alert rules
+[✓] DORA Alert Rules: Found 39 DORA alert rules
 [✓] Event Ingestion → Metrics: Event ingested and reflected in metrics
 [✓] DORA PromQL Queries: All DORA PromQL queries successful
 
