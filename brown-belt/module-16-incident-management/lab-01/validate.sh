@@ -192,7 +192,7 @@ check_tempo_reachable() {
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${TEMPO_URL}/api/search?limit=1" 2>&1 || echo "000")
 
   if [ "$code" = "200" ]; then
-    record_test "Tempo" "PASS" "trace search answers (it may well return no traces: see Step 3.3)"
+    record_test "Tempo" "PASS" "trace search answers (it has no traces for node-exporter: see Step 3.3)"
   else
     record_test "Tempo" "FAIL" "Tempo search returned HTTP $code"
   fi
