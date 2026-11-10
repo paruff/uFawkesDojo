@@ -3,9 +3,9 @@
 **Module**: Brown Belt — Module 15: SLIs, SLOs, and Error Budgets
 **Estimated Time**: 45 minutes
 **Difficulty**: Advanced (Modules 13-14 complete required)
-**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose), a **pre-release**
+**Runs against**: [uFawkesObs `v1.0.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.1) (Docker Compose)
 
-> **Run for real on 2026-10-14 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Every rule, query and command below ran verbatim, and the outputs are what they printed (your numbers will differ). Grafana's browser-only clicks were not exercised: the dashboard is imported through Grafana's API. The lab moves to the stable tag when uFawkesObs ships it. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-10 against `v1.0.1` (stable), from a fresh clone, through the stack's APIs.** Every rule, query and command below ran, and the outputs are what they printed (your numbers will differ). Step 2.2 and Clean Up restart Prometheus instead of reloading it (see the note in 2.2). `validate.sh` passed 8/8. Grafana's browser-only clicks were not exercised: the dashboard is imported through Grafana's API. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -30,7 +30,7 @@ uFawkesObs ships Prometheus, Grafana and Alertmanager in Docker Compose, and Pro
 
 ## Prerequisites
 
-**Required**: the uFawkesObs stack from Module 13, running at `v1.1.0-rc.1`
+**Required**: the uFawkesObs stack from Module 13, running at `v1.0.1`
 
 ```bash
 cd ~/dojo-labs/uFawkesObs
@@ -65,7 +65,7 @@ This lab assumes you've read the [Module 15 theory](../README.md#theory--concept
 ls config/prometheus/rules/
 ```
 
-**Expected**: `ai-rules.yml`, `ufawkesobs-dora-metrics.yml`, `ufawkesobs-dora-regression.yml`, `ufawkesobs-self-monitoring.yml`. Nothing about SLOs. That is your job.
+**Expected**: `ai-rules.yml`, `ufawkesobs-dora-metrics.yml`, `ufawkesobs-dora-regression.yml`, `ufawkesobs-self-monitoring.yml`, `ufawkesobs-sigma-band.yml` and `ufawkesobs-slo-burn-rate.yml`. The last one is an SLO for the stack's own scrapes (`slo:scrape_error_ratio`), not for a service. Nothing measures Grafana's API. That is your job.
 
 ### 1.2 Look at the raw material
 
@@ -127,10 +127,13 @@ Prometheus loads only the files named under `rule_files`:
 ```bash
 sed -i.bak 's#^  - "/etc/prometheus/rules/ufawkesobs-dora-regression.yml"#&\n  - "/etc/prometheus/rules/dojo-slo-rules.yml"#' config/prometheus/prometheus.yaml
 docker compose exec -T prometheus promtool check rules /etc/prometheus/rules/dojo-slo-rules.yml
-curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
+docker compose restart prometheus
+sleep 30
 ```
 
-**Expected**: `SUCCESS: 3 rules found` and `reload HTTP 200`.
+**Expected**: `SUCCESS: 3 rules found`.
+
+Restart Prometheus rather than reloading it: `sed -i` replaces the file, and the container's single-file bind mount keeps pointing at the old one, so `/-/reload` returns 200 but re-reads the old rule list and your group never appears. From here on, `cat >>` edits the rules file in place, so the plain reload in Steps 3 and 4 works.
 
 ### 2.3 Send steady traffic and verify
 
@@ -339,14 +342,15 @@ UF_OBS_DIR=~/dojo-labs/uFawkesObs bash brown-belt/module-15-slis-slos/lab-01/val
 ```
 [✓] Prerequisites: curl, jq, git, make installed
 [✓] uFawkesObs Stack: All 8 core services healthy
+[✓] SLI Source Metric: grafana_http_request_duration_seconds_count has <n> series
 [✓] SLO Rules: dojo-sli-recording, dojo-slo-error-budget and dojo-slo-alerts are loaded
 [✓] SLI Recording: availability=<value> latency_500ms=<value>
 [✓] Error Budget: target=0.995 burn_rate_1h=<value>
 [✓] SLO Alerts: DojoAvailabilityFastBurn and DojoAvailabilitySlowBurn are loaded
 [✓] Grafana SLO Dashboard: dojo-slo-grafana-api has 6 panels
 
-Total Tests : 7
-Passed      : 7
+Total Tests : 8
+Passed      : 8
 Failed      : 0
 ```
 
@@ -361,7 +365,7 @@ cd ~/dojo-labs/uFawkesObs
 docker compose start loki    # in case you stopped it and did not restart it
 rm config/prometheus/rules/dojo-slo-rules.yml
 mv config/prometheus/prometheus.yaml.bak config/prometheus/prometheus.yaml
-curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://localhost:9090/-/reload
+docker compose restart prometheus
 curl -s -u "admin:$GRAFANA_PASSWORD" -X DELETE http://localhost:3000/api/dashboards/uid/dojo-slo-grafana-api
 ```
 
