@@ -3,9 +3,9 @@
 **Module**: Brown Belt — Module 13: Observability
 **Estimated Time**: 60 minutes
 **Difficulty**: Advanced (Modules 9-12 complete required)
-**Runs against**: [uFawkesObs `v1.1.0-rc.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.1.0-rc.1) (Docker Compose), a **pre-release**
+**Runs against**: [uFawkesObs `v1.0.1`](https://github.com/paruff/uFawkesObs/releases/tag/v1.0.1) (Docker Compose)
 
-> **Run for real on 2026-10-07 against `v1.1.0-rc.1` (pre-release), through the stack's APIs.** Grafana's browser-only clicks were not exercised in a browser. The lab moves to the stable tag when uFawkesObs ships it. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-10 against `v1.0.1` (stable), from a fresh clone.** Steps 1 to 7 and `validate.sh` (12/12) were run through the stack's APIs. Grafana's browser-only clicks were not exercised in a browser. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
 
 ---
 
@@ -25,7 +25,7 @@ By the end of this lab you will have:
 
 ## Why This Lab Uses uFawkesObs
 
-This lab runs against **uFawkesObs `v1.1.0-rc.1`** (pre-release) — the Observability plane of the uFawkes suite — because it provides a complete, production-grade observability stack in Docker Compose:
+This lab runs against **uFawkesObs `v1.0.1`** (stable) — the Observability plane of the uFawkes suite — because it provides a complete, production-grade observability stack in Docker Compose:
 
 - **Prometheus** — Metrics storage and PromQL query engine
 - **Grafana** — Dashboards, visualization, alerting UI
@@ -46,7 +46,7 @@ No Kubernetes required — runs entirely in Docker Compose on your laptop.
 
 ```bash
 mkdir -p ~/dojo-labs && cd ~/dojo-labs
-export OBS_TAG=v1.1.0-rc.1
+export OBS_TAG=v1.0.1
 git clone -c advice.detachedHead=false --depth 1 --branch "$OBS_TAG" \
   https://github.com/paruff/uFawkesObs.git
 cd uFawkesObs
@@ -54,7 +54,7 @@ cp .env.example .env
 # Edit .env and replace GRAFANA_ADMIN_PASSWORD's REPLACE_ME with a real value
 ```
 
-The other `REPLACE_ME` values in `.env` (the Slack and Discord webhooks) can stay as they are.
+The other `REPLACE_ME` value in `.env` (`SLACK_WEBHOOK_URL`) can stay as it is.
 
 Create the data directories the containers write to, as uFawkesObs's README does:
 
@@ -472,23 +472,24 @@ cd /path/to/uFawkesDojo
 bash brown-belt/module-13-observability/lab-01/validate.sh
 ```
 
-**Expected output** (all 11 checks pass):
+**Expected output** (all 12 checks pass):
 
 ```
 [✓] Prerequisites: curl, jq, git, make installed
+[✓] Grafana Datasources: All 4 required datasources configured (Prometheus, Loki, Tempo, Alertmanager)
 [✓] uFawkesObs Stack: All 8 services healthy (prometheus, grafana, loki, tempo, alertmanager, alloy, otel-collector, node-exporter)
-[✓] Prometheus Metrics: Query successful, 12 targets found
+[✓] Prometheus Metrics: Query successful, 11 targets found
 [✓] Loki Logs: LogQL query successful
 [✓] Tempo Traces: Found traces for telemetry-generator
-[✓] Prometheus Rules: Found 68 alerting rules loaded
+[✓] Prometheus Rules: Found 85 alerting rules loaded
 [✓] Alertmanager: Alertmanager API reachable
 [✓] DORA Profile: dora-api healthy and exposing DORA metrics (compute runs in-process)
 [✓] PromQL Queries: All test PromQL queries successful
 [✓] LogQL Queries: All test LogQL queries successful
 [✓] TraceQL Query: TraceQL query successful
 
-Total Tests : 11
-Passed      : 11
+Total Tests : 12
+Passed      : 12
 Failed      : 0
 
 [✓] All tests passed! ✅
