@@ -180,13 +180,9 @@ separates cards.
 - Don't use `#16a34a` (3.30:1) or `#6366f1` with white text (4.47:1).
 - Don't add gradients, web fonts or breakpoints beyond 767px and 640px.
 
-## Today (measured 2026-10-24 on `main`)
+## Today
 
-| Rule                              | What the pages have                                                                     |
-| --------------------------------- | --------------------------------------------------------------------------------------- |
-| Flame and Indigo, no gradients    | Violet gradient `#667eea` to `#764ba2` (40 and 12 uses across the three pages), a pink gradient `#f093fb` to `#f5576c` |
-| Status colours from the palette   | `#48bb78`, `#ed8936`, `#f56565`, `#9f7aea`, `#28a745`, `#ffc107`                          |
-| Ink and Muted greys               | `#333`, `#555`, `#666`                                                                  |
-| Radii 4px and 8px                 | 8px, 12px, 15px, 20px, 50%                                                              |
-| Breakpoints 767px and 640px       | `max-width: 768px` only                                                                 |
-| Monospace stack                   | `onboarding.html` uses `"Courier New", monospace`                                       |
+`index.html`, `lesson.html` and `onboarding.html` use these tokens (D15). The
+violet and pink gradients, the off-palette status colours and the 12px, 15px
+and 20px radii are gone. Not yet done: dark mode on `index.html` and
+`onboarding.html` (only `lesson.html` follows `prefers-color-scheme`).
