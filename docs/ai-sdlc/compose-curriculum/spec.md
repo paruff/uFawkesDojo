@@ -89,6 +89,29 @@ measure during rewrite rather than assume:
   registration, not stack startup.
 - Brown Belt Module 13 (currently 3–4 hours) may shrink on uFawkesObs.
 
+## Interfaces
+
+uFawkesDojo provides no contract to another repo. It consumes these rows of
+the suite's [cross-repo interface contracts](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/spec.md#cross-repo-interface-contracts):
+
+| Contract | From | How a lab pins it |
+|---|---|---|
+| Release tags of each stack | uFawkesObs, uFawkesPipe, uFawkesDevX, uFawkesAI | The `**Runs against**` line and `git clone --branch vX.Y.Z` (R1, R2; AC-003, AC-006, AC-007) |
+| Compose surface: services, published ports, `.env.example` variables | uFawkesObs | The tag. A lab step that names a port or a variable breaks on a major release of the stack |
+| Reusable workflow `reusable-preflight.yml` | uFawkesPipe | Commit SHA |
+| `ufawkes-ci` CI job image and `fawkes-space` devcontainer image | uFawkesPipe, uFawkesAI | Digest |
+
+## Pipeline invariants
+
+The [suite pipeline invariants](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/spec.md#pipeline-invariants) apply here, with one departure:
+
+- **PI-8:** this repo has no `main-ci-guard.yml`. Its required checks are the hook job, `🔗 Artifact Chain`, `commit-lint` and `markdownlint`. Tracked in paruff/uFawkesDojo#120.
+
+This repo adds:
+
+- No lab targets `main` (AC-003), and every tag a lab names exists (AC-006).
+- The nightly live acceptance run checks out the tag the lab pins (AC-007).
+
 ## Concerns
 
 | Risk | Handling |
