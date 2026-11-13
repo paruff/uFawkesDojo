@@ -12,19 +12,17 @@
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: #333;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: #f9fafb;
+        color: #111827;
         line-height: 1.6;
       }
 
       .header {
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
+        background: #061723;
         padding: 2rem 0;
         text-align: center;
-        color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        color: #ffffff;
       }
 
       .header h1 {
@@ -45,24 +43,24 @@
 
       .hero-card {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
         text-align: center;
       }
 
       .hero-card h2 {
-        color: #667eea;
+        color: #4f46e5;
         font-size: 2rem;
         margin-bottom: 1rem;
       }
 
       .hero-card .time-estimate {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: #4f46e5;
+        color: #ffffff;
         padding: 0.5rem 1rem;
-        border-radius: 20px;
+        border-radius: 8px;
         display: inline-block;
         margin: 1rem 0;
         font-weight: bold;
@@ -77,22 +75,20 @@
 
       .path-card {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
         cursor: pointer;
-        transition: transform 0.3s ease;
         border: 3px solid transparent;
       }
 
       .path-card:hover {
-        transform: translateY(-5px);
-        border-color: #667eea;
+                border-color: #4f46e5;
       }
 
       .path-card.selected {
-        border-color: #667eea;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-color: #4f46e5;
+        background: #f9fafb;
       }
 
       .path-icon {
@@ -101,22 +97,22 @@
       }
 
       .path-card h3 {
-        color: #667eea;
+        color: #4f46e5;
         margin-bottom: 0.5rem;
       }
 
       .path-card .duration {
-        color: #666;
+        color: #4b5563;
         font-size: 0.9rem;
         margin-bottom: 1rem;
       }
 
       .step-section {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
       }
 
       .step {
@@ -124,17 +120,17 @@
         gap: 1.5rem;
         margin: 2rem 0;
         padding: 1.5rem;
-        background: #f8f9fa;
+        background: #f9fafb;
         border-radius: 8px;
-        border-left: 4px solid #667eea;
+        border-left: 4px solid #4f46e5;
       }
 
       .step-number {
         flex-shrink: 0;
         width: 50px;
         height: 50px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: #4f46e5;
+        color: #ffffff;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -144,34 +140,36 @@
       }
 
       .step-content h3 {
-        color: #333;
+        color: #111827;
         margin-bottom: 0.5rem;
       }
 
       .step-time {
-        color: #667eea;
+        color: #4f46e5;
         font-size: 0.9rem;
         font-weight: bold;
         margin-bottom: 0.5rem;
       }
 
       .code-block {
-        background: #2d2d2d;
-        color: #f8f8f2;
+        background: #061723;
+        color: #f9fafb;
         padding: 1rem;
-        border-radius: 6px;
+        border-radius: 8px;
         margin: 1rem 0;
         overflow-x: auto;
-        font-family: "Courier New", monospace;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-size: 0.9rem;
       }
 
       .command {
-        color: #50fa7b;
+        color: #a5b4fc;
       }
 
       .comment {
-        color: #6272a4;
+        color: #e5e7eb;
       }
 
       .checklist {
@@ -190,20 +188,22 @@
         position: absolute;
         left: 0;
         font-size: 1.2rem;
-        color: #667eea;
+        color: #4f46e5;
       }
 
       .help-box {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
+        background: #fef3c7;
+        color: #92400e;
+        border-left: 4px solid #92400e;
         padding: 1rem;
         margin: 1rem 0;
         border-radius: 4px;
       }
 
       .success-box {
-        background: #d4edda;
-        border-left: 4px solid #28a745;
+        background: #dcfce7;
+        color: #15803d;
+        border-left: 4px solid #15803d;
         padding: 1rem;
         margin: 1rem 0;
         border-radius: 4px;
@@ -217,8 +217,10 @@
       }
 
       .quick-link {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: #ffffff;
+        color: #4f46e5;
+        border: 2px solid #4f46e5;
+        font-weight: 600;
         padding: 1rem;
         border-radius: 8px;
         text-align: center;
@@ -227,60 +229,61 @@
       }
 
       .quick-link:hover {
-        transform: translateY(-2px);
+        color: #4338ca;
+        border-color: #4338ca;
       }
 
       .faq {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
       }
 
       .faq-item {
         margin: 1.5rem 0;
         padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 6px;
+        background: #f9fafb;
+        border-radius: 8px;
       }
 
       .faq-question {
         font-weight: bold;
-        color: #667eea;
+        color: #4f46e5;
         margin-bottom: 0.5rem;
       }
 
       .video-placeholder {
-        background: #f0f0f0;
-        border: 2px dashed #ccc;
+        background: #f9fafb;
+        border: 2px dashed #4b5563;
         border-radius: 8px;
         padding: 3rem;
         text-align: center;
-        color: #666;
+        color: #4b5563;
         margin: 1rem 0;
       }
 
       .progress-tracker {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
       }
 
       .progress-bar {
         width: 100%;
         height: 30px;
-        background: #e9ecef;
-        border-radius: 15px;
+        background: #e5e7eb;
+        border-radius: 8px;
         overflow: hidden;
         margin: 1rem 0;
       }
 
       .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        background: #4f46e5;
         width: 0%;
         transition: width 0.5s ease;
         display: flex;
@@ -290,7 +293,7 @@
         font-weight: bold;
       }
 
-      @media (max-width: 768px) {
+      @media (max-width: 767px) {
         .header h1 {
           font-size: 1.8rem;
         }
@@ -326,7 +329,7 @@
         <h2>Welcome to Fawkes!</h2>
         <p>Fawkes is your internal developer platform that makes deploying applications fast, secure, and reliable.</p>
         <div class="time-estimate">⏱️ Complete Onboarding: 30 minutes</div>
-        <p style="margin-top: 1rem; color: #666">
+        <p style="margin-top: 1rem; color: #4b5563">
           No infrastructure knowledge required. Just write code, push to Git, and we handle the rest.
         </p>
       </div>
@@ -369,7 +372,7 @@
         <div class="progress-bar">
           <div class="progress-fill" id="progressBar">0%</div>
         </div>
-        <p style="text-align: center; color: #666; margin-top: 0.5rem">Keep going! You're doing great 🎉</p>
+        <p style="text-align: center; color: #4b5563; margin-top: 0.5rem">Keep going! You're doing great 🎉</p>
       </div>
 
       <!-- Beginner Path -->
@@ -429,7 +432,7 @@
               <p>Open the project in your favorite code editor (VS Code, IntelliJ, etc.)</p>
               <div class="help-box">
                 <strong>📚 New to Git?</strong> Git is how we track code changes.
-                <a href="#git-basics" style="color: #667eea">Learn Git basics →</a>
+                <a href="#git-basics" style="color: #4f46e5">Learn Git basics →</a>
               </div>
             </div>
           </div>
@@ -860,7 +863,7 @@
       <div class="step-section">
         <h2>📋 Quick Reference: Fawkes CLI Commands</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem">
-          <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px">
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px">
             <h4>🚀 Deployment</h4>
             <div class="code-block">
               fawkes deploy<br />
@@ -870,7 +873,7 @@
             </div>
           </div>
 
-          <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px">
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px">
             <h4>📊 Monitoring</h4>
             <div class="code-block">
               fawkes logs<br />
@@ -880,7 +883,7 @@
             </div>
           </div>
 
-          <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px">
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px">
             <h4>🔐 Secrets</h4>
             <div class="code-block">
               fawkes secret set KEY val<br />
@@ -889,7 +892,7 @@
             </div>
           </div>
 
-          <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px">
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px">
             <h4>🛠️ Utilities</h4>
             <div class="code-block">
               fawkes open<br />
@@ -907,28 +910,28 @@
         <p>See how other developers are using Fawkes:</p>
 
         <div style="display: grid; gap: 1.5rem; margin-top: 1.5rem">
-          <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #28a745">
+          <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #15803d">
             <p style="font-style: italic; margin-bottom: 1rem">
               "Before Fawkes, deployments took me 2 hours and I was always nervous. Now I deploy 5 times a day and never
               worry about breaking things."
             </p>
-            <p style="color: #666"><strong>— Sarah, Frontend Developer</strong></p>
+            <p style="color: #4b5563"><strong>— Sarah, Frontend Developer</strong></p>
           </div>
 
-          <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #667eea">
+          <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #4f46e5">
             <p style="font-style: italic; margin-bottom: 1rem">
               "I went from not knowing what Kubernetes was to deploying microservices in a week. Fawkes handles all the
               complexity."
             </p>
-            <p style="color: #666"><strong>— Marcus, Junior Developer</strong></p>
+            <p style="color: #4b5563"><strong>— Marcus, Junior Developer</strong></p>
           </div>
 
-          <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #ffc107">
+          <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #92400e">
             <p style="font-style: italic; margin-bottom: 1rem">
               "Our team went from monthly deployments to deploying multiple times per day. Fawkes gave us the confidence
               to move fast."
             </p>
-            <p style="color: #666"><strong>— Dev Team Lead, Payments Team</strong></p>
+            <p style="color: #4b5563"><strong>— Dev Team Lead, Payments Team</strong></p>
           </div>
         </div>
       </div>
@@ -948,29 +951,31 @@
         >
           <div
             style="
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
+              background: #ffffff;
+              color: #111827;
+              border: 1px solid #e5e7eb;
               padding: 1.5rem;
               border-radius: 8px;
             "
           >
-            <h3 style="color: white">📖 Learn More</h3>
+            <h3 style="color: #111827">📖 Learn More</h3>
             <ul style="margin-top: 1rem; line-height: 1.8">
-              <li>Read the <a href="#" style="color: white; text-decoration: underline">Fawkes User Guide</a></li>
-              <li>Watch <a href="#" style="color: white; text-decoration: underline">video tutorials</a></li>
-              <li>Join <a href="#" style="color: white; text-decoration: underline">#fawkes-users</a> on Mattermost</li>
+              <li>Read the <a href="#" style="color: #4f46e5; text-decoration: underline">Fawkes User Guide</a></li>
+              <li>Watch <a href="#" style="color: #4f46e5; text-decoration: underline">video tutorials</a></li>
+              <li>Join <a href="#" style="color: #4f46e5; text-decoration: underline">#fawkes-users</a> on Mattermost</li>
             </ul>
           </div>
 
           <div
             style="
-              background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-              color: white;
+              background: #ffffff;
+              color: #111827;
+              border: 1px solid #e5e7eb;
               padding: 1.5rem;
               border-radius: 8px;
             "
           >
-            <h3 style="color: white">🚀 Deploy More</h3>
+            <h3 style="color: #111827">🚀 Deploy More</h3>
             <ul style="margin-top: 1rem; line-height: 1.8">
               <li>Try different templates</li>
               <li>Deploy to staging</li>
@@ -981,13 +986,14 @@
 
           <div
             style="
-              background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-              color: white;
+              background: #ffffff;
+              color: #111827;
+              border: 1px solid #e5e7eb;
               padding: 1.5rem;
               border-radius: 8px;
             "
           >
-            <h3 style="color: white">🤝 Help Others</h3>
+            <h3 style="color: #111827">🤝 Help Others</h3>
             <ul style="margin-top: 1rem; line-height: 1.8">
               <li>Share your experience</li>
               <li>Answer questions in #fawkes-help</li>
@@ -1010,15 +1016,15 @@
       </div>
     </div>
 
-    <div style="background: rgba(0, 0, 0, 0.8); color: white; padding: 2rem 0; text-align: center; margin-top: 2rem">
+    <div style="background: #061723; color: #ffffff; padding: 2rem 0; text-align: center; margin-top: 2rem">
       <div class="container">
         <h3>📚 Additional Resources</h3>
         <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; flex-wrap: wrap">
-          <a href="#" style="color: white">📖 Full Documentation</a>
-          <a href="#" style="color: white">🎥 Video Tutorials</a>
-          <a href="#" style="color: white">💬 Community Forum</a>
-          <a href="#" style="color: white">🐛 Report Issues</a>
-          <a href="#" style="color: white">📊 Platform Status</a>
+          <a href="#" style="color: #a5b4fc">📖 Full Documentation</a>
+          <a href="#" style="color: #a5b4fc">🎥 Video Tutorials</a>
+          <a href="#" style="color: #a5b4fc">💬 Community Forum</a>
+          <a href="#" style="color: #a5b4fc">🐛 Report Issues</a>
+          <a href="#" style="color: #a5b4fc">📊 Platform Status</a>
         </div>
         <p style="margin-top: 2rem; opacity: 0.7">
           Built with ❤️ by the Platform Team | Questions? #fawkes-help on Mattermost

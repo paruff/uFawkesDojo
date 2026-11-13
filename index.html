@@ -13,25 +13,22 @@
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: #333;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: #f9fafb;
+        color: #111827;
         line-height: 1.6;
       }
 
       .header {
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
+        background: #061723;
         padding: 2rem 0;
         text-align: center;
-        color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        color: #ffffff;
       }
 
       .header h1 {
         font-size: 3rem;
         margin-bottom: 0.5rem;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
       }
 
       .header .subtitle {
@@ -47,14 +44,14 @@
 
       .intro-card {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
       }
 
       .intro-card h2 {
-        color: #667eea;
+        color: #4f46e5;
         margin-bottom: 1rem;
       }
 
@@ -66,14 +63,14 @@
       }
 
       .philosophy-card {
-        background: #f8f9fa;
-        border-left: 4px solid #667eea;
+        background: #f9fafb;
+        border-left: 4px solid #4f46e5;
         padding: 1.5rem;
         border-radius: 8px;
       }
 
       .philosophy-card h3 {
-        color: #667eea;
+        color: #4f46e5;
         font-size: 1.1rem;
         margin-bottom: 0.5rem;
       }
@@ -86,12 +83,11 @@
       }
 
       .stat-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: #4f46e5;
+        color: #ffffff;
         padding: 1.5rem;
         border-radius: 8px;
         text-align: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
 
       .stat-card .number {
@@ -102,15 +98,14 @@
 
       .stat-card .label {
         font-size: 0.9rem;
-        opacity: 0.9;
       }
 
       .belt-section {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
       }
 
       .belt-header {
@@ -119,7 +114,7 @@
         gap: 1rem;
         margin-bottom: 1.5rem;
         padding-bottom: 1rem;
-        border-bottom: 3px solid #eee;
+        border-bottom: 1px solid #e5e7eb;
       }
 
       .belt-icon {
@@ -128,26 +123,26 @@
 
       .belt-info h3 {
         font-size: 1.8rem;
-        color: #333;
+        color: #111827;
       }
 
       .belt-meta {
         display: flex;
         gap: 2rem;
-        color: #666;
+        color: #4b5563;
         font-size: 0.9rem;
         flex-wrap: wrap;
       }
 
       .belt-competencies {
-        background: #f8f9fa;
+        background: #f9fafb;
         padding: 1rem;
         border-radius: 8px;
         margin: 1rem 0;
       }
 
       .belt-competencies h4 {
-        color: #667eea;
+        color: #4f46e5;
         margin-bottom: 0.5rem;
       }
 
@@ -161,10 +156,11 @@
 
       .dora-coverage {
         display: inline-block;
-        background: #e7f3ff;
-        color: #0066cc;
+        background: #f9fafb;
+        color: #4f46e5;
+        border: 1px solid #4f46e5;
         padding: 0.3rem 0.8rem;
-        border-radius: 20px;
+        border-radius: 8px;
         font-size: 0.85rem;
         font-weight: 600;
         margin-top: 0.5rem;
@@ -177,12 +173,11 @@
       }
 
       .module-card {
-        background: #f8f9fa;
-        border: 2px solid #e9ecef;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
         border-radius: 8px;
         padding: 1.5rem;
-        transition: all 0.3s ease;
-        cursor: pointer;
+                cursor: pointer;
         position: relative;
         text-decoration: none;
         display: block;
@@ -190,9 +185,7 @@
       }
 
       .module-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-        border-color: #667eea;
+                border-color: #4f46e5;
         text-decoration: none;
       }
 
@@ -200,8 +193,8 @@
         position: absolute;
         top: 1rem;
         right: 1rem;
-        background: #667eea;
-        color: white;
+        background: #4f46e5;
+        color: #ffffff;
         width: 36px;
         height: 36px;
         border-radius: 50%;
@@ -214,57 +207,67 @@
       .module-title {
         font-size: 1.1rem;
         font-weight: 600;
-        color: #333;
+        color: #111827;
         margin-bottom: 0.5rem;
         padding-right: 3rem;
       }
 
       .module-duration {
         font-size: 0.85rem;
-        color: #666;
+        color: #4b5563;
         margin-bottom: 0.5rem;
       }
 
       .module-description {
         font-size: 0.9rem;
-        color: #555;
+        color: #4b5563;
         line-height: 1.4;
       }
 
       .cta-section {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
         text-align: center;
       }
 
       .cta-button {
         display: inline-block;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: #f06300;
+        color: #061723;
         padding: 1rem 2rem;
         border-radius: 8px;
         text-decoration: none;
         font-weight: bold;
         font-size: 1.1rem;
         margin: 0.5rem;
-        transition: transform 0.3s ease;
       }
 
       .cta-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        background: #e85800;
       }
 
       .certification-path {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        border-radius: 12px;
+        background: #061723;
+        color: #ffffff;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
+      }
+
+      .cta-button.secondary {
+        background: #ffffff;
+        color: #4f46e5;
+        border: 2px solid #4f46e5;
+      }
+
+      .cta-button.secondary:hover {
+        background: #ffffff;
+        color: #4338ca;
+        border-color: #4338ca;
       }
 
       .cert-grid {
@@ -275,8 +278,7 @@
       }
 
       .cert-card {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
+        background: #1f2937;
         border-radius: 8px;
         padding: 1.5rem;
         text-align: center;
@@ -289,10 +291,10 @@
 
       .belt-progression {
         background: white;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e5e7eb;
       }
 
       .progression-flow {
@@ -317,17 +319,17 @@
 
       .progression-arrow {
         font-size: 2rem;
-        color: #667eea;
+        color: #4f46e5;
       }
 
       .footer {
         text-align: center;
         padding: 2rem;
-        color: white;
-        opacity: 0.8;
+        color: #ffffff;
+        background: #061723;
       }
 
-      @media (max-width: 768px) {
+      @media (max-width: 767px) {
         .header h1 {
           font-size: 2rem;
         }
@@ -420,43 +422,43 @@
       <!-- Belt Progression Overview -->
       <div class="belt-progression">
         <h2>Belt Progression Path</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 1rem">
+        <p style="text-align: center; color: #4b5563; margin-bottom: 1rem">
           Total Time: 40 hours (1 week full-time or 5 weeks part-time)
         </p>
         <div class="progression-flow">
           <div class="progression-step">
             <div class="progression-icon">⚪</div>
             <div><strong>White Belt</strong></div>
-            <div style="font-size: 0.85rem; color: #666">8 hours</div>
-            <div style="font-size: 0.85rem; color: #666">Platform Fundamentals</div>
+            <div style="font-size: 0.85rem; color: #4b5563">8 hours</div>
+            <div style="font-size: 0.85rem; color: #4b5563">Platform Fundamentals</div>
           </div>
           <div class="progression-arrow">→</div>
           <div class="progression-step">
             <div class="progression-icon">🟡</div>
             <div><strong>Yellow Belt</strong></div>
-            <div style="font-size: 0.85rem; color: #666">8 hours</div>
-            <div style="font-size: 0.85rem; color: #666">CI/CD Mastery</div>
+            <div style="font-size: 0.85rem; color: #4b5563">8 hours</div>
+            <div style="font-size: 0.85rem; color: #4b5563">CI/CD Mastery</div>
           </div>
           <div class="progression-arrow">→</div>
           <div class="progression-step">
             <div class="progression-icon">🟢</div>
             <div><strong>Green Belt</strong></div>
-            <div style="font-size: 0.85rem; color: #666">8 hours</div>
-            <div style="font-size: 0.85rem; color: #666">GitOps & Deployment</div>
+            <div style="font-size: 0.85rem; color: #4b5563">8 hours</div>
+            <div style="font-size: 0.85rem; color: #4b5563">GitOps & Deployment</div>
           </div>
           <div class="progression-arrow">→</div>
           <div class="progression-step">
             <div class="progression-icon">🟤</div>
             <div><strong>Brown Belt</strong></div>
-            <div style="font-size: 0.85rem; color: #666">8 hours</div>
-            <div style="font-size: 0.85rem; color: #666">Observability & SRE</div>
+            <div style="font-size: 0.85rem; color: #4b5563">8 hours</div>
+            <div style="font-size: 0.85rem; color: #4b5563">Observability & SRE</div>
           </div>
           <div class="progression-arrow">→</div>
           <div class="progression-step">
             <div class="progression-icon">⚫</div>
             <div><strong>Black Belt</strong></div>
-            <div style="font-size: 0.85rem; color: #666">8 hours</div>
-            <div style="font-size: 0.85rem; color: #666">Platform Architecture</div>
+            <div style="font-size: 0.85rem; color: #4b5563">8 hours</div>
+            <div style="font-size: 0.85rem; color: #4b5563">Platform Architecture</div>
           </div>
         </div>
       </div>
@@ -466,7 +468,7 @@
         <h2>Ready to Begin Your Journey?</h2>
         <p style="margin: 1rem 0">Start with Module 1 or jump to any belt level based on your experience</p>
         <a href="#white-belt" class="cta-button">Start White Belt</a>
-        <a href="#certification" class="cta-button">Certification Status</a>
+        <a href="#certification" class="cta-button secondary">Certification Status</a>
       </div>
 
       <!-- White Belt -->
@@ -834,8 +836,8 @@
             margin-top: 1.5rem;
           "
         >
-          <div style="background: #f0f7ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #667eea">
-            <h4 style="color: #667eea; margin-bottom: 0.5rem">Continuous Delivery (8)</h4>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border-left: 4px solid #4f46e5">
+            <h4 style="color: #4f46e5; margin-bottom: 0.5rem">Continuous Delivery (8)</h4>
             <ul style="font-size: 0.9rem; margin-left: 1.2rem">
               <li>Version Control</li>
               <li>Deployment Automation</li>
@@ -848,8 +850,8 @@
             </ul>
           </div>
 
-          <div style="background: #f0fff4; padding: 1rem; border-radius: 8px; border-left: 4px solid #48bb78">
-            <h4 style="color: #48bb78; margin-bottom: 0.5rem">Architecture (3)</h4>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border-left: 4px solid #4f46e5">
+            <h4 style="color: #4f46e5; margin-bottom: 0.5rem">Architecture (3)</h4>
             <ul style="font-size: 0.9rem; margin-left: 1.2rem">
               <li>Loosely Coupled Architecture</li>
               <li>Empowering Teams</li>
@@ -857,8 +859,8 @@
             </ul>
           </div>
 
-          <div style="background: #fffaf0; padding: 1rem; border-radius: 8px; border-left: 4px solid #ed8936">
-            <h4 style="color: #ed8936; margin-bottom: 0.5rem">Product & Process (6)</h4>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border-left: 4px solid #4f46e5">
+            <h4 style="color: #4f46e5; margin-bottom: 0.5rem">Product & Process (6)</h4>
             <ul style="font-size: 0.9rem; margin-left: 1.2rem">
               <li>Team Experimentation</li>
               <li>Work in Small Batches</li>
@@ -869,8 +871,8 @@
             </ul>
           </div>
 
-          <div style="background: #fef5ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #9f7aea">
-            <h4 style="color: #9f7aea; margin-bottom: 0.5rem">Lean Management (4)</h4>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border-left: 4px solid #4f46e5">
+            <h4 style="color: #4f46e5; margin-bottom: 0.5rem">Lean Management (4)</h4>
             <ul style="font-size: 0.9rem; margin-left: 1.2rem">
               <li>Monitoring & Observability</li>
               <li>Proactive Failure Notification</li>
@@ -879,8 +881,8 @@
             </ul>
           </div>
 
-          <div style="background: #fff5f5; padding: 1rem; border-radius: 8px; border-left: 4px solid #f56565">
-            <h4 style="color: #f56565; margin-bottom: 0.5rem">Cultural (3)</h4>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border-left: 4px solid #4f46e5">
+            <h4 style="color: #4f46e5; margin-bottom: 0.5rem">Cultural (3)</h4>
             <ul style="font-size: 0.9rem; margin-left: 1.2rem">
               <li>Generative Organizational Culture</li>
               <li>Learning Culture</li>
@@ -898,7 +900,7 @@
         <p>
           Start with
           <strong
-            ><a href="lesson.html?src=modules/white-belt/module-01-what-is-idp.md" style="color: #667eea; text-decoration: none"
+            ><a href="lesson.html?src=modules/white-belt/module-01-what-is-idp.md" style="color: #4f46e5; text-decoration: none"
               >Module 1: Internal Delivery Platforms</a
             ></strong
           >
@@ -909,7 +911,7 @@
         <p>
           Start with
           <strong
-            ><a href="lesson.html?src=modules/yellow-belt/module-05-ci-fundamentals.md" style="color: #667eea; text-decoration: none"
+            ><a href="lesson.html?src=modules/yellow-belt/module-05-ci-fundamentals.md" style="color: #4f46e5; text-decoration: none"
               >Module 5: Continuous Integration Fundamentals</a
             ></strong
           >
@@ -920,7 +922,7 @@
         <p>
           Jump to
           <strong
-            ><a href="lesson.html?src=modules/black-belt/module-17-platform-product.md" style="color: #667eea; text-decoration: none"
+            ><a href="lesson.html?src=modules/black-belt/module-17-platform-product.md" style="color: #4f46e5; text-decoration: none"
               >Module 17: Platform as a Product</a
             ></strong
           >
@@ -935,17 +937,17 @@
           <li>
             <a
               href="lesson.html?src=white-belt/module-01-what-is-idp/lab-01/instructions.md"
-              style="color: #667eea"
+              style="color: #4f46e5"
               >Module 1</a
             >: deploy a service with kubectl, on a Kubernetes cluster you provide
           </li>
           <li>
             <a
               href="lesson.html?src=white-belt/module-02-dora-metrics/lab-01/instructions.md"
-              style="color: #667eea"
+              style="color: #4f46e5"
               >Module 2</a
             >: send real deployment events to
-            <a href="https://github.com/paruff/uFawkesObs" style="color: #667eea">uFawkesObs</a> (Docker Compose) and
+            <a href="https://github.com/paruff/uFawkesObs" style="color: #4f46e5">uFawkesObs</a> (Docker Compose) and
             watch the DORA dashboards change
           </li>
         </ul>
@@ -957,7 +959,7 @@
         <h3 style="margin-top: 1.5rem">Assessment & Certification</h3>
         <p>
           Written belt assessments are available in the
-          <a href="https://github.com/paruff/uFawkesDojo/tree/main/assessments" style="color: #667eea"
+          <a href="https://github.com/paruff/uFawkesDojo/tree/main/assessments" style="color: #4f46e5"
             >assessments folder</a
           >. Practical exams, scoring, and certification are planned but not built yet.
         </p>
@@ -966,11 +968,11 @@
         <ul style="margin-top: 0.5rem; margin-left: 1.5rem">
           <li>
             📖 <strong>Documentation:</strong>
-            <a href="https://github.com/paruff/uFawkesDojo" style="color: #667eea">github.com/paruff/uFawkesDojo</a>
+            <a href="https://github.com/paruff/uFawkesDojo" style="color: #4f46e5">github.com/paruff/uFawkesDojo</a>
           </li>
           <li>
             🐛 <strong>Questions & Issues:</strong>
-            <a href="https://github.com/paruff/uFawkesDojo/issues" style="color: #667eea">GitHub Issues</a>
+            <a href="https://github.com/paruff/uFawkesDojo/issues" style="color: #4f46e5">GitHub Issues</a>
           </li>
         </ul>
 
