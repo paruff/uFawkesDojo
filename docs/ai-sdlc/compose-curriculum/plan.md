@@ -124,3 +124,12 @@ The nightly live acceptance (#55) runs 4 of 14 labs.
 | AC-006 | Script: every tag a lab names exists | Phase 0.2.0 step 5; nightly |
 | AC-007 | The nightly's checkout ref equals the lab's pin | Phase 0.2.6 |
 | AC-DOJO-01 (suite) | `bash scripts/checks/ac-dojo-01.sh` in uFawkes.dev exits 0 | Before the 0.2 release |
+
+### Make commands
+
+Per [the suite's rule for `make` commands](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/spec.md#make-verification-commands). This repo has no `make validate` or `make doctor` yet (paruff/uFawkesDojo#121); run
+`pre-commit run --all-files` directly.
+
+| Command | Proves | Needs |
+|---|---|---|
+| `make verify-labs` | The four stack-verified labs' `validate.sh` pass against a real uFawkesObs stack, as the nightly does | Docker; a uFawkesObs checkout at `UF_OBS_DIR` |
