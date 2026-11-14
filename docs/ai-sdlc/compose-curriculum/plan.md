@@ -1,7 +1,7 @@
 # Plan: Teach the uFawkes Compose Suite First
 
 **Traces to:** [`spec.md`](spec.md) → [`intent.md`](intent.md)
-**Status:** Draft | **Revision:** 3 | **State as of:** 2026-10-14
+**Status:** Draft | **Revision:** 4 | **State as of:** 2026-11-13
 **Evidence:** [`audit-2026-10-06.md`](audit-2026-10-06.md)
 
 Phases follow the suite release order. Each phase starts only after its
@@ -16,13 +16,19 @@ live status is on the
 | Phase | Stack release today | Content | Run for real |
 |---|---|---|---|
 | 0.2.1 Accuracy + "Start here" | uFawkesAI `v2.0.0` (tagged 2026-10-07) | Guide, PR template, Module 0 and its lab merged | "Start here" on `v2.0.0`, verbatim in CI (`start-here-live.yml`); AC-DOJO-01 passes |
-| 0.2.2 uFawkesObs | `v1.2.0-rc.1` (no stable tag); labs run on `v1.1.0-rc.1` | Module 2 lab-01 re-run (#79, #90); Brown Belt 13–16 written | Module 2 lab-01; M13/M14 `validate.sh` in the nightly only |
+| 0.2.2 uFawkesObs | `v1.0.1` (stable, 2026-10-18). Module 2 lab-01 pins `v1.0.0`, lab-02 `v1.1.0-rc.1`, Brown Belt 13–16 `v1.0.1` | Module 2 lab-01 re-run (#79, #90); Brown Belt 13–16 written | Module 2 lab-01 and lab-02, M13 and M14 in the nightly; M15 and M16 as `--stack-only`. The lab headers say 13–16 ran on 2026-11-10 |
 | 0.2.3 uFawkesPipe | `v1.16.0-beta.1` (no `v2.0.0`) | Yellow Belt 5–8 written against `v2.0.0` | none |
-| 0.2.4 uFawkesDevX | `v1.1.0` (stable) | White Belt 1/3/4 written against `v1.0.1` | none. **Blocked:** `v1.1.0` still does not fix Backstage (uFawkesDevX#98, open). SQLite adopted for #57 |
+| 0.2.4 uFawkesDevX | `v1.2.0` (stable, 2026-10-17) | White Belt 1/3/4 written against `v1.0.1` | none. `v1.2.0` lists the Backstage build (uFawkesDevX#98) as fixed and runs on SQLite, so the labs' Postgres steps are wrong. Re-pin and run: #123 |
 | 0.2.5 Green Belt framing | none needed | Done (Modules 9–12) | n/a |
 
 "Written" means the lab files exist. It does not mean a learner can follow
 them. Eleven labs were merged ahead of their stacks without a run (audit F1).
+
+The 2026-11-13 suite audit compared every lab with its stack's `main`. Its
+findings are the sub-issues of #127: the uFawkesDevX labs (#123), wrong ports,
+files and metric names (#124), pins and the AC-008 check (#125), and CI and
+stale state (#126). One decision is open and the owner's: whether a `fawkes`
+lab is in scope, since no lab targets `fawkes` today.
 
 ## Phase 0.2.0 — Verify and gate (now, before any announcement)
 
@@ -123,6 +129,7 @@ The nightly live acceptance (#55) runs 4 of 14 labs.
 | AC-005 | Authoring-guide boxes in the PR template checked, or each gap explained | Every module PR |
 | AC-006 | Script: every tag a lab names exists | Phase 0.2.0 step 5; nightly |
 | AC-007 | The nightly's checkout ref equals the lab's pin | Phase 0.2.6 |
+| AC-008 | A nightly job looks up each lab's `make` targets and `localhost` ports in the pinned tag (#125) | Nightly; every lab PR |
 | AC-DOJO-01 (suite) | `bash scripts/checks/ac-dojo-01.sh` in uFawkes.dev exits 0 | Before the 0.2 release |
 
 ### Make commands

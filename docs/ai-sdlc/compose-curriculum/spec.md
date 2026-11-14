@@ -1,7 +1,7 @@
 # Spec: Teach the uFawkes Compose Suite First
 
 **Traces to:** [`intent.md`](intent.md) | **Plan:** [`plan.md`](plan.md)
-**Status:** Draft | **Revision:** 5
+**Status:** Draft | **Revision:** 6
 **Approval required before risky work:** Yes. This rewrites live curriculum
 content that dojo.ufawkes.dev links to. No module changes until the stack
 it targets is released, and every lab step is run for real first.
@@ -16,6 +16,7 @@ it targets is released, and every lab step is run for real first.
 | 4 | 2026-10-04 | Added R6 and AC-005: rewritten modules pass the whole authoring-guide checklist | Review against mastery learning and Visible Learning: R5 bound only two of the guide's items, so a rewrite could meet every AC and skip retrieval, feedback and correctives |
 | 5 | 2026-10-06 | Added R7, R8, AC-006, AC-007; belt table notes uFawkesDevX is released (`v1.0.1`) | [Audit](audit-2026-10-06.md): eleven labs were merged ahead of their stacks with no run evidence, eight naming tags that do not exist, and the nightly tests `main`, not the pinned tag |
 | 5.1 | 2026-10-06 | R1 allows a labeled pre-release tag | Owner decision, 2026-10-06: pre-release pins are acceptable |
+| 6 | 2026-11-13 | AC-003 covers every belt and the uFawkesAI clone; AC-006 and AC-007 say what is true now; added AC-008 | Suite audit (#127): the uFawkesObs labs match their stack, the uFawkesDevX and uFawkesPipe labs name things their stacks don't have, and nothing compares the two |
 
 ## Requirements
 
@@ -152,9 +153,13 @@ This repo adds:
 
 ### AC-003: No lab targets `main`
 
-- **Expected:** `grep -rn "git clone" white-belt modules labs` shows a
-  `--branch vX.Y.Z` on every uFawkes stack clone
+- **Expected:** `grep -rn "git clone" white-belt yellow-belt brown-belt modules labs`
+  shows a `--branch vX.Y.Z` on every uFawkes stack clone, uFawkesAI included.
+  A workflow that checks out a stack for a lab names a tag too
 - **Verification:** The grep, run in the PR that touches any lab
+- **Today (2026-11-13):** two checkouts take uFawkesAI at its default branch:
+  `white-belt/module-02-dora-metrics/lab-02/instructions.md` and
+  `_lab-acceptance.yml`. Yellow Belt 5–8 have no clone step at all (#125)
 - **Priority:** Required
 
 ### AC-004: uFawkesDevX's Postgres source is known before the White Belt DevX rewrite
@@ -183,8 +188,10 @@ This repo adds:
 - **Must not:** Link to a release page for a tag that does not exist
 - **Verification:** A script over every `*/module-*/lab-*/instructions.md`,
   run in the nightly and in any lab PR
-- **Priority:** Required. Today it fails for Brown Belt 13–16
-  (`uFawkesObs v1.0.0`) and Yellow Belt 5–8 (`uFawkesPipe v2.0.0`).
+- **Priority:** Required. `scripts/check-lab-pins.sh` runs it in the nightly.
+  On 2026-11-13 Brown Belt 13–16 pin `uFawkesObs v1.0.1`, which exists.
+  Yellow Belt 5–8 pin `uFawkesPipe v2.0.0`, which doesn't; the script warns
+  for a lab marked "not yet run for real" and doesn't fail.
 
 ### AC-007: The nightly checks out the tag the lab pins
 
@@ -193,5 +200,26 @@ This repo adds:
   tag in its "Runs against" line
 - **Verification:** The nightly workflow reads the tag from the lab, or a
   check compares the two
-- **Priority:** Required once R8 lands. Today the nightly checks out the
-  stack's default branch for every lab.
+- **Priority:** Required. Met for uFawkesObs: the nightly resolves the tag
+  with `scripts/check-lab-pins.sh --print`. Not met for uFawkesAI (AC-003).
+
+### AC-008: What a lab names exists in the tag it pins
+
+- **Scenario:** Any lab with a "Runs against" line
+- **Expected:** Every `make` target, published `localhost` port, file path and
+  HTTP status the lab tells the learner to use or expect exists in the pinned
+  tag of the stack it names
+- **Must not:** Pass because the stack's `main` has it
+- **Verification:** A nightly job that reads each lab's `make` targets and
+  `localhost` ports and looks them up in the pinned tag's `Makefile` and
+  compose file. File paths and status codes are covered by the lab's own
+  `validate.sh` run
+- **Priority:** Required for a lab in the nightly. A lab marked "not yet run
+  for real" is reported, not failed
+- **Today (2026-11-13), read against each stack's `main`, not run:** White
+  Belt 1, 3 and 4 tell the learner to start an external Postgres that
+  uFawkesDevX `v1.2.0` doesn't use, and expect a 422 where the Score service
+  returns 400 (#123). Yellow Belt 5 and 7 open SonarQube on port 9000;
+  uFawkesPipe publishes 9001 (#124). Brown Belt 14's answer key names
+  `dora_deployment_frequency`; the metric is
+  `dora_deployment_frequency_per_week` (#124)
