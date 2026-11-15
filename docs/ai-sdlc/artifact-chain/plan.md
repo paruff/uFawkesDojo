@@ -25,3 +25,7 @@
 
 Make `Artifact Chain` a required check once it has been green on `main` and
 on several PRs (a ruleset change, tracked separately).
+
+### Audit follow-up, 2026-11-15
+
+This branch fixes High findings from the suite integration harness (uFawkes.dev `tests/suite-integration/AUDIT_FINDINGS.md`). Verified by running the harness against it: `make suite-integration-test` passes with the fix applied and the finding's reproduction test no longer reproduces.
