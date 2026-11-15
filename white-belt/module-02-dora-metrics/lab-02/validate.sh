@@ -176,6 +176,9 @@ GRAFANA_PASS="${GRAFANA_ADMIN_PASSWORD:-}"
 if [ -z "$GRAFANA_PASS" ] && [ -f "${CALLER_DIR}/.env" ]; then
   GRAFANA_PASS=$(grep -E '^GRAFANA_ADMIN_PASSWORD=' "${CALLER_DIR}/.env" | cut -d= -f2- || true)
 fi
+if [ -z "$GRAFANA_PASS" ]; then
+  log_info "No Grafana password found (GRAFANA_ADMIN_PASSWORD or ${CALLER_DIR}/.env); trying admin:admin"
+fi
 GRAFANA_PASS="${GRAFANA_PASS:-admin}"
 if curl -fsS -u "${GRAFANA_USER}:${GRAFANA_PASS}" \
   "http://localhost:3000/api/dashboards/uid/ufawkesobs-dora-metrics" > /dev/null 2>&1; then
