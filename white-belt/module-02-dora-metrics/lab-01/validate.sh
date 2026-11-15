@@ -86,9 +86,14 @@ check_dora_metrics() {
   http_code=$(curl -s -o /dev/null -w "%{http_code}" \
     --max-time 5 "${DORA_API_URL}/metrics" 2> /dev/null || echo "000")
 
-  if [ "$http_code" = "200" ]; then
+  # An empty /metrics body means no event was ever recorded (AF-16).
+  if [ "$http_code" = "200" ] && curl -s --max-time 5 "${DORA_API_URL}/metrics" 2> /dev/null \
+    | grep -q '^dora_deployment_frequency_per_week'; then
     record_test "DORA Compute" "PASS" \
       "dora-api exposes DORA metrics at ${DORA_API_URL}/metrics (compute runs in-process)"
+  elif [ "$http_code" = "200" ]; then
+    record_test "DORA Compute" "FAIL" \
+      "dora-api /metrics has no dora_deployment_frequency_per_week sample — send an event first (see instructions.md)"
   else
     record_test "DORA Compute" "FAIL" \
       "dora-api /metrics returned HTTP $http_code — compute runs inside dora-api now; check 'docker logs ufawkesdora-ingestion'"
@@ -115,6 +120,7 @@ check_grafana_health() {
 # as the lab instructions direct. If .env can't be found, skip these two
 # checks with a loud warning rather than silently reporting them as
 # passed — per this repo's own AGENTS.md rule against swallowed failures.
+# A check that cannot run fails.
 load_grafana_credentials() {
   if [ -f "./.env" ]; then
     GRAFANA_USER=$(grep -E '^GRAFANA_ADMIN_USER=' ./.env | cut -d= -f2- || true)
@@ -128,7 +134,8 @@ check_dashboard() {
   local label="$1" uid="$2"
 
   if [ -z "$GRAFANA_USER" ] || [ -z "$GRAFANA_PASS" ]; then
-    log_warning "$label Dashboard: skipped — no ./.env found with Grafana credentials. Run this script from inside your uFawkesObs checkout (see instructions.md Step 5)."
+    record_test "$label Dashboard" "FAIL" \
+      "no ./.env found with Grafana credentials. Run this script from inside your uFawkesObs checkout (see instructions.md Step 5)."
     return
   fi
 
