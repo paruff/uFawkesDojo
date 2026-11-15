@@ -23,7 +23,7 @@ LOKI_URL="${LOKI_URL:-http://localhost:3100}"
 TEMPO_URL="${TEMPO_URL:-http://localhost:3200}"
 ALERTMANAGER_URL="${ALERTMANAGER_URL:-http://localhost:9093}"
 DORA_API_URL="${DORA_API_URL:-http://localhost:8088}"
-UF_OBS_DIR="${UF_OBS_DIR:-~/dojo-labs/uFawkesObs}"
+UF_OBS_DIR="${UF_OBS_DIR:-$HOME/dojo-labs/uFawkesObs}"
 
 # Grafana API credentials — anonymous access is disabled by design in
 # uFawkesObs (see SECURITY.md), so dashboard checks authenticate.
@@ -199,11 +199,11 @@ check_prometheus_metrics() {
   log_info "Checking Prometheus DORA metrics..."
 
   local metrics=(
-    "dora_deployment_frequency"
-    "dora_lead_time_seconds"
-    "dora_change_failure_rate"
-    "dora_mttr_seconds"
-    "dora_rework_rate"
+    "dora_deployment_frequency_per_week"
+    "dora_lead_time_p50_hours"
+    "dora_cfr_pct"
+    "dora_fdrt_p50_hours"
+    "dora_rework_rate_pct"
   )
 
   local all_pass=true
@@ -216,7 +216,8 @@ check_prometheus_metrics() {
     if [ "$http_code" = "200" ]; then
       local body
       body=$(curl -s --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || echo "")
-      if echo "$body" | jq -e '.status == "success"' > /dev/null 2>&1; then
+      # Prometheus answers success to any well-formed query, so require a sample.
+      if echo "$body" | jq -e '.status == "success" and (.data.result | length) > 0' > /dev/null 2>&1; then
         log_success "  $metric: queryable"
       else
         log_error "  $metric: query succeeded but no data"
@@ -240,9 +241,8 @@ check_grafana_dashboard() {
 
   load_grafana_credentials
   if [ -z "$GRAFANA_PASS" ]; then
-    # Loud skip, never a silent pass: the check didn't run, so it must not
-    # read as if it did (AGENTS.md: no swallowed failures).
-    log_warning "Grafana DORA Dashboard: skipped — no credentials found. Set GRAFANA_ADMIN_PASSWORD, or keep it in ${UF_OBS_DIR}/.env"
+    # A check that cannot run is not a pass.
+    record_test "Grafana DORA Dashboard" "FAIL" "No Grafana credentials found. Set GRAFANA_ADMIN_PASSWORD, or keep it in ${UF_OBS_DIR}/.env"
     return
   fi
   local auth=(-u "${GRAFANA_USER:-admin}:${GRAFANA_PASS}")
@@ -322,13 +322,13 @@ check_event_ingestion() {
     sleep 5
 
     # Check if the event appears in metrics
-    local encoded
-    encoded=$(echo "dora_deployment_frequency{commit_sha=\"${test_sha}\"}" | jq -sRr @uri)
-    local metric_code
-    metric_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
-      "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || echo "000")
+    # No DORA metric carries a commit_sha label (and this event is environment=test,
+    # outside the production metrics), so look for any sample.
+    local metric_body
+    metric_body=$(curl -s --max-time 10 \
+      "${PROMETHEUS_URL}/api/v1/query?query=count(dora_deployment_frequency_per_week)" 2> /dev/null || echo "")
 
-    if [ "$metric_code" = "200" ]; then
+    if echo "$metric_body" | jq -e '(.data.result | length) > 0' > /dev/null 2>&1; then
       record_test "Event Ingestion → Metrics" "PASS" "Event ingested and reflected in metrics"
     else
       record_test "Event Ingestion → Metrics" "WARN" "Event accepted but not yet visible in metrics (timing)"
@@ -342,11 +342,11 @@ check_promql_queries() {
   log_info "Testing DORA PromQL queries..."
 
   local queries=(
-    "dora_deployment_frequency"
-    "histogram_quantile(0.95, rate(dora_lead_time_seconds_bucket[7d]))"
-    "dora_change_failure_rate"
-    "dora_mttr_seconds"
-    "dora_rework_rate"
+    "dora_deployment_frequency_per_week"
+    "dora_lead_time_p95_hours"
+    "dora_cfr_pct"
+    "dora_fdrt_p50_hours"
+    "dora_rework_rate_pct"
   )
 
   local all_pass=true

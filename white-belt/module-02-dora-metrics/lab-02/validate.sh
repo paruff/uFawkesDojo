@@ -115,12 +115,10 @@ cd "${UFAWKESAI_ROOT}"
 # the jq parses below) but is never discarded silently: on failure it is
 # printed, so "the emit failed" and its reason are both visible.
 EVENT_ERR="${TMPDIR:-/tmp}/emit-dora-event.err"
-EVENT_JSON=$(OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 \
+EVENT_JSON=$(OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 GITHUB_REPOSITORY=dojo-lab/test GITHUB_RUN_ID="${GITHUB_RUN_ID:-dojo-lab}" \
   bash scripts/emit-dora-event.sh deploy-marker \
   --status success \
-  --environment production \
-  --deployment-intent planned \
-  --repo dojo-lab/test 2> "$EVENT_ERR") || {
+  --environment production 2> "$EVENT_ERR") || {
   log_fail "emit-dora-event.sh failed to emit deploy-marker"
   echo "--- emit-dora-event.sh stderr ---"
   cat "$EVENT_ERR" 2> /dev/null || echo "(no stderr captured)"
@@ -153,8 +151,8 @@ verify_out=$(bash scripts/verify-dora-event-in-loki.sh 2>&1) || verify_rc=$?
 if [ "$verify_rc" -eq 0 ]; then
   log_ok "verify-dora-event-in-loki.sh: marker event found in Loki"
 elif [ "$verify_rc" -eq 2 ]; then
-  # Exit code 2 = SKIP (Loki down), 1 = timeout, 0 = found
-  log_skip "verify-dora-event-in-loki.sh: Loki not reachable (SKIP)"
+  # Exit code 2 = Loki down, 1 = timeout, 0 = found. A check that cannot run is not a pass.
+  log_fail "verify-dora-event-in-loki.sh: Loki not reachable"
 else
   log_fail "verify-dora-event-in-loki.sh: marker event NOT found in Loki (timeout)"
   echo "$verify_out" | tail -n 20
