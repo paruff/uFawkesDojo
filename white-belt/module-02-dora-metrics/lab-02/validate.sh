@@ -6,6 +6,7 @@
 
 set -euo pipefail
 
+CALLER_DIR="$PWD" # the uFawkesObs stack dir the learner ran this from; $PWD changes below
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 # Sibling checkout by default (the labs' layout); overridable so CI can point
 # at wherever it checked uFawkesAI out, like the other env-configurable vars
@@ -47,7 +48,8 @@ check_cmd() {
 
 check_container() {
   local name="$1"
-  if docker ps --format '{{.Names}}' | grep -q "^${name}$"; then
+  # Filter in docker, not grep -q: under pipefail grep exiting early can SIGPIPE docker (AF-24).
+  if docker ps --filter "name=^${name}$" --format '{{.Names}}' | grep -q .; then
     log_ok "Stack: $name container is running"
     return 0
   else
@@ -79,7 +81,11 @@ check_cmd docker || true
 check_cmd curl || true
 check_cmd jq || true
 check_cmd python3 || true
-check_cmd gh || log_skip "gh (GitHub CLI) not installed; PR metadata will be limited"
+if command -v gh > /dev/null 2>&1; then
+  check_cmd gh || true
+else
+  log_skip "gh (GitHub CLI) not installed; PR metadata will be limited"
+fi
 
 # ── uFawkesObs stack ─────────────────────────────────────────────────────
 # Container names are uFawkesObs's explicit container_name values; the old
@@ -167,8 +173,8 @@ log_info "Checking DORA Metrics dashboard via Grafana API..."
 # ufawkesobs-dora-* uids (the bare dora-* uids never existed here).
 GRAFANA_USER="${GRAFANA_ADMIN_USER:-admin}"
 GRAFANA_PASS="${GRAFANA_ADMIN_PASSWORD:-}"
-if [ -z "$GRAFANA_PASS" ] && [ -f "./.env" ]; then
-  GRAFANA_PASS=$(grep -E '^GRAFANA_ADMIN_PASSWORD=' ./.env | cut -d= -f2- || true)
+if [ -z "$GRAFANA_PASS" ] && [ -f "${CALLER_DIR}/.env" ]; then
+  GRAFANA_PASS=$(grep -E '^GRAFANA_ADMIN_PASSWORD=' "${CALLER_DIR}/.env" | cut -d= -f2- || true)
 fi
 GRAFANA_PASS="${GRAFANA_PASS:-admin}"
 if curl -fsS -u "${GRAFANA_USER}:${GRAFANA_PASS}" \

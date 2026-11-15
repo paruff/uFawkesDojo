@@ -152,7 +152,7 @@ check_dora_api() {
   log_info "Checking DORA API..."
 
   local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${DORA_API_URL}/health" 2> /dev/null || echo "000")
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${DORA_API_URL}/health" 2> /dev/null || true) # curl -w already printed 000 (AF-22)
 
   if [ "$http_code" = "200" ]; then
     record_test "DORA API" "PASS" "API reachable at ${DORA_API_URL}/health"
@@ -186,7 +186,7 @@ check_dora_event_ingestion() {
   http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
     -X POST "${DORA_API_URL}/event" \
     -H "Content-Type: application/json" \
-    -d "$test_event" 2> /dev/null || echo "000")
+    -d "$test_event" 2> /dev/null || true) # curl -w already printed 000 (AF-22)
 
   if [ "$http_code" = "200" ] || [ "$http_code" = "201" ] || [ "$http_code" = "202" ]; then
     record_test "DORA Event Ingestion" "PASS" "Event accepted by dora-api (HTTP $http_code)"
@@ -211,7 +211,7 @@ check_prometheus_metrics() {
     local encoded
     encoded=$(echo "$metric" | jq -sRr @uri)
     local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || echo "000")
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || true) # curl -w already printed 000 (AF-22)
 
     if [ "$http_code" = "200" ]; then
       local body
@@ -248,7 +248,7 @@ check_grafana_dashboard() {
   local auth=(-u "${GRAFANA_USER:-admin}:${GRAFANA_PASS}")
 
   local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${auth[@]}" "${GRAFANA_URL}/api/search?query=dora" 2> /dev/null || echo "000")
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${auth[@]}" "${GRAFANA_URL}/api/search?query=dora" 2> /dev/null || true) # curl -w already printed 000 (AF-22)
 
   if [ "$http_code" = "200" ]; then
     local body
@@ -270,7 +270,7 @@ check_alerting() {
   log_info "Checking DORA alerting rules..."
 
   local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/rules" 2> /dev/null || echo "000")
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${PROMETHEUS_URL}/api/v1/rules" 2> /dev/null || true) # curl -w already printed 000 (AF-22)
 
   if [ "$http_code" = "200" ]; then
     local body
@@ -303,7 +303,7 @@ check_event_ingestion() {
     \"schema_version\": \"1.0\",
     \"event_type\": \"deployment\",
     \"repo\": \"dojo-lab/validation\",
-    \"service\": \"validation-test\",
+    \"service\": \"validation-test-e2e\",
     \"environment\": \"test\",
     \"commit_sha\": \"${test_sha}\",
     \"deployed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
@@ -315,7 +315,7 @@ check_event_ingestion() {
   http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
     -X POST "${DORA_API_URL}/event" \
     -H "Content-Type: application/json" \
-    -d "$test_event" 2> /dev/null || echo "000")
+    -d "$test_event" 2> /dev/null || true) # curl -w already printed 000 (AF-22)
 
   if [ "$http_code" = "200" ] || [ "$http_code" = "201" ] || [ "$http_code" = "202" ]; then
     # Give dora-api's in-process compute loop a beat before querying
@@ -355,7 +355,7 @@ check_promql_queries() {
     encoded=$(echo "$query" | jq -sRr @uri)
     local http_code
     http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
-      "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || echo "000")
+      "${PROMETHEUS_URL}/api/v1/query?query=${encoded}" 2> /dev/null || true) # curl -w already printed 000 (AF-22)
 
     if [ "$http_code" = "200" ]; then
       log_success "  PromQL OK: $query"
