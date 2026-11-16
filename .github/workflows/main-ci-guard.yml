@@ -1,0 +1,19 @@
+name: Main CI Guard
+
+"on":
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  ci-guard:
+    name: CI Guard
+    uses: paruff/uFawkesPipe/.github/workflows/reusable-main-ci-guard.yml@271154e53badbd96f3ef173f92ecb06545fc1cfb # v1.16.0-beta.1
+    with:
+      workflow-id: pre-commit.yml
+      workflow-name: "Pre-commit"
