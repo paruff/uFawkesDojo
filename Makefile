@@ -10,4 +10,10 @@ UF_OBS_DIR ?= $(HOME)/dojo-labs/uFawkesObs
 verify-labs: ## Boot the real stack and run the 4 stack-verified labs' self-checks
 	@UF_OBS_DIR="$(UF_OBS_DIR)" bash scripts/verify-labs.sh
 
-.PHONY: verify-labs
+validate: ## The local gate: every pre-commit hook on all files; needs no running stack
+	pre-commit run --all-files
+
+doctor: ## Report whether this clone's hooks are live
+	bash scripts/shift-left.sh doctor
+
+.PHONY: verify-labs validate doctor
