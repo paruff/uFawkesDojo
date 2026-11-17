@@ -81,6 +81,13 @@ jobs:
       UFAWKESAI_ROOT: ${{ github.workspace }}/uFawkesAI
 
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - name: Check out uFawkesDojo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -232,3 +239,7 @@ jobs:
             # still annotated in the run, never hidden.
             echo "::warning::teardown of the uFawkesObs stack failed — see this step's log"
           fi
+
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"

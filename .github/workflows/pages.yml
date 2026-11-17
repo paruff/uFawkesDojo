@@ -29,7 +29,7 @@ jobs:
     runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
-      - name: Log job start
+      - name: job-start
         run: echo "job-start workflow=deploy-pages job=build sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -38,7 +38,7 @@ jobs:
         with:
           path: .
 
-      - name: Log job finish
+      - name: job-finish
         if: always()
         run: echo "job-finish workflow=deploy-pages job=build sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
 
@@ -51,12 +51,12 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Log job start
+      - name: job-start
         run: echo "job-start workflow=deploy-pages job=deploy sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
 
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
 
-      - name: Log job finish
+      - name: job-finish
         if: always()
         run: echo "job-finish workflow=deploy-pages job=deploy sha=${{ github.sha }} time=$(date -u +%FT%TZ)"
