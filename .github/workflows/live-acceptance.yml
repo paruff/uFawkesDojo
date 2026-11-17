@@ -44,9 +44,20 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - name: Check out uFawkesDojo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: scripts/check-lab-pins.sh
+
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
   white-belt-m02-lab-01:
     name: White Belt M02 Lab 01 — See DORA Metrics Live
@@ -124,6 +135,13 @@ jobs:
       - brown-belt-m15-lab-01
       - brown-belt-m16-lab-01
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - name: Write per-lab result table
         env:
           WB01: ${{ needs.white-belt-m02-lab-01.result }}
@@ -147,3 +165,7 @@ jobs:
             echo "| Brown Belt M15 Lab 01 — SLIs and SLOs (stack-only) | ${BB15} |"
             echo "| Brown Belt M16 Lab 01 — Incident Management (stack-only) | ${BB16} |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
