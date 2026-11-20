@@ -26,7 +26,7 @@ TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
 REPO_ID=""
-PIPELINES="[]"
+PIPELINES=""
 
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[✓]${NC} $1"; }
@@ -64,6 +64,13 @@ api() {
 need_repo() {
   [ -n "$REPO_ID" ] && return 0
   record_test "$1" "FAIL" "skipped: ${LAB_REPO} was not found active (see Repo Activated)"
+  return 1
+}
+
+# Record a FAIL and return 1 unless check_pipeline_success fetched the pipeline list.
+need_pipelines() {
+  [ -n "$PIPELINES" ] && return 0
+  record_test "$1" "FAIL" "skipped: the pipeline list could not be read (see Pipeline Success)"
   return 1
 }
 
@@ -146,19 +153,27 @@ check_pipeline_success() {
 
 check_parallel() {
   need_repo "Parallel Execution" || return
-  local num body ok
-  for num in $(echo "$PIPELINES" | jq -r '[.[] | select(.status == "success")] | .[].number'); do
+  need_pipelines "Parallel Execution" || return
+  local nums num body ok
+  if ! nums=$(echo "$PIPELINES" | jq -r '[.[] | select(.status == "success")] | .[].number'); then
+    record_test "Parallel Execution" "FAIL" "unexpected pipelines data (jq error above)"
+    return
+  fi
+  for num in $nums; do
     if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
       record_test "Parallel Execution" "FAIL" "could not read pipeline #${num} (reason above)"
       return
     fi
     # lint and dependency-scan have no dependency on each other: their time windows must overlap.
-    ok=$(echo "$body" | jq -r '
+    if ! ok=$(echo "$body" | jq -r '
       [.workflows[]?.children[]?] as $s
       | ([$s[] | select(.name == "lint")][0]) as $a
       | ([$s[] | select(.name == "dependency-scan")][0]) as $b
       | if $a == null or $b == null then false
-        else ($a.started < $b.finished and $b.started < $a.finished) end')
+        else ($a.started < $b.finished and $b.started < $a.finished) end'); then
+      record_test "Parallel Execution" "FAIL" "unexpected pipeline #${num} data (jq error above)"
+      return
+    fi
     if [ "$ok" = "true" ]; then
       record_test "Parallel Execution" "PASS" "lint and dependency-scan overlapped in pipeline #${num}"
       return
@@ -169,6 +184,7 @@ check_parallel() {
 
 check_performance_measured() {
   need_repo "Performance Measured" || return
+  need_pipelines "Performance Measured" || return
   local n times
   if ! n=$(echo "$PIPELINES" | jq '[.[] | select(.status == "success")] | length'); then
     record_test "Performance Measured" "FAIL" "unexpected pipelines response (jq error above)"
@@ -178,7 +194,10 @@ check_performance_measured() {
     record_test "Performance Measured" "FAIL" "need at least 2 successful runs to compare durations (Step 5); found ${n}"
     return
   fi
-  times=$(echo "$PIPELINES" | jq -r '[.[] | select(.status == "success")] | sort_by(.number) | map("#\(.number)=\(.finished - .started)s") | join(" ")')
+  if ! times=$(echo "$PIPELINES" | jq -r '[.[] | select(.status == "success")] | sort_by(.number) | map("#\(.number)=\(.finished - .started)s") | join(" ")'); then
+    record_test "Performance Measured" "FAIL" "could not compute durations (jq error above)"
+    return
+  fi
   record_test "Performance Measured" "PASS" "${n} successful runs, durations: ${times}"
 }
 

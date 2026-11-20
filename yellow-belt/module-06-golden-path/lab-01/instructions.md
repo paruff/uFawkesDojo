@@ -16,7 +16,7 @@ By the end of this lab you will have:
 1. Read the golden-path contracts of the `python-fawkes-path` and `java-fawkes-path` repos
 2. Scaffolded a Python Flask app and written its `.fawkespipe.yml` contract
 3. Generated a `.woodpecker.yml` from the contract, pushed it to GitHub and activated the repo
-4. Run the pipeline and seen which steps run in parallel
+4. Run the pipeline and see which steps run in parallel
 5. Read per-step timings from the Woodpecker API and compared repeat runs
 
 ---
@@ -282,7 +282,7 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 1. `.fawkespipe.yml`
 2. `make generate-pipeline` in uFawkesPipe (it writes `.woodpecker.yml`)
 3. `lint` and `dependency-scan`: neither has a `depends_on`, so Woodpecker starts them together
-4. In our runs `test` started when the slower parallel step (`dependency-scan`) finished
+4. `test` waits for the whole previous group, not just `lint`: in our runs it started when the slower parallel step (`dependency-scan`) finished
 5. The Woodpecker API (`/api/repos/<id>/pipelines/<n>`) or the run page in the UI
 
 ---
