@@ -89,11 +89,11 @@ This lab walks you through:
 5. Examining security scan results
 6. Practicing failure/recovery cycle
 
-**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
-> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Last run for real**: 2026-11-20, every step, against uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1.
 
-**Validation**: `bash yellow-belt/module-05-ci-fundamentals/lab-01/validate.sh`
+**Validation**: `WOODPECKER_URL=<your Woodpecker URL> WOODPECKER_TOKEN=<token> bash yellow-belt/module-05-ci-fundamentals/lab-01/validate.sh`
 
 ---
 
