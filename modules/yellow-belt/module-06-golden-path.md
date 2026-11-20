@@ -781,14 +781,13 @@ In Woodpecker UI, you can view:
 ### Lab Overview
 
 You'll use the running uFawkesPipe stack to:
-1. Explore built-in golden path templates
-2. Create a customized `.fawkespipe.yml` for a Python Flask application
-3. Configure pipeline stages with optimization settings
-4. Push to Git, activate in Woodpecker, watch pipeline execute
-5. Practice optimization: enable parallel, observe build time
-6. Practice optimization: observe caching effect
+1. Read the `python-fawkes-path` and `java-fawkes-path` golden-path contracts
+2. Write a `.fawkespipe.yml` for a scaffolded Python Flask app and generate its `.woodpecker.yml`
+3. Push to GitHub and activate the repo in Woodpecker
+4. Run the pipeline and see which steps run in parallel
+5. Read per-step timings from the Woodpecker API and compare repeat runs
 
-**Time Estimate**: 20 minutes
+**Time Estimate**: about 30 minutes
 **Difficulty**: Intermediate (Module 5 complete required)
 **Auto-Graded**: Yes
 **Points**: 100
@@ -797,12 +796,11 @@ You'll use the running uFawkesPipe stack to:
 
 **Prerequisites**: uFawkesPipe v2.0.0 running locally
 - ✅ Woodpecker CI at http://localhost:8000
-- ✅ SonarQube at http://localhost:9000
-- ✅ Portainer CE at https://localhost:9443
+- SonarQube and Portainer are optional here; the lab needs only the Woodpecker server and agent
 
 ➡️ **[Lab 01: Build Your Golden Path Pipeline](yellow-belt/module-06-golden-path/lab-01/instructions.md)**
 
-This lab walks you through customizing a golden path template, configuring pipeline optimization, and measuring performance.
+This lab walks you through writing a golden path contract, running the generated pipeline, and measuring its step timings.
 
 **Validation**: `bash yellow-belt/module-06-golden-path/lab-01/validate.sh`
 

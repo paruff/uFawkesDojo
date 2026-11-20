@@ -73,15 +73,13 @@ A **Golden Path** is an opinionated template that makes the easy path also the b
 ➡️ **[Lab 01: Build Your Golden Path Pipeline](lab-01/instructions.md)**
 
 This lab walks you through:
-1. Exploring uFawkesPipe's built-in golden path templates
-2. Customizing a template for a Python Flask application
-3. Configuring pipeline optimization (parallel, caching, resources)
-4. Pushing to Git, watching pipeline execute in Woodpecker
-6. Measuring and improving build performance
+1. Reading the `python-fawkes-path` and `java-fawkes-path` golden-path contracts
+2. Writing a `.fawkespipe.yml` for a scaffolded Python Flask app and generating its `.woodpecker.yml`
+3. Pushing to GitHub and activating the repo in Woodpecker
+4. Running the pipeline and seeing which steps run in parallel
+5. Reading per-step timings from the Woodpecker API and comparing repeat runs
 
-**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
-
-> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
 **Prerequisites**: Module 5 completed, uFawkesPipe running
 
