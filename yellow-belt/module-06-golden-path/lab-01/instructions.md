@@ -1,11 +1,11 @@
 # Lab 01: Build Your Golden Path Pipeline
 
 **Module**: Yellow Belt — Module 6: Golden Path Pipelines
-**Estimated Time**: 10 minutes
-**Difficulty**: Intermediate (Module 5 completion required)
-**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
+**Estimated Time**: about 30 minutes (an estimate, not timed; a first run pulls container images)
+**Difficulty**: Intermediate (Module 5 complete required)
+**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
-> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Last run for real**: 2026-11-20, every step below, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1. Where the platform behaves differently from what you might expect, the step says so.
 
 ---
 
@@ -13,403 +13,240 @@
 
 By the end of this lab you will have:
 
-1. Explored uFawkesPipe's built-in golden path templates
-2. Created a customized `.fawkespipe.yml` for a Python Flask application
-3. Configured pipeline optimization (parallel stages, caching, resource tuning)
-4. Pushed the configuration to Git, activated the repository in Woodpecker
-5. Watched the pipeline execute through all stages with optimization
-6. Measured build performance and practiced optimization
-
----
-
-## Why This Lab Uses uFawkesPipe
-
-This lab runs against **uFawkesPipe v2.0.0** — the CI/CD plane of the Fawkes IDP — because it provides a complete CI/CD platform with Golden Path templates in Docker Compose:
-
-- **Golden Path Templates**: Pre-built `.fawkespipe.yml` examples for Python, Java, Node.js, Go
-- **Woodpecker CI**: Lightweight, YAML-driven CI/CD with GitHub OAuth
-- **CNB Builder**: Cloud Native Buildpacks for OCI images without Dockerfiles
-- **Security-First Pipeline**: Gitleaks, Trivy, SonarQube integrated
-- **Performance Metrics**: Woodpecker UI + Prometheus/Grafana for build time tracking
-
-No Kubernetes required — runs entirely in Docker Compose on your laptop.
+1. Read the golden-path contracts of the `python-fawkes-path` and `java-fawkes-path` repos
+2. Scaffolded a Python Flask app and written its `.fawkespipe.yml` contract
+3. Generated a `.woodpecker.yml` from the contract, pushed it to GitHub and activated the repo
+4. Run the pipeline and see which steps run in parallel
+5. Read per-step timings from the Woodpecker API and compared repeat runs
 
 ---
 
 ## Prerequisites
 
-**Required**: uFawkesPipe v2.0.0 running locally
+This lab continues [Module 5](../../module-05-ci-fundamentals/lab-01/instructions.md). Follow its **Prerequisites** section to set up the tools, the GitHub OAuth App, the `uFawkesPipe` and `uFawkesDevX` checkouts, `.env`, the stack, and your `WOODPECKER_TOKEN`. Two things from there matter here:
+
+- Start only the two services this lab needs: `docker compose -f compose.yaml up -d woodpecker-server woodpecker-agent`.
+- Never stop the stack with `make down` (it runs `down -v` and deletes your Woodpecker login and repo activations). Use `docker compose -f compose.yaml stop`.
+
+Verify the stack and your token:
 
 ```bash
-# Verify your stack is running
-cd ~/dojo-labs/uFawkesPipe
-make status
+export WP=http://localhost:8000        # your Woodpecker URL (8001 if you moved the port)
+export WOODPECKER_TOKEN='eyJ...'       # Personal Access Token from the Woodpecker UI
+curl -s -H "Authorization: Bearer $WOODPECKER_TOKEN" $WP/api/user | jq .login
 ```
 
-**Expected**: All services healthy (woodpecker-server, woodpecker-agent, sonarqube, portainer, trivy-server)
-
-**Required**: Module 5 completed (understand CI workflow with uFawkesPipe)
-
-**Tools required** (already installed from previous modules):
-- `curl` — HTTP client
-- `jq` — JSON processor
-- `git` — version control
-- `cookiecutter` — `pip install cookiecutter`
+**Expected**: your GitHub login. A `401` means the token is wrong or stale.
 
 ---
 
 ## Step 0 — Read the Theory First (if you haven't)
 
-This lab assumes you've read the [Module 6 theory](../README.md#theory-summary-20-minutes) up through "Golden Path Templates by Language". You should be able to name the standard pipeline stages and identify the golden path templates.
+This lab assumes you've read the [Module 6 theory](../README.md#theory-summary-20-minutes).
 
 ---
 
-## Step 1 — Explore Golden Path Templates (Worked Example) (2 minutes)
+## Step 1 — Read the Golden Path Contracts (4 minutes)
 
-### 1.1 Examine Built-in Templates
+The golden-path templates are example repos, each with a `.fawkespipe.yml` contract and the `.woodpecker.yml` generated from it:
 
-```bash
-# Check uFawkesPipe's examples directory
-cd ~/dojo-labs/uFawkesPipe
-ls examples/
-```
+- [`paruff/python-fawkes-path`](https://github.com/paruff/python-fawkes-path) (Python, FastAPI)
+- [`paruff/java-fawkes-path`](https://github.com/paruff/java-fawkes-path) (Java, Spring Boot)
 
-**Expected output**:
-```
-.fawkespipe-go.yml
-.fawkespipe-java-maven.yml
-.fawkespipe-nodejs-express.yml
-.fawkespipe-python-flask.yml
-.fawkespipe.yml.example
-```
-
-### 1.2 Examine Python Flask Template
+A JavaScript template is planned but does not exist yet.
 
 ```bash
-cat examples/.fawkespipe-python-flask.yml
+cd ~/dojo-labs
+git clone --depth 1 https://github.com/paruff/python-fawkes-path.git
+git clone --depth 1 https://github.com/paruff/java-fawkes-path.git
+for r in python java; do
+  echo "== $r"
+  sed -n '/^stages:/,$p' $r-fawkes-path/.fawkespipe.yml
+  grep -E '^- name:' $r-fawkes-path/.woodpecker.yml
+done
 ```
 
-**Key observations**:
-- `app` section: name, type, language, version
-- `build` section: CNB builder, image registry, tags
-- `stages`: lint, test, sast, dependency_scan, build, image_scan, push
-- `advanced`: timeout, parallel, workspace cleanup
+**What you'll see**:
 
-> ✅ **Checkpoint**: You can identify the template structure and key sections.
+- `python-fawkes-path` enables only `build` and `notify_obs`, so its generated pipeline has steps `build` and `notify-obs`.
+- `java-fawkes-path` enables `test`, `dependency_scan`, `build` and `image_scan`, with `advanced.timeout: 20`. Its pipeline has steps `test`, `dependency-scan`, `build` and `image-scan`.
+
+A contract names stages; `make generate-pipeline` turns each enabled stage into one Woodpecker step. The stage list is the golden path, so a team gets the same steps in the same order by copying a contract instead of writing pipeline YAML. For the full list of stages, read `STAGE_ORDER` in `uFawkesPipe/scripts/generate_woodpecker_yml.py`.
+
+uFawkesPipe's `examples/` directory also has contracts for Python, Java, Node.js and Go (`.fawkespipe-python-flask.yml`, `.fawkespipe-java-maven.yml`, `.fawkespipe-nodejs-express.yml`, `.fawkespipe-go.yml`). They enable `sast`, `build`, `image_scan` and `push`, which need SonarQube and registry credentials this lab does not set up. They come back in [Module 7](../../module-07-security-scanning/README.md).
+
+> ✅ **Checkpoint**: you can say which stages a contract enables and which steps they generate.
 
 ---
 
-## Step 2 — Scaffold and Customize a Golden Path Pipeline (3 minutes)
+## Step 2 — Scaffold the App and Write Its Contract (6 minutes)
 
-### 2.1 Scaffold a Python Flask App
+### 2.1 Scaffold
 
 ```bash
-# Work in a temporary directory
-mkdir -p ~/dojo-labs/golden-path-lab && cd ~/dojo-labs/golden-path-lab
-
-# Scaffold a Python Flask app using uFawkesDevX template
-# (Requires uFawkesDevX v1.0.1 from White Belt Module 1)
 cd ~/dojo-labs/uFawkesDevX
 cookiecutter templates/python-flask-app --no-input \
   project_name="My Golden Path App" \
   project_slug="my-golden-path-app" \
   language="python" \
   registry_namespace="dojo"
+cd my-golden-path-app && ls -a
 ```
 
-### 2.2 Customize the Pipeline Contract
+The generated `.fawkespipe.yml` enables only `lint` (`ruff check .`) and `test` (`pytest`). Both commands fail in a bare `python:3.12-slim` image: `ruff` and the app's dependencies are not installed, and a bare `pytest` cannot import `src`.
 
-```bash
-cd ~/dojo-labs/uFawkesDevX/my-golden-path-app
+### 2.2 Write the contract
 
-# Examine the generated .fawkespipe.yml
-cat .fawkespipe.yml
-```
+Replace everything from `stages:` down with this (keep the `app:`, `build:` and `image:` sections above it):
 
-### 2.3 Customize for Golden Path Optimization
-
-```bash
-# Create an optimized version with parallel execution and caching
-cat > .fawkespipe.yml <<'EOF'
-# uFawkesPipe Golden Path — Optimized Python Flask
-app:
-  name: my-golden-path-app
-  type: service
-  language: python
-  version: 1.0.0
-
-build:
-  builder: cnb
-  cnb:
-    builder: paketobuildpacks/builder:base
-    env:
-      BP_CPYTHON_VERSION: "3.11"
-  image:
-    registry: docker.io
-    namespace: dojo
-    name: my-golden-path-app
-    tags:
-      - "${GIT_COMMIT_SHORT}"
-      - "latest"
-
+```yaml
 stages:
   lint:
     enabled: true
     commands:
       - language: python
-        cmd: |
-          pip install ruff black
-          ruff check src/
-          black --check src/
-    dockerfile:
-      enabled: true
-
+        cmd: pip install -q ruff && ruff check .
   test:
     enabled: true
     commands:
       - language: python
-        cmd: |
-          pip install pytest pytest-cov
-          pytest tests/ --cov=src --cov-report=xml --cov-report=html
-    coverage:
-      enabled: true
-      threshold: 80
-      report: coverage.xml
-
-  sast:
-    enabled: true
-    sonarqube:
-      enabled: true
-      projectKey: my-golden-path-app
-      sources: src/
-      qualityGate: true
-    trivy:
-      enabled: true
-      severity: HIGH,CRITICAL
-
+        cmd: pip install -q -r requirements.txt pytest && python -m pytest
   dependency_scan:
     enabled: true
     tools:
       - trivy
-    fail_on: HIGH
-
-  build:
-    enabled: true
-
-  image_scan:
-    enabled: true
-    severity: CRITICAL
-    fail_on: CRITICAL
-
-  push:
-    enabled: true
-    registries:
-      - docker.io
-
-notifications:
-  slack:
-    enabled: false
-    channel: "#ci-cd"
-    events:
-      - build_success
-      - build_failure
-      - deployment
-
-advanced:
-  timeout: 25
-  parallel:
-    enabled: true
-  workspace:
-    cleanup: true
-  artifacts:
-    paths:
-      - coverage.xml
-      - htmlcov/
-    retention: 30
-  workspace:
-    cleanup: true
-EOF
 ```
 
-### 2.4 Verify the Contract
+> **There is no `parallel`, `cache` or resource setting in the contract.** The generator reads `advanced.timeout` only to write a comment (Woodpecker CE has no per-pipeline timeout field; see `docs/KNOWN_LIMITATIONS.md` L-005 in uFawkesPipe), and ignores `advanced.parallel`. Parallelism comes from the step dependencies the generator writes, which Step 4 shows.
+
+### 2.3 Generate the Woodpecker pipeline
 
 ```bash
-# Validate the contract syntax
-python3 -c "import yaml; yaml.safe_load(open('.fawkespipe.yml'))" && echo "YAML valid"
+cd ~/dojo-labs/uFawkesPipe
+make generate-pipeline \
+  FILE=$HOME/dojo-labs/uFawkesDevX/my-golden-path-app/.fawkespipe.yml \
+  OUTPUT=$HOME/dojo-labs/uFawkesDevX/my-golden-path-app/.woodpecker.yml
+cat $HOME/dojo-labs/uFawkesDevX/my-golden-path-app/.woodpecker.yml
 ```
 
-> ✅ **Checkpoint**: Your optimized `.fawkespipe.yml` is ready with parallel execution, caching config, and resource tuning.
+**Expected**: three steps. `lint` and `dependency-scan` (image `aquasec/trivy`) have no `depends_on`; `test` has `depends_on: [lint]`.
+
+> ✅ **Checkpoint**: the app has a runnable `.fawkespipe.yml` and a generated `.woodpecker.yml`.
 
 ---
 
-## Step 3 — Push to Git and Activate in Woodpecker (2 minutes)
+## Step 3 — Push to GitHub and Activate in Woodpecker (5 minutes)
 
-### 3.1 Initialize Git Repository
+Woodpecker here uses GitHub as its forge, so the repo must be on GitHub.
 
 ```bash
 cd ~/dojo-labs/uFawkesDevX/my-golden-path-app
-
-# Initialize Git
-git init
-git add .
-git commit -m "Initial commit: Golden Path optimized Python Flask app"
-
-# Create a bare remote (local Git server simulation)
-cd ..
-git clone --bare my-golden-path-app my-golden-path-app.git
-cd my-golden-path-app
-git remote add origin ../my-golden-path-app.git
-git push -u origin main
+git init -b main
+git add . && git commit -m "Initial commit: scaffolded Python Flask app"
+gh repo create my-golden-path-app --private --source=. --remote=origin --push
 ```
 
-### 3.2 Push to GitHub (Alternative)
-
-If you have a GitHub account, push to a real repository:
+Activate it (the same call the UI's **Add Repository** button makes) and look up Woodpecker's own id for it:
 
 ```bash
-# Create repo on GitHub named "my-golden-path-app", then:
-cd ~/dojo-labs/uFawkesDevX/my-golden-path-app
-git remote add origin https://github.com/<your-username>/my-golden-path-app.git
-git branch -M main
-git push -u origin main
+RID=$(gh api repos/$(gh api user --jq .login)/my-golden-path-app --jq .id)
+curl -s -X POST -H "Authorization: Bearer $WOODPECKER_TOKEN" "$WP/api/repos?forge_remote_id=$RID" | jq '{id, full_name, active}'
+WPID=$(curl -s -H "Authorization: Bearer $WOODPECKER_TOKEN" "$WP/api/repos/lookup/$(gh api user --jq .login)/my-golden-path-app" | jq .id)
+echo $WPID
 ```
 
-### 3.3 Activate Repository in Woodpecker
+**Expected**: `active: true` and a repo `id` (`2` if you kept Module 5's lab repo). A `500 could not create webhook in forge` means `WOODPECKER_EXPERT_WEBHOOK_HOST` in `.env` is empty or `localhost`; see Module 5's Prerequisites.
 
-1. Open **http://localhost:8000** (Woodpecker UI)
-2. Click **Repositories** in the sidebar
-3. Click **Add Repository** (or "Activate" if already listed)
-4. Find your `my-golden-path-app` repository
-5. Click **Activate**
-6. Woodpecker will:
-   - Detect `.woodpecker.yml` (generated from `.fawkespipe.yml`)
-   - Register webhook with GitHub
-   - Show repository as "Active"
-
-> ✅ **Checkpoint**: Repository activated in Woodpecker, ready for pipeline runs.
+> ✅ **Checkpoint**: the repo shows as active in the Woodpecker UI.
 
 ---
 
-## Step 4 — Watch Optimized Pipeline Execute (2 minutes)
+## Step 4 — Run the Pipeline and See the Parallel Steps (6 minutes)
 
-### 4.1 Trigger the Pipeline
+Start a run on `main`. Builds are started through the API because this lab's webhook URL is a placeholder:
 
 ```bash
-cd ~/dojo-labs/uFawkesDevX/my-golden-path-app
-
-# Make a small change to trigger pipeline
-echo "# My Golden Path App" > README.md
-git add README.md
-git commit -m "Add README"
-git push origin main
+curl -s -X POST -H "Authorization: Bearer $WOODPECKER_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"branch":"main"}' "$WP/api/repos/$WPID/pipelines" | jq '{number, status}'
 ```
 
-### 4.2 Watch Pipeline Execute
+When the run finishes (a few seconds to a few minutes), print each step's start offset and duration. Replace `1` with your build number:
 
-1. Open **http://localhost:8000** → Repositories → `my-golden-path-app`
-2. Click the **pipeline run** (should show "Running" or "Pending")
-3. Click the **build number** (e.g., #1)
+```bash
+N=1
+curl -s -H "Authorization: Bearer $WOODPECKER_TOKEN" "$WP/api/repos/$WPID/pipelines/$N" | jq -r '
+  .started as $s
+  | "build \(.number): \(.status), total \(.finished - .started)s",
+    (.workflows[0].children[] | "  \(.name)\t\(.state)\tstart +\(.started - $s)s\tdur \(.finished - .started)s")'
+```
 
-**Watch the optimized stages execute**:
+**What we got** (the second run on a warm machine, Docker images already pulled):
 
-| Stage | Steps | Parallel? | Expected Time |
-|-------|-------|-----------|---------------|
-| **validate** | `init` → `lint-yaml` + `lint-shell` | ✅ Yes | ~30s |
-| **test** | `unit-tests` + `integration-tests` + `contract-tests` | ✅ Yes | ~2-3 min |
-| **security** | `secrets-scan` → `vuln-scan-fs` → `vuln-scan-image` | Sequential | ~1-2 min |
-| **build** | `build-image` (CNB cached) | — | ~1-2 min (cached) |
-| **publish** | `upload-defectdojo` | — | ~30s |
-| **deploy** | `notify-obs` | — | ~10s |
+```
+build 2: success, total 26s
+  clone             success  start +1s   dur 3s
+  lint              success  start +4s   dur 8s
+  dependency-scan   success  start +4s   dur 12s
+  test              success  start +16s  dur 9s
+```
 
-**Key observations**:
-- `lint-yaml` and `lint-shell` run in **parallel**
-- `unit-tests`, `integration-tests`, `contract-tests` run in **parallel**
-- `build-image` uses **CNB cache** (faster on subsequent runs)
+- `lint` and `dependency-scan` **start at the same second**. Neither depends on the other, so Woodpecker runs them in parallel. This is the parallelism a golden path gives you: you enable stages, the generator wires the dependencies.
+- `test` starts only when **both** have finished (+16s is when `dependency-scan` ended), not when `lint` ended at +12s. Total time is roughly `clone + the slower of lint and dependency-scan + test`.
+- Your first run may be slower: it pulls the Python and Trivy images and Trivy's vulnerability database.
 
-> ✅ **Checkpoint**: Pipeline completes with parallel stages visible. Note the total build time.
+> ✅ **Checkpoint**: you can point at two steps that overlapped in your run's timings.
 
 ---
 
-## Step 5 — Measure and Optimize Build Performance (2 minutes)
+## Step 5 — Compare Repeat Runs (4 minutes)
 
-### 5.1 Record Baseline Build Time
-
-1. In Woodpecker UI, click on the completed build
-2. Note the **total duration** and **per-stage duration**
-3. Record: Total time = ___ minutes
-
-### 5.2 Observe Caching Effect
+Start two more runs and print their timings with the Step 4 command (change `N`):
 
 ```bash
-# Make another small change to trigger second build
-cd ~/dojo-labs/uFawkesDevX/my-golden-path-app
-echo "# Update" >> README.md
-git add README.md
-git commit -m "Trigger second build for caching test"
-git push origin main
+for i in 1 2; do
+  curl -s -X POST -H "Authorization: Bearer $WOODPECKER_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"branch":"main"}' "$WP/api/repos/$WPID/pipelines" | jq .number
+done
 ```
 
-1. Watch the second pipeline run
-2. Note the **build-image stage duration** — should be faster due to CNB cache
-3. Record: Second build total time = ___ minutes
-4. **Cache improvement** = (First - Second) / First × 100 = ___%
+**What we got** (builds 1, 2, 3 on a machine that had already pulled the images in Module 5):
 
-### 5.3 View Performance in Woodpecker UI
+| Build | Total | `dependency-scan` | Others |
+|---|---|---|---|
+| #1 | 30s | 16s | lint 8s, test 9s |
+| #2 | 26s | 12s | lint 8s, test 9s |
+| #3 | 25s | 12s | lint 7s, test 9s |
 
-1. In Woodpecker, go to the repository page
-2. Click on the **Builds** tab
-3. Compare build durations across runs
-4. Observe stage-level timing
+Your numbers will differ. The pattern to look for is that the scan step gets faster after the first run and `lint` and `test` do not.
 
-> ✅ **Checkpoint**: You've measured baseline and cached build times, observed parallel execution.
+**This pipeline has no build cache.** `lint` and `test` run `pip install` from scratch every time (about the same duration each run), and the generated pipeline does not set up any dependency or build cache. We did not isolate why `dependency-scan` sped up (Trivy's vulnerability-database cache is the likely cause); on a machine that has never pulled the images, expect the first run to also pay for the image pulls. The Cloud Native Buildpacks cache is only relevant when the `build` stage is enabled, which this lab does not do. To make `lint`/`test` faster you would edit the contract's commands (for example, `pip install` against a pre-built image), which is a pipeline change you would then measure the same way.
+
+In the Woodpecker UI, the repo page lists each run with its duration; click a run to see the per-step bars.
+
+> ✅ **Checkpoint**: you have recorded timings for at least two successful runs and can say which step changed and why.
 
 ---
 
 ## Step 6 — Run the Validation Script
 
 ```bash
-# From your uFawkesDojo checkout
 cd /path/to/uFawkesDojo
-bash yellow-belt/module-06-golden-path/lab-01/validate.sh
+WOODPECKER_URL=$WP bash yellow-belt/module-06-golden-path/lab-01/validate.sh
 ```
 
-**Expected output** (all checks pass):
-
-```
-[INFO] Starting Yellow Belt Module 06 Lab 01 validation...
-
-[✓] Prerequisites: curl, jq, git, cookiecutter installed
-[✓] uFawkesPipe Stack: all 5 services healthy
-[✓] Woodpecker API: reachable at http://localhost:8000
-[✓] Pipeline Run: my-golden-path-app pipeline completed successfully
-[✓] Parallel Execution: lint-yaml and lint-shell ran in parallel
-[✓] Build Caching: Second build faster than first (CNB cache)
-[✓] Performance Measured: Build time recorded and compared
-
-==========================================
-Total Tests: 7
-Passed: 7
-Failed: 0
-
-[✓] All tests passed! ✅
-
-🎉 Congratulations! You've completed Yellow Belt Module 6 Lab 01.
-   You've built an optimized Golden Path pipeline with parallel execution
-   and build caching. Move on to Module 07: Security & Quality Gates.
-```
+It reads `WOODPECKER_TOKEN` from your shell. **Expected**: 7 checks, all `[✓]`: prerequisites, stack running, API token accepted, repo activated, a successful run, `lint` and `dependency-scan` overlapping in a run, and at least two successful runs to compare.
 
 ---
 
 ## Clean Up
 
 ```bash
-# Remove local repos (optional)
-rm -rf ~/dojo-labs/golden-path-lab
-rm -rf ~/dojo-labs/my-golden-path-app.git
+# Stop the stack, keeping its data (do NOT use make down: it deletes volumes)
+cd ~/dojo-labs/uFawkesPipe && docker compose -f compose.yaml stop
 
-# Stop uFawkesPipe when done (optional)
-cd ~/dojo-labs/uFawkesPipe
-make down
+# Delete the lab repo from GitHub (needs the delete_repo scope, or use the repo's Settings page)
+gh repo delete my-golden-path-app --yes
+rm -rf ~/dojo-labs/uFawkesDevX/my-golden-path-app ~/dojo-labs/python-fawkes-path ~/dojo-labs/java-fawkes-path
 ```
 
 ---
@@ -417,12 +254,14 @@ make down
 ## Troubleshooting
 
 | Problem | Cause | Fix |
-|---------|-------|-----|
-| Woodpecker won't start | Port 8000 in use / OAuth config | `lsof -i :8000`, check `.env` for OAuth keys |
-| Pipeline stuck "Pending" | Agent not connected | `docker logs woodpecker-agent`, check `WOODPECKER_AGENT` config |
-| Pipeline fails at `secrets-scan` | Gitleaks found secret | Check `.gitleaks.toml` allowlist, remove secret |
-| Pipeline fails at `build-image` | CNB builder issue | Check Docker access, `docker ps` |
-| Build not faster on second run | Cache not working | Check `pack_cache` volume, `docker volume ls` |
+|---|---|---|
+| `/api/user` returns 401 | Token stale, mistyped, or copied before a **Reset token** | Sign in again, copy the current token, `export` it again |
+| `500 could not create webhook in forge` | `WOODPECKER_EXPERT_WEBHOOK_HOST` empty or `localhost` | Set a public URL in `.env`, recreate the server, restart the agent |
+| Run stays `pending`/`running` | Agent lost its connection to the server | `docker compose -f compose.yaml restart woodpecker-agent`, then start a new run |
+| `lint` fails: `ruff: not found`, or `test` fails: `No module named 'src'` | Contract commands skip the install step or use bare `pytest` | Use the Step 2.2 commands |
+| Contract has `advanced.parallel` but nothing changes | The generator ignores it | Remove it; parallelism comes from steps with no `depends_on` |
+| Validation: `Parallel Execution` fails | `lint` or `dependency_scan` is not enabled in the contract, or the run predates the change | Enable both, regenerate, push, start a new run |
+| Woodpecker data and login vanished | `make down` ran `down -v` | Sign in again and re-activate; stop with `docker compose ... stop` in future |
 
 ---
 
@@ -430,13 +269,21 @@ make down
 
 Write your answers down — the act of writing (not just thinking) strengthens retention.
 
-1. What file defines the Golden Path pipeline contract in uFawkesPipe?
-2. How do you enable parallel execution in a pipeline?
-3. How does CNB caching work between builds?
-4. What does `advanced.parallel.enabled: true` do?
-5. Where can you find build performance metrics in Woodpecker?
+1. What file defines the golden-path pipeline contract?
+2. Which command turns the contract into a Woodpecker pipeline?
+3. Which two steps ran in parallel in your pipeline, and why?
+4. Why did `test` not start as soon as `lint` finished?
+5. Where do you read per-step timings from?
 
-(Suggested answers: 1 = .fawkespipe.yml; 2 = advanced.parallel.enabled: true; 3 = CNB caches buildpack layers between builds; 4 = enables parallel execution for compatible stages; 5 = Woodpecker UI build details, Prometheus/Grafana)
+---
+
+## Retrieval Check Answers
+
+1. `.fawkespipe.yml`
+2. `make generate-pipeline` in uFawkesPipe (it writes `.woodpecker.yml`)
+3. `lint` and `dependency-scan`: neither has a `depends_on`, so Woodpecker starts them together
+4. `test` waits for the whole previous group, not just `lint`: in our runs it started when the slower parallel step (`dependency-scan`) finished
+5. The Woodpecker API (`/api/repos/<id>/pipelines/<n>`) or the run page in the UI
 
 ---
 
@@ -444,24 +291,10 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 
 | File | Purpose |
 |------|---------|
-| `.fawkespipe.yml` | Optimized Golden Path contract (parallel, caching, resources) |
-| `.woodpecker.yml` | Generated Woodpecker pipeline (from .fawkespipe.yml) |
-| `src/app.py` | Flask app with `/health` endpoint |
+| `.fawkespipe.yml` | Pipeline contract (lint, test, dependency scan) |
+| `.woodpecker.yml` | Generated Woodpecker pipeline; regenerate it after editing the contract |
+| `src/app.py` | Flask app with `/` and `/health` |
 | `tests/test_app.py` | Pytest suite |
-| `.devcontainer/devcontainer.json` | Coder workspace definition |
-
-You've now built an optimized Golden Path pipeline with parallel execution, build caching, and performance measurement — the foundation for scalable, maintainable CI/CD!
-
----
-
-## Retrieval Check Answers
-
-1. **Contract file**: `.fawkespipe.yml`
-2. **Parallel execution**: `advanced.parallel.enabled: true`
-3. **CNB caching**: Caches buildpack layers between builds
-4. **Parallel config**: Enables parallel execution for compatible stages
-5. **Metrics**: Woodpecker UI build details, Prometheus/Grafana
-
----
+| `Dockerfile`, `score.yaml` | Present in the scaffold; not used by this lab's pipeline |
 
 ➡️ **Next**: Return to [Module 6 README](../README.md), then continue to **Module 07: Security Scanning & Quality Gates**.

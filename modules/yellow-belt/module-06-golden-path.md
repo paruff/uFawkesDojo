@@ -16,8 +16,7 @@ By the end of this module, you will be able to:
 - ✅ Understand the "Golden Path" concept and how uFawkesPipe implements it via `.fawkespipe.yml` templates
 - ✅ Create and customize `.fawkespipe.yml` pipeline contracts for different application types
 - ✅ Configure pipeline stages (lint, test, security, build) with language-specific commands
-- ✅ Implement pipeline optimization: parallel execution, build caching, incremental builds
-- ✅ Configure resource optimization and build time measurement
+- ✅ Read which steps run in parallel and measure step timings (build caching and resource tuning are not implemented by the v2.0.0 generator; see the correction in Section 4)
 - ✅ Measure and improve pipeline performance using Woodpecker UI and metrics
 - ✅ Use golden path templates for Java, Python, Node.js, and Go applications
 
@@ -309,6 +308,8 @@ Each template includes:
 ---
 
 ## 4. Pipeline Optimization in uFawkesPipe (10 minutes)
+
+> **Correction (2026-11-20).** Running Lab 01 against uFawkesPipe v2.0.0 showed that the generator ignores `advanced.parallel` and has no build-cache, resource or incremental-build settings (`advanced.timeout` becomes a comment only). Steps with no `depends_on` start together, and that is the parallelism you get. The examples below that set `advanced.parallel`, caching or `resources` describe intended behaviour, not what v2.0.0 does; the lab measures what it does. Rewrite tracked in a follow-up issue.
 
 ### Technique 1: Parallel Execution
 
@@ -781,28 +782,26 @@ In Woodpecker UI, you can view:
 ### Lab Overview
 
 You'll use the running uFawkesPipe stack to:
-1. Explore built-in golden path templates
-2. Create a customized `.fawkespipe.yml` for a Python Flask application
-3. Configure pipeline stages with optimization settings
-4. Push to Git, activate in Woodpecker, watch pipeline execute
-5. Practice optimization: enable parallel, observe build time
-6. Practice optimization: observe caching effect
+1. Read the `python-fawkes-path` and `java-fawkes-path` golden-path contracts
+2. Write a `.fawkespipe.yml` for a scaffolded Python Flask app and generate its `.woodpecker.yml`
+3. Push to GitHub and activate the repo in Woodpecker
+4. Run the pipeline and see which steps run in parallel
+5. Read per-step timings from the Woodpecker API and compare repeat runs
 
-**Time Estimate**: 20 minutes
+**Time Estimate**: about 30 minutes
 **Difficulty**: Intermediate (Module 5 complete required)
 **Auto-Graded**: Yes
 **Points**: 100
 
 ### Lab Environment
 
-**Prerequisites**: uFawkesPipe v2.0.0 running locally
+**Prerequisites**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (see the lab)
 - ✅ Woodpecker CI at http://localhost:8000
-- ✅ SonarQube at http://localhost:9000
-- ✅ Portainer CE at https://localhost:9443
+- SonarQube and Portainer are optional here; the lab needs only the Woodpecker server and agent
 
 ➡️ **[Lab 01: Build Your Golden Path Pipeline](yellow-belt/module-06-golden-path/lab-01/instructions.md)**
 
-This lab walks you through customizing a golden path template, configuring pipeline optimization, and measuring performance.
+This lab walks you through writing a golden path contract, running the generated pipeline, and measuring its step timings.
 
 **Validation**: `bash yellow-belt/module-06-golden-path/lab-01/validate.sh`
 
@@ -845,11 +844,11 @@ This lab walks you through customizing a golden path template, configuring pipel
 **How does uFawkesPipe enable parallel execution?**
 
 - [ ] A) Run all stages in parallel
-- [x] B) Set `advanced.parallel.enabled: true` in `.fawkespipe.yml`
-- [ ] C) Use GNU Make's `-j` flag
+- [ ] B) Set `advanced.parallel.enabled: true` in `.fawkespipe.yml`
+- [x] C) Enable stages that do not depend on each other (steps with no `depends_on` start together)
 - [ ] D) Run multiple pipelines simultaneously
 
-**Explanation**: Setting **`advanced.parallel.enabled: true`** enables parallel execution for compatible stages (lint steps, test steps).
+**Explanation**: v2.0.0 ignores `advanced.parallel`. The generator gives `test` a `depends_on: [lint]` and leaves other steps (such as `dependency-scan`) without one, so those start together with `lint`.
 
 ---
 
