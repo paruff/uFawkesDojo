@@ -55,9 +55,6 @@ Deploy → Production                       ↑                    ↑
 
 | Stage | Purpose | Tools |
 |-------|---------|-------|
-| **secrets-scan** | Secret/credential detection | Gitleaks |
-| **vuln-scan-fs** | Filesystem vulnerability scan | Trivy |
-| **vuln-scan-image** | Container image scan | Trivy |
 | **sast** | Static Application Security Testing | SonarQube, Trivy, Bandit |
 | **dependency_scan** | Dependency vulnerability scan | Trivy / OSV-Scanner |
 | **image_scan** | Container image scan | Trivy |
@@ -83,16 +80,15 @@ Deploy → Production                       ↑                    ↑
 ➡️ **[Lab 01: Security Scanning with uFawkesPipe](lab-01/instructions.md)**
 
 This lab walks you through:
-1. Exploring security stages in Woodpecker
-2. Configuring SAST with SonarQube + Trivy + Bandit
-4. Configuring dependency and image scanning
-5. Enabling secret detection with Gitleaks
-5. Integrating with DefectDojo
-6. Practicing quality gate enforcement
+1. Reading the security stages in the generator
+2. Running a Trivy `dependency_scan` pipeline green
+3. Making it fail with a vulnerable dependency, then finding the CVE
+4. Making the same stage fail on a planted secret
+5. Fixing both and recovering
 
-**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
-> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Last run for real**: 2026-11-20, against uFawkesPipe v2.0.0. Only `dependency_scan` (Trivy) was run. SonarQube SAST, Bandit, image scanning, DAST, DefectDojo and a separate Gitleaks gate were **not** run (v2.0.0 has no Gitleaks stage; they need services and credentials the lab does not set up). The theory covers them; treat those parts as unrun.
 
 **Prerequisites**: Module 5 & 6 completed, uFawkesPipe running
 
