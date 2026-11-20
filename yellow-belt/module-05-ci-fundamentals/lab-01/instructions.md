@@ -1,7 +1,7 @@
 # Lab 01: Your First Pipeline with uFawkesPipe
 
 **Module**: Yellow Belt — Module 5: CI Fundamentals
-**Estimated Time**: 45 minutes (first run pulls container images)
+**Estimated Time**: about 45 minutes (an estimate, not timed; the first run pulls container images)
 **Difficulty**: Intermediate (White Belt complete required)
 **Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
