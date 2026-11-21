@@ -190,78 +190,60 @@ check_gate() {
   fi
 }
 
-# sast succeeded in some run.
+# Pass if any run's detail matches a jq predicate over its steps. Usage:
+#   find_run <label> <hint if none> <jq filter returning true/false over .workflows[].children[]>
+find_run() {
+  local label="$1" hint="$2" filter="$3" num body
+  need_repo "$label" || return
+  need_pipelines "$label" || return
+  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
+    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
+      record_test "$label" "FAIL" "could not read pipeline #${num} (reason above)"
+      return
+    fi
+    if echo "$body" | jq -e "[.workflows[]?.children[]?] as \$s | ${filter}" > /dev/null; then
+      record_test "$label" "PASS" "matched in pipeline #${num}"
+      return
+    fi
+  done
+  record_test "$label" "FAIL" "$hint"
+}
+
 check_sast() {
-  need_repo "SAST" || return
-  need_pipelines "SAST" || return
-  local num body
-  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
-    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
-      record_test "SAST" "FAIL" "could not read pipeline #${num} (reason above)"
-      return
-    fi
-    if echo "$body" | jq -e '[.workflows[]?.children[]? | select(.name == "sast" and .state == "success")] | length >= 1' > /dev/null; then
-      record_test "SAST" "PASS" "sast succeeded in pipeline #${num}"
-      return
-    fi
-  done
-  record_test "SAST" "FAIL" "no run where sast succeeded (Step 6)"
+  find_run "SAST" "no run where sast succeeded (Step 6); this covers the SonarQube part only" \
+    '[$s[] | select(.name == "sast" and .state == "success")] | length >= 1'
 }
 
-# build succeeded and image-scan executed (it fails on a stock python base image, so either result counts).
+# Either result counts: the lab's image fails the scan on its base layer.
 check_image_scan() {
-  need_repo "Image Scan" || return
-  need_pipelines "Image Scan" || return
-  local num body
-  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
-    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
-      record_test "Image Scan" "FAIL" "could not read pipeline #${num} (reason above)"
-      return
-    fi
-    if echo "$body" | jq -e '[.workflows[]?.children[]?] as $s
-        | ([$s[] | select(.name == "build" and .state == "success")] | length >= 1)
-          and ([$s[] | select(.name == "image-scan" and (.state == "success" or .state == "failure"))] | length >= 1)' > /dev/null; then
-      record_test "Image Scan" "PASS" "build succeeded and image-scan ran in pipeline #${num}"
-      return
-    fi
-  done
-  record_test "Image Scan" "FAIL" "no run where build succeeded and image-scan ran (Step 7)"
+  find_run "Image Scan" "no run where build succeeded and image-scan ran (Step 7)" \
+    '([$s[] | select(.name == "build" and .state == "success")] | length >= 1)
+     and ([$s[] | select(.name == "image-scan" and (.state == "success" or .state == "failure"))] | length >= 1)'
 }
 
-# dast executed (it fails in v2.0.0 even when ZAP runs, so either result counts).
+# The dast step always ends red in v2.0.0 (Step 9); this only shows the step started and ZAP got to run.
 check_dast() {
-  need_repo "DAST" || return
-  need_pipelines "DAST" || return
-  local num body
-  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
-    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
-      record_test "DAST" "FAIL" "could not read pipeline #${num} (reason above)"
-      return
-    fi
-    if echo "$body" | jq -e '[.workflows[]?.children[]? | select(.name == "dast" and .error == null and (.state == "success" or .state == "failure"))] | length >= 1' > /dev/null; then
-      record_test "DAST" "PASS" "dast step ran in pipeline #${num}"
-      return
-    fi
-  done
-  record_test "DAST" "FAIL" "no run where the dast step ran (Step 9)"
+  find_run "DAST" "no run where the dast step started without a container error (Step 9)" \
+    '[$s[] | select(.name == "dast" and .error == null and (.state == "success" or .state == "failure"))] | length >= 1'
 }
 
-# The upload step succeeded. This does not prove findings arrived: check DefectDojo (Step 10).
+# The upload step is green even when nothing was imported (every curl ends in || true),
+# so the real check is DefectDojo itself: set DD_TOKEN (and DD_URL if not localhost:8080).
 check_defectdojo() {
-  need_repo "DefectDojo Upload" || return
-  need_pipelines "DefectDojo Upload" || return
-  local num body
-  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
-    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
-      record_test "DefectDojo Upload" "FAIL" "could not read pipeline #${num} (reason above)"
-      return
-    fi
-    if echo "$body" | jq -e '[.workflows[]?.children[]? | select(.name == "defectdojo-upload" and .state == "success")] | length >= 1' > /dev/null; then
-      record_test "DefectDojo Upload" "PASS" "defectdojo-upload succeeded in pipeline #${num} (confirm the findings in DefectDojo)"
-      return
-    fi
-  done
-  record_test "DefectDojo Upload" "FAIL" "no run where defectdojo-upload succeeded (Step 10)"
+  local url="${DD_URL:-http://localhost:8080}" n
+  if [ -z "${DD_TOKEN:-}" ]; then
+    record_test "DefectDojo Findings" "FAIL" "DD_TOKEN is not set; the pipeline's green upload step proves nothing, so this checks DefectDojo itself (Step 10)"
+    return
+  fi
+  if ! n=$(curl -sS --max-time 15 -H "Authorization: Token ${DD_TOKEN}" "${url}/api/v2/findings/?limit=1" | jq -r '.count'); then
+    record_test "DefectDojo Findings" "FAIL" "could not read ${url}/api/v2/findings/ (error above)"
+    return
+  fi
+  if [ "$n" != "null" ] && [ "${n:-0}" -ge 1 ] 2> /dev/null; then
+    record_test "DefectDojo Findings" "PASS" "${n} finding(s) in DefectDojo at ${url}"
+  else
+    record_test "DefectDojo Findings" "FAIL" "no findings in DefectDojo (response: ${n:-empty}); check fixtures, product and engagement (Step 10)"
+  fi
 }
 
 print_summary() {

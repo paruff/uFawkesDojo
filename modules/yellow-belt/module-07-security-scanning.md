@@ -7,7 +7,7 @@
 
 ---
 
-> **Correction (2026-11-20).** Running Lab 01 against uFawkesPipe v2.0.0 showed that the generator has no `secrets-scan`, `vuln-scan-fs` or `vuln-scan-image` stages and no Gitleaks step: the stages are `sast`, `dependency_scan`, `image_scan`, `dast` and `defectdojo`. A finding fails a scan step through the tool's exit code, and Trivy's filesystem scan also catches secrets. The lab ran `dependency_scan`, `sast` (SonarQube only; the quality-gate step loops forever on a wrong endpoint, and the step image has no Trivy or Bandit) and `build` plus `image_scan`, with workarounds. Bandit (via the lint command), ZAP DAST and the DefectDojo upload were also run, each with workarounds. The detailed sections below were not rewritten and still describe intended behaviour in places. Rewrite tracked in a follow-up issue.
+> **Correction (2026-11-20).** Running Lab 01 against uFawkesPipe v2.0.0 showed that the generator has no `secrets-scan`, `vuln-scan-fs` or `vuln-scan-image` stages and no Gitleaks step: the stages are `sast`, `dependency_scan`, `image_scan`, `dast` and `defectdojo`. A finding fails a scan step through the tool's exit code, and Trivy's filesystem scan also catches secrets. The lab ran `dependency_scan`, `sast` (SonarQube only; the quality-gate step loops forever on a wrong endpoint, and the step image has no Trivy or Bandit) and `build` plus `image_scan`, with workarounds. Bandit (via the lint command), ZAP DAST and the DefectDojo upload were also run, each with workarounds. The detailed sections below were not rewritten and still describe intended behaviour in places. The theory sections have not been rewritten yet.
 
 ## 1. Learning Objectives (3 minutes)
 

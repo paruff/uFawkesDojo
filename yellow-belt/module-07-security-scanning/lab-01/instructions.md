@@ -1,11 +1,11 @@
 # Lab 01: Make Security Findings Fail the Pipeline
 
 **Module**: Yellow Belt — Module 7: Security Scanning & Quality Gates
-**Estimated Time**: about 25 minutes (an estimate, not timed; a first run pulls container images and Trivy's vulnerability database)
+**Estimated Time**: about 25 minutes for Steps 1-5; Steps 6-10 took us several hours, mostly setup and image pulls (an estimate, not timed)
 **Difficulty**: Intermediate (Modules 5 & 6 complete required)
 **Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
-> **Last run for real**: 2026-11-20, every step below, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1.
+> **Last run for real**: Steps 1-5 on 2026-11-20 and Steps 6-10 on 2026-11-21, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1. Steps 6-10 needed the workarounds they list, a Docker VM resized to 4 CPUs and 6 GB, and a DefectDojo initialised by hand; this is not a run of an unmodified release.
 >
 > **Scope.** Steps 1-5 run `dependency_scan` (Trivy). Steps 6-10 run `sast` (SonarQube), `image_scan`, Bandit, `dast` (OWASP ZAP) and the `defectdojo` upload. v2.0.0 does not work out of the box for any of Steps 6-10: each step lists the defects we hit and the workaround that got it running. The `dast` step still ends red (Step 9 says why) and the Trivy and Bandit options inside `sast` do not work (Step 6). uFawkesPipe has no separate Gitleaks stage; Trivy's filesystem scan also looks for secrets (Step 4). Steps 6-10 need a Docker VM with about 6 GB of RAM and a lot of patience; on a laptop already under load the runs were very slow, and starting SonarQube, ZAP and DefectDojo at the same time overloaded ours.
 
@@ -30,6 +30,7 @@ By the end of this lab you will have:
 This lab continues [Module 5](../../module-05-ci-fundamentals/lab-01/instructions.md) and [Module 6](../../module-06-golden-path/lab-01/instructions.md). Use their **Prerequisites** (tools, GitHub OAuth App, `uFawkesPipe` and `uFawkesDevX` checkouts, `.env`, `WOODPECKER_TOKEN`). Start only `docker compose -f compose.yaml up -d woodpecker-server woodpecker-agent`, and never stop the stack with `make down` (it runs `down -v`).
 
 ```bash
+git -C ~/dojo-labs/uFawkesPipe describe --tags   # must print v2.0.0; if not: git -C ~/dojo-labs/uFawkesPipe checkout v2.0.0
 export WP=http://localhost:8000        # your Woodpecker URL (check WOODPECKER_UI_PORT in .env)
 export WOODPECKER_TOKEN='eyJ...'
 curl -s -H "Authorization: Bearer $WOODPECKER_TOKEN" $WP/api/user | jq .login
@@ -476,10 +477,10 @@ curl -s -H "Authorization: Token $DD_TOKEN" "localhost:8080/api/v2/findings/?lim
 
 ```bash
 cd /path/to/uFawkesDojo
-WOODPECKER_URL=$WP bash yellow-belt/module-07-security-scanning/lab-01/validate.sh
+DD_TOKEN=<your DefectDojo token> WOODPECKER_URL=$WP bash yellow-belt/module-07-security-scanning/lab-01/validate.sh
 ```
 
-It reads `WOODPECKER_TOKEN` from your shell. **Expected**: 11 checks, all `[✓]`: prerequisites, stack running, API token accepted, repo activated, a successful run, a run where `dependency-scan` failed and `test` was skipped, a successful run after it, a run where `sast` succeeded, a run where `build` succeeded and `image-scan` ran, a run where `dast` ran, and a run where `defectdojo-upload` succeeded. It does not check Bandit or what is inside DefectDojo; use Steps 8 and 10 for those.
+It reads `WOODPECKER_TOKEN` from your shell. **Expected**: 11 checks, all `[✓]`: prerequisites, stack running, API token accepted, repo activated, a successful run, a run where `dependency-scan` failed and `test` was skipped, a successful run after it, a run where `sast` succeeded, a run where `build` succeeded and `image-scan` ran, a run where `dast` ran, and findings present in DefectDojo. The DefectDojo check queries DefectDojo itself and fails unless you export `DD_TOKEN` (and `DD_URL` if it is not `http://localhost:8080`). The `dast` check only shows the step started; it ends red by design. Nothing checks Bandit; use Step 8.
 
 ---
 
