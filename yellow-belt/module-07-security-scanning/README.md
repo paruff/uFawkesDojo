@@ -87,10 +87,11 @@ This lab walks you through:
 5. Fixing both and recovering
 6. Adding SonarQube SAST and seeing what v2.0.0 needs from you
 7. Building an image and scanning it
+8. Gating on Bandit, running a ZAP scan, and uploading findings to DefectDojo
 
 **Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
-> **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0. Run: `dependency_scan` (Trivy), `sast` (SonarQube only) and `build` plus `image_scan`, each with workarounds the lab spells out. **Not run**: Bandit and Trivy inside `sast` (the step's image lacks both), DAST, DefectDojo, and a separate Gitleaks gate (v2.0.0 has no Gitleaks stage). The theory covers the unrun parts; treat them as unrun.
+> **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0. Every stage the lab covers was run: `dependency_scan`, `sast` (SonarQube), `build` plus `image_scan`, Bandit (through the lint command), `dast` (ZAP) and the `defectdojo` upload. None works out of the box in v2.0.0; the lab spells out each defect and workaround. Known gaps: Trivy and Bandit inside `sast` do not work, the `dast` step still ends red, and v2.0.0 has no Gitleaks stage. The theory sections have a correction banner but are otherwise unchanged.
 
 **Prerequisites**: Module 5 & 6 completed, uFawkesPipe running
 

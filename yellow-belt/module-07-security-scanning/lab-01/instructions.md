@@ -7,7 +7,7 @@
 
 > **Last run for real**: 2026-11-20, every step below, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1.
 >
-> **Scope.** Steps 1-5 run `dependency_scan` (Trivy). Steps 6-7 run `sast` (SonarQube) and `image_scan` (Trivy on a locally built image). Both need workarounds for problems in uFawkesPipe v2.0.0, and each step says what they are. We did **not** run `dast` or `defectdojo`, and `sast`'s Bandit and Trivy parts could not run (the `sast` step's image has neither tool). uFawkesPipe has no separate Gitleaks stage; Trivy's filesystem scan also looks for secrets (Step 4). Steps 6-7 need a Docker VM with about 6 GB of RAM (SonarQube alone uses about 2 GB), and on a laptop already under load the first runs were very slow.
+> **Scope.** Steps 1-5 run `dependency_scan` (Trivy). Steps 6-10 run `sast` (SonarQube), `image_scan`, Bandit, `dast` (OWASP ZAP) and the `defectdojo` upload. v2.0.0 does not work out of the box for any of Steps 6-10: each step lists the defects we hit and the workaround that got it running. The `dast` step still ends red (Step 9 says why) and the Trivy and Bandit options inside `sast` do not work (Step 6). uFawkesPipe has no separate Gitleaks stage; Trivy's filesystem scan also looks for secrets (Step 4). Steps 6-10 need a Docker VM with about 6 GB of RAM and a lot of patience; on a laptop already under load the runs were very slow, and starting SonarQube, ZAP and DefectDojo at the same time overloaded ours.
 
 ---
 
@@ -317,14 +317,169 @@ The gate has no `--severity`, so any finding fails it. You would fix this by cha
 
 ---
 
-## Step 8 — Run the Validation Script
+## Step 8 — Bandit Through the Lint Command (5 minutes)
+
+The `sast` step cannot run Bandit (Step 6.5), but the `lint` stage runs any command you give it. Change the Python lint command in the contract:
+
+```yaml
+        cmd: pip install -q ruff bandit && ruff check . && bandit -r src/ --severity-level medium --confidence-level medium
+```
+
+Regenerate (re-add the workspace block from 6.3), push and run.
+
+**What we got**: `lint  failure`. Bandit reported `B104 hardcoded_bind_all_interfaces` (Medium) at `src/app.py:19`, in the **scaffolded** app: `app.run(host="0.0.0.0", ...)`. Binding every interface is what you want inside a container, so suppress it with a reason instead of changing the code:
+
+```python
+app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "8080")))  # nosec B104 - bind all interfaces is intended inside the container
+```
+
+Push and run again: `lint  success`.
+
+> ✅ **Checkpoint**: a red `lint` from a Bandit finding, then green after a justified `# nosec`.
+
+---
+
+## Step 9 — DAST with OWASP ZAP (about 20 minutes)
+
+DAST needs a running target. Start the image from Step 7 and point the contract at it:
+
+```bash
+docker run -d --name my-secure-app -p 8080:8080 dojo/my-secure-app
+curl -s localhost:8080/health   # {"status":"ok"}
+```
+
+```yaml
+  dast:
+    enabled: true
+    tool: zap
+    target_url: http://host.docker.internal:8080
+    timeout: 120
+```
+
+The generated step runs `zap-baseline.py` and then `zap-api-scan.py` against `<target>/openapi.json`, in `zaproxy/zap-stable`. Three problems, in the order we hit them:
+
+1. **First pull fails** with `failed to Lchown` while extracting a layer, or the step ends with `No such image`. Run `docker pull zaproxy/zap-stable:latest` yourself (about 1 GB) and run again.
+2. **`source: not found`** at the top of the log. The step's shell is `dash`, which has no `source`, so the OpenTelemetry span helper never loads. This did not stop the scan; ignore it.
+3. **`A file based option has been specified but the directory '/zap/wrk' is not mounted`**, followed by ZAP's usage text. The step passes `-r` and `-x` report paths but never mounts `/zap/wrk`, and ZAP runs as a non-root user. Two changes get it going. Hand-edit the generated `dast` step (regenerating removes this):
+
+```yaml
+- name: dast
+  image: zaproxy/zap-stable:latest
+  backend_options:
+    docker:
+      user: root
+```
+
+and add a `/zap/wrk` volume to the agent, next to the Docker socket from Step 7: `WOODPECKER_BACKEND_DOCKER_VOLUMES=maven-cache:/root/.m2,/var/run/docker.sock:/var/run/docker.sock,zapwrk:/zap/wrk`.
+
+**What we got**: ZAP runs. The baseline scan found missing security headers (`X-Content-Type-Options`, `Content-Security-Policy`, `Permissions-Policy`) and a `Server` header that leaks the version; the API scan found no `/openapi.json` (404). The step still ends `failure`: the log's last line is `ERROR [Errno 2] No such file or directory: '/zap/wrk/artifacts/security/zap-api.html'`, because the generated `mkdir -p artifacts/security` creates the directory in the workspace, not in `/zap/wrk`. So even a green DAST would leave its reports in a Docker volume where the DefectDojo step cannot find them. **We did not get a green `dast` step.** `-I` (the default `fail_on: HIGH`) only stops warnings failing it.
+
+Stop the target when you are done: `docker rm -f my-secure-app`.
+
+> ✅ **Checkpoint**: you have seen ZAP run in the pipeline and can name the findings and why the step still fails.
+
+---
+
+## Step 10 — Upload Findings to DefectDojo (about 30 minutes)
+
+The `defectdojo` stage runs `curl` against DefectDojo's `import-scan` API for each report file it finds in `artifacts/security/`. DefectDojo's compose profile did not work out of the box either; we fixed five things before the first upload.
+
+1. **Postgres 18 refuses to start** with the compose file's mount at `/var/lib/postgresql/data`. Override it in an extra compose file:
+
+```yaml
+services:
+  postgres:
+    volumes: !override
+      - postgres-data:/var/lib/postgresql
+  defectdojo-nginx:
+    environment:
+      DD_UWSGI_HOST: defectdojo
+```
+
+The second entry fixes problem 2: nginx exited with `host not found in upstream "uwsgi:3031"` because the service is called `defectdojo`, not `uwsgi`.
+
+2. **Start it** (stop SonarQube first to save memory; the UI listens on port 8080, so stop the Step 9 target too):
+
+```bash
+cd ~/dojo-labs/uFawkesPipe
+docker compose -f compose.yaml stop sonarqube
+docker compose -f compose.yaml -f dd-override.yaml --profile security up -d \
+  postgres valkey defectdojo defectdojo-nginx defectdojo-celery-beat defectdojo-celery-worker
+```
+
+3. **Nothing initialises the database** (no initializer service): `/login` returns HTTP 500 until you run the migrations, create an admin user and API token, and load the reference data. Without the fixtures, every upload fails with `Development_Environment matching query does not exist`:
+
+```bash
+docker exec defectdojo python3 manage.py migrate
+docker exec defectdojo python3 manage.py loaddata system_settings initial_banner_conf product_type test_type \
+  development_environment benchmark_type benchmark_category benchmark_requirement language_type \
+  objects_review regulation initial_surveys role
+docker exec -e PW='<admin password>' defectdojo python3 manage.py shell -c "
+import os
+from django.contrib.auth import get_user_model
+from rest_framework.authtoken.models import Token
+u,_=get_user_model().objects.get_or_create(username='admin',defaults={'is_superuser':True,'is_staff':True})
+u.is_superuser=True; u.is_staff=True; u.set_password(os.environ['PW']); u.save()
+print(Token.objects.get_or_create(user=u)[0].key)"
+```
+
+The `DOJO_API_TOKEN` in uFawkesPipe's `.env` does not match a token you create this way.
+
+4. **Create the product and engagement the step names.** `import-scan` by name needs both to exist:
+
+```bash
+export DD_TOKEN=<the token printed above>
+curl -s -H "Authorization: Token $DD_TOKEN" -H 'Content-Type: application/json' -d '{"name":"dojo-lab"}' localhost:8080/api/v2/product_types/
+curl -s -H "Authorization: Token $DD_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"name":"my-secure-app","description":"lab","prod_type":1}' localhost:8080/api/v2/products/
+curl -s -H "Authorization: Token $DD_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"name":"CI-Engagement","product":1,"target_start":"2026-11-21","target_end":"2026-12-31","engagement_type":"CI/CD","status":"In Progress"}' \
+  localhost:8080/api/v2/engagements/
+```
+
+5. **Give Woodpecker the token** as a repo secret named `defectdojo_api_token` (Woodpecker UI: repo Settings, Secrets; events `push` and `manual`).
+
+Now the contract, with `dependency_scan` and `defectdojo` enabled and the URL set (the default `http://defectdojo:8080` is not reachable from a step container):
+
+```yaml
+  defectdojo:
+    enabled: true
+    url: http://host.docker.internal:8080
+    engagement_name: CI-Engagement
+```
+
+Add `requests==2.19.0` to `requirements.txt` again so there is something to upload. Two hand edits to the generated `.woodpecker.yml` (regenerating removes both): `failure: ignore` on `dependency-scan` (a failed scan otherwise skips every later step), and widen the upload step's `when` so it runs for the lab's API-started runs and after a failed scan:
+
+```yaml
+  when:
+    event: [push, manual]
+    branch: main
+    status: [success, failure]
+```
+
+Push, run, then **ask DefectDojo, not the pipeline**:
+
+```bash
+curl -s -H "Authorization: Token $DD_TOKEN" localhost:8080/api/v2/tests/ | jq '.count'
+curl -s -H "Authorization: Token $DD_TOKEN" "localhost:8080/api/v2/findings/?limit=5" | jq -r '.results[] | "\(.severity) \(.title)"'
+```
+
+**What we got**: `build 24: success` with `dependency-scan  failure` and `defectdojo-upload  success`, and a second Trivy Scan test in DefectDojo. The five findings were `High CVE-2018-18074 Requests 2.19.0` and four `Medium` CVEs on the same package.
+
+**The upload step reports `success` even when nothing arrived.** Every `curl` ends in `|| true`, and our first run showed `success` while DefectDojo had zero findings (Problem 3: missing fixtures). Always check DefectDojo itself.
+
+> ✅ **Checkpoint**: DefectDojo shows the Trivy findings for `my-secure-app`, and you can say why the pipeline's green upload step proves nothing on its own.
+
+---
+
+## Step 11 — Run the Validation Script
 
 ```bash
 cd /path/to/uFawkesDojo
 WOODPECKER_URL=$WP bash yellow-belt/module-07-security-scanning/lab-01/validate.sh
 ```
 
-It reads `WOODPECKER_TOKEN` from your shell. **Expected**: 9 checks, all `[✓]`: prerequisites, stack running, API token accepted, repo activated, a successful run, a run where `dependency-scan` failed and `test` was skipped, a successful run after it, a run where `sast` succeeded, and a run where `build` succeeded and `image-scan` ran.
+It reads `WOODPECKER_TOKEN` from your shell. **Expected**: 11 checks, all `[✓]`: prerequisites, stack running, API token accepted, repo activated, a successful run, a run where `dependency-scan` failed and `test` was skipped, a successful run after it, a run where `sast` succeeded, a run where `build` succeeded and `image-scan` ran, a run where `dast` ran, and a run where `defectdojo-upload` succeeded. It does not check Bandit or what is inside DefectDojo; use Steps 8 and 10 for those.
 
 ---
 
@@ -335,6 +490,7 @@ cd ~/dojo-labs/uFawkesPipe && docker compose -f compose.yaml stop   # not make d
 gh repo delete my-secure-app --yes
 rm -rf ~/dojo-labs/uFawkesDevX/my-secure-app
 docker image rm dojo/my-secure-app
+docker compose -f compose.yaml --profile security stop   # DefectDojo, if started
 ```
 
 ---
@@ -353,6 +509,9 @@ docker image rm dojo/my-secure-app
 | `sast`: `Not authorized` | No token reaches the step | Step 6.4 |
 | `sast`: `trivy`/`bandit: command not found` | `sonar-scanner-cli` image lacks them | Disable both (Step 6.5) |
 | `build`: cannot connect to the Docker daemon | No socket in the step | Mount it from the agent (Step 7) |
+| `dast`: `/zap/wrk is not mounted` | Generated step has no `/zap/wrk` volume | Step 9 |
+| DefectDojo `/login` returns 500 | Database not initialised | Step 10, problem 3 |
+| `defectdojo-upload` is green but DefectDojo is empty | Each `curl` ends in `\|\| true` | Run the `import-scan` call by hand and read the error; check fixtures, product and engagement |
 | Run stays `pending` | Agent lost its connection | `docker compose -f compose.yaml restart woodpecker-agent`, run again |
 
 ---
@@ -366,6 +525,7 @@ docker image rm dojo/my-secure-app
 5. Why is deleting the file not enough for a real leaked secret?
 6. Why did the quality-gate polling loop never end, and how do you read the gate instead?
 7. Where did the 51 HIGH/CRITICAL image findings come from?
+8. Why can a green `defectdojo-upload` step still mean no findings were uploaded?
 
 ---
 
@@ -378,6 +538,7 @@ docker image rm dojo/my-secure-app
 5. The secret stays in Git history; it must be revoked and rotated
 6. It polls `/api/qualitygates/project`, which does not exist, so the status stays `PENDING`; read `/api/qualitygates/project_status` yourself
 7. The Debian base image (`python:3.12-slim`), not the app or its Python dependencies
+8. Each upload `curl` ends in `|| true`, so a failed import is swallowed; check DefectDojo itself
 
 ---
 

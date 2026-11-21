@@ -228,6 +228,42 @@ check_image_scan() {
   record_test "Image Scan" "FAIL" "no run where build succeeded and image-scan ran (Step 7)"
 }
 
+# dast executed (it fails in v2.0.0 even when ZAP runs, so either result counts).
+check_dast() {
+  need_repo "DAST" || return
+  need_pipelines "DAST" || return
+  local num body
+  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
+    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
+      record_test "DAST" "FAIL" "could not read pipeline #${num} (reason above)"
+      return
+    fi
+    if echo "$body" | jq -e '[.workflows[]?.children[]? | select(.name == "dast" and .error == null and (.state == "success" or .state == "failure"))] | length >= 1' > /dev/null; then
+      record_test "DAST" "PASS" "dast step ran in pipeline #${num}"
+      return
+    fi
+  done
+  record_test "DAST" "FAIL" "no run where the dast step ran (Step 9)"
+}
+
+# The upload step succeeded. This does not prove findings arrived: check DefectDojo (Step 10).
+check_defectdojo() {
+  need_repo "DefectDojo Upload" || return
+  need_pipelines "DefectDojo Upload" || return
+  local num body
+  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
+    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
+      record_test "DefectDojo Upload" "FAIL" "could not read pipeline #${num} (reason above)"
+      return
+    fi
+    if echo "$body" | jq -e '[.workflows[]?.children[]? | select(.name == "defectdojo-upload" and .state == "success")] | length >= 1' > /dev/null; then
+      record_test "DefectDojo Upload" "PASS" "defectdojo-upload succeeded in pipeline #${num} (confirm the findings in DefectDojo)"
+      return
+    fi
+  done
+  record_test "DefectDojo Upload" "FAIL" "no run where defectdojo-upload succeeded (Step 10)"
+}
+
 print_summary() {
   echo ""
   echo "=========================================="
@@ -259,6 +295,8 @@ main() {
   check_gate
   check_sast
   check_image_scan
+  check_dast
+  check_defectdojo
   print_summary
 }
 
