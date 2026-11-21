@@ -221,7 +221,7 @@ export SONAR_LAB_TOKEN=$(curl -s -u admin:<new> -X POST localhost:9001/api/user_
   -d name=lab -d type=GLOBAL_ANALYSIS_TOKEN | jq -r .token)
 ```
 
-**6.2 Enable `sast` in the contract** (SonarQube only; see 6.5 for why Trivy and Bandit are off) and add a `sonar-project.properties`:
+**6.2 Enable `sast` in the contract** (SonarQube, plus the Trivy and Bandit options, which run in their own steps once uFawkesPipe includes the #288 fix) and add a `sonar-project.properties`:
 
 ```yaml
   sast:
@@ -229,10 +229,6 @@ export SONAR_LAB_TOKEN=$(curl -s -u admin:<new> -X POST localhost:9001/api/user_
     sonarqube:
       enabled: true
       qualityGate: false
-    trivy:
-      enabled: false
-    bandit:
-      enabled: false
 ```
 
 ```
@@ -265,7 +261,7 @@ services:
 curl -s -u "$SONAR_LAB_TOKEN:" "localhost:9001/api/qualitygates/project_status?projectKey=my-secure-app" | jq .projectStatus.status
 ```
 
-With `trivy` and `bandit` enabled, the next failure is `trivy: command not found`: the step runs in `sonarsource/sonar-scanner-cli`, which has neither tool. That is why they are off. Trivy's filesystem scan still runs in `dependency_scan`; Bandit has no working route in v2.0.0.
+In v2.0.0 `trivy` and `bandit` ran inside `sonarsource/sonar-scanner-cli`, which has neither tool, so they failed with `trivy: command not found` (uFawkesPipe#288). With the fix they run as `sast-trivy` (`aquasec/trivy`) and `sast-bandit` (`python`, `pip install bandit`) and are on by default, so leave them enabled. On v2.0.0 itself, set both to `enabled: false` and use Step 8.
 
 **What we got** (run with `lint`, `sast`, `dependency-scan`): `sast  success`, with `ANALYSIS SUCCESSFUL` in its log and the project visible at `http://localhost:9001/dashboard?id=my-secure-app`.
 
@@ -318,9 +314,9 @@ The gate has no `--severity`, so any finding fails it. You would fix this by cha
 
 ---
 
-## Step 8 — Bandit Through the Lint Command (5 minutes)
+## Step 8 — Bandit (5 minutes)
 
-The `sast` step cannot run Bandit (Step 6.5), but the `lint` stage runs any command you give it. Change the Python lint command in the contract:
+With the #288 fix, `sast.bandit` runs Bandit in its own `sast-bandit` step; skip the lint change below. On v2.0.0 the `sast` step cannot run Bandit (Step 6.5), but the `lint` stage runs any command you give it. Change the Python lint command in the contract:
 
 ```yaml
         cmd: pip install -q ruff bandit && ruff check . && bandit -r src/ --severity-level medium --confidence-level medium
@@ -508,7 +504,7 @@ docker compose -f compose.yaml --profile security stop   # DefectDojo, if starte
 | SAST step prints `PENDING` forever | Quality-gate loop polls a non-existent endpoint | Cancel the run; set `qualityGate: false` (Step 6.5) |
 | `sast`: `/drone/src/scripts/otel-trace.sh: No such file` | Script missing and default workspace differs | Step 6.3 |
 | `sast`: `Not authorized` | No token reaches the step | Step 6.4 |
-| `sast`: `trivy`/`bandit: command not found` | `sonar-scanner-cli` image lacks them | Disable both (Step 6.5) |
+| `sast`: `trivy`/`bandit: command not found` | `sonar-scanner-cli` image lacks them | Use a uFawkesPipe release with the #288 fix, or disable both (Step 6.5) |
 | `build`: cannot connect to the Docker daemon | No socket in the step | Mount it from the agent (Step 7) |
 | `dast`: `/zap/wrk is not mounted` | Generated step has no `/zap/wrk` volume | Step 9 |
 | DefectDojo `/login` returns 500 | Database not initialised | Step 10, problem 3 |
