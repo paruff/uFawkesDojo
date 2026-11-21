@@ -4,8 +4,9 @@
 
 ## Changes
 
-1. Set `DORA_COMPUTE_ENVIRONMENTS=production,test` in `scripts/verify-labs.sh`
-   and `.github/workflows/_lab-acceptance.yml`. The labs post
+1. Have dora-api count `test` deploys as well as `production` ones, by setting
+   its compute-environments variable in `scripts/verify-labs.sh` and
+   `.github/workflows/_lab-acceptance.yml`. The labs post
    `environment: test` deploys and dora-api counts only `production` by
    default (uFawkesObs DC-05).
 2. M14 lab-01 `validate.sh`: treat `dora_fdrt_p50_hours` as expected-empty, like
