@@ -27,6 +27,9 @@ STEADY_SECONDS="${STEADY_SECONDS:-60}"
 # Same reason as CI's job env: short intervals so a lab that submits an
 # event sees refreshed data within the run instead of waiting an hour.
 export DORA_COMPUTE_INTERVAL_SECONDS="${DORA_COMPUTE_INTERVAL_SECONDS:-15}"
+# The labs post environment=test events; dora-api counts only production by
+# default (uFawkesObs DC-05), so without this every DORA gauge stays empty (#739).
+export DORA_COMPUTE_ENVIRONMENTS="${DORA_COMPUTE_ENVIRONMENTS:-production,test}"
 export OTEL_METRIC_EXPORT_INTERVAL="${OTEL_METRIC_EXPORT_INTERVAL:-5000}"
 
 pass_count=0

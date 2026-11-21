@@ -62,6 +62,9 @@ jobs:
       # Short compute/telemetry intervals so a lab that submits an event sees
       # refreshed data within the run instead of waiting for the 1h default.
       DORA_COMPUTE_INTERVAL_SECONDS: "15"
+      # Labs post environment=test events; dora-api counts only production by
+      # default (uFawkesObs DC-05), so the gauges would stay empty (uFawkesObs#739).
+      DORA_COMPUTE_ENVIRONMENTS: "production,test"
       OTEL_METRIC_EXPORT_INTERVAL: "5000"
       # Ephemeral CI-only stack, torn down at job end — not a real credential,
       # so a plain value here (not a GitHub secret) is fine, matching
