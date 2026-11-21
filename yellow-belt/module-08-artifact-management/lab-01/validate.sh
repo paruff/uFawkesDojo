@@ -190,6 +190,11 @@ check_push() {
      and ([$s[] | select(.name == "push" and .state == "success")] | length >= 1)'
 }
 
+check_deploy() {
+  find_run "Deploy Step" "no run where deploy succeeded: fix the generated deploy step by hand (Step 4)" \
+    '[$s[] | select(.name == "deploy" and .state == "success")] | length >= 1'
+}
+
 # A green push step is not proof: ask the registry itself what it holds.
 check_registry() {
   local out code tags
@@ -244,6 +249,7 @@ main() {
   check_build
   check_scan_gate
   check_push
+  check_deploy
   check_registry
   print_summary
 }

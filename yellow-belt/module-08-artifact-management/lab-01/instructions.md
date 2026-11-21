@@ -7,7 +7,7 @@
 
 > **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1, with a local `registry:2` container instead of Docker Hub. The agent needed the Docker socket mounted (Step 1); this is not a run of an unmodified release.
 >
-> **Scope.** v2.0.0 turns `build`, `image_scan`, `push` and `deploy` into pipeline steps, and that is all this lab runs. It does **not** implement the module's retention policies, tag-pattern retention, artifact promotion, Cosign signing or the `kubernetes` section: the generator ignores them (Step 5 shows how to check). The `deploy` step does not work as generated (Step 4).
+> **Scope.** v2.0.0 turns `build`, `image_scan`, `push` and `deploy` into pipeline steps, and that is all this lab runs. It does **not** implement the module's retention policies, tag-pattern retention, artifact promotion, Cosign signing or the `kubernetes` section: the generator ignores them (Step 5 shows how to check). The `deploy` step fails as generated and ran only after two hand edits (Step 4).
 
 ---
 
@@ -211,7 +211,23 @@ docker: invalid reference format.
 
 Three defects show here. The image reference is `${REGISTRY_USERNAME}/${CI_REPO_NAME}:${CI_COMMIT_SHA:0:7}`, but `REGISTRY_USERNAME` is not set in that step, so the name starts with `/`. The tag is the commit SHA, but `push` never pushed a SHA tag (Step 3). And `-p 8080:8000` maps to container port 8000 while the scaffolded app listens on 8080. This step is written for the `cnb` builder, where `pack build --publish` pushes `<user>/<repo>:<sha>`; it does not work with the `docker` builder.
 
-> ✅ **Checkpoint**: you have seen `deploy` fail and can name the empty variable.
+Replace the generated `docker run` in the `deploy` step with one that names the image you pushed and the port the app listens on (regenerating removes this):
+
+```yaml
+  commands:
+  - docker rm -f $CI_REPO_NAME || true
+  - docker run -d --name $CI_REPO_NAME -p 8080:8080 --restart unless-stopped localhost:5001/dojo/my-artifact-app:latest
+```
+
+```bash
+git commit -am "Fix deploy by hand" && git push origin main
+run
+curl -s localhost:8080/health
+```
+
+**What we got**: `build 4: success` with `clone`, `build`, `push` and `deploy` all `success`, `{"status":"ok"}` from the app, and a `my-artifact-app` container running. It deploys `:latest`, so it is not traceable to a commit (Step 3). Stop it with `docker rm -f my-artifact-app`.
+
+> ✅ **Checkpoint**: you have seen `deploy` fail, can name the empty variable, and have a hand-fixed `deploy` that succeeds.
 
 ---
 
@@ -240,14 +256,14 @@ cd /path/to/uFawkesDojo
 WOODPECKER_URL=$WP bash yellow-belt/module-08-artifact-management/lab-01/validate.sh
 ```
 
-It reads `WOODPECKER_TOKEN` from your shell. **Expected**: 9 checks, all `[✓]`: prerequisites, stack running, API token accepted, repo activated, a successful run, a run where `build` succeeded, a run where `image-scan` failed and `push` was skipped, a run where `build` and `push` succeeded, and a tag in the registry (`REGISTRY_URL` defaults to `http://localhost:5001`). Nothing checks `deploy`, because it fails as generated.
+It reads `WOODPECKER_TOKEN` from your shell. **Expected**: 10 checks, all `[✓]`: prerequisites, stack running, API token accepted, repo activated, a successful run, a run where `build` succeeded, a run where `image-scan` failed and `push` was skipped, a run where `build` and `push` succeeded, a run where `deploy` succeeded (after the hand edits), and a tag in the registry (`REGISTRY_URL` defaults to `http://localhost:5001`).
 
 ---
 
 ## Clean Up
 
 ```bash
-docker rm -f lab-registry
+docker rm -f lab-registry my-artifact-app
 cd ~/dojo-labs/uFawkesPipe && docker compose -f compose.yaml up -d woodpecker-agent   # without the override: drops the socket mount
 gh repo delete my-artifact-app --yes
 rm -rf ~/dojo-labs/uFawkesDevX/my-artifact-app

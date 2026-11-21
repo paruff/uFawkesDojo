@@ -7,7 +7,7 @@
 
 ---
 
-> **Correction (2026-11-21).** Running Lab 01 against uFawkesPipe v2.0.0 showed that the generator implements `build`, `image_scan`, `push` and `deploy` only. It ignores `advanced.artifacts.retention` and `paths`, the tag-pattern retention table, `build.image.tags` (the `docker` builder tags `latest` only), any `sign` stage (Cosign) and the `kubernetes` section; there is no promotion stage, and the generated `deploy` step fails with the `docker` builder. `push` generates no step for the `cnb` builder (`pack build --publish` already pushed). `image_scan` ignores `severity` and `fail_on`: any finding fails it. The detailed sections below were not rewritten and still describe intended behaviour in places. The Prometheus metrics and Grafana panels were not checked, and quiz questions 4, 7 and 10 are duplicates.
+> **Correction (2026-11-21).** Running Lab 01 against uFawkesPipe v2.0.0 showed that the generator implements `build`, `image_scan`, `push` and `deploy` only. It ignores `advanced.artifacts.retention` and `paths`, the tag-pattern retention table, `build.image.tags` (the `docker` builder tags `latest` only), any `sign` stage (Cosign) and the `kubernetes` section; there is no promotion stage, and the generated `deploy` step fails with the `docker` builder (it ran green only after a hand edit to the image reference and port). `push` generates no step for the `cnb` builder (`pack build --publish` already pushed). `image_scan` ignores `severity` and `fail_on`: any finding fails it. The detailed sections below were not rewritten and still describe intended behaviour in places. The Prometheus metrics and Grafana panels were not checked, and quiz questions 4, 7 and 10 are duplicates.
 
 ## 1. Learning Objectives (3 minutes)
 

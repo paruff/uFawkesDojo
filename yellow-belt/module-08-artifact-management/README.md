@@ -92,7 +92,7 @@ This lab walks you through:
 1. Building an image in the pipeline and pushing it to a local registry
 2. Watching the `image_scan` (Trivy) gate stop the push
 3. Reading what the registry actually holds after a push
-4. Seeing the generated `deploy` step fail, and why
+4. Seeing the generated `deploy` step fail, and fixing it by hand
 5. Checking which contract fields (retention, promotion, signing, `kubernetes`) the generator ignores
 
 **Runs against**: uFawkesPipe v2.0.0 (Docker Compose), last run for real on 2026-11-21 with a local registry. The lab covers build, image scan, push and the generated deploy step; v2.0.0 does not implement retention, promotion, signing or the `kubernetes` section (see the lab's Scope note).
