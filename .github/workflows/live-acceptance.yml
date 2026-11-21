@@ -152,8 +152,8 @@ jobs:
           git clone --depth 1 --branch "${{ steps.pin.outputs.tag }}" https://github.com/paruff/uFawkesDevX.git ~/dojo-labs/uFawkesDevX
 
       - name: Start the stack (Lab 1, Steps 1-2)
-        working-directory: ~/dojo-labs/uFawkesDevX
         run: |
+          cd ~/dojo-labs/uFawkesDevX
           make network
           cp .env.example .env
           gid=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock alpine stat -c %g /var/run/docker.sock)
@@ -172,8 +172,7 @@ jobs:
 
       - name: Stack logs on failure
         if: failure()
-        working-directory: ~/dojo-labs/uFawkesDevX
-        run: docker compose logs --no-color --tail 200
+        run: cd ~/dojo-labs/uFawkesDevX && docker compose logs --no-color --tail 200
 
       - name: job-finish
         if: always()
