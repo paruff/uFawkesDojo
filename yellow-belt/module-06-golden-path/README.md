@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟡 Yellow Belt
 **Estimated Time**: 60 minutes (20 min theory + 10 min architecture + 10 min optimization + 10 min templates + 10 min lab)
-**Prerequisites**: Module 5 completed, uFawkesPipe v2.0.0 running
+**Prerequisites**: Module 5 completed, uFawkesPipe v2.0.1 running
 **DORA Capability**: Continuous Integration (CD3, CD4), Deployment Pipeline
 
 ---
@@ -71,7 +71,7 @@ This lab walks you through:
 4. Running the pipeline and seeing which steps run in parallel
 5. Reading per-step timings from the Woodpecker API and comparing repeat runs
 
-**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.1 and uFawkesDevX v1.2.0 (Docker Compose)
 
 **Prerequisites**: Module 5 completed, uFawkesPipe running
 

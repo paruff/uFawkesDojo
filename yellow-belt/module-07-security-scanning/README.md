@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟡 Yellow Belt
 **Estimated Time**: 60 minutes (25 min theory + 10 min SAST + 5 min dependency + 5 min image + 5 min secrets + 5 min DAST/DefectDojo + 5 min quality gates + 15 min lab)
-**Prerequisites**: Module 5 & 6 complete, uFawkesPipe v2.0.0 running
+**Prerequisites**: Module 5 & 6 complete, uFawkesPipe v2.0.1 running
 **DORA Capability**: Shift Left on Security (CD6), Security & Compliance Automation
 
 ---
@@ -89,7 +89,7 @@ This lab walks you through:
 7. Building an image and scanning it
 8. Gating on Bandit, running a ZAP scan, and uploading findings to DefectDojo
 
-**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.1 and uFawkesDevX v1.2.0 (Docker Compose)
 
 > **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0. Every stage the lab covers was run: `dependency_scan`, `sast` (SonarQube), `build` plus `image_scan`, Bandit (through the lint command), `dast` (ZAP) and the `defectdojo` upload. None works out of the box in v2.0.0; the lab spells out each defect and workaround. Known gaps: Trivy and Bandit inside `sast` do not work, the `dast` step still ends red, and v2.0.0 has no Gitleaks stage. The theory sections have a correction banner but are otherwise unchanged. The Woodpecker runs used uFawkesDevX v1.0.1. The lab pins v1.2.0 now: its `python-flask-app` template differs from v1.0.1 by one comment in `src/app.py`, and Step 2's scaffold and pipeline generation were re-run on v1.2.0 (2026-11-21) with identical output. The pipeline runs themselves were not repeated on v1.2.0.
 

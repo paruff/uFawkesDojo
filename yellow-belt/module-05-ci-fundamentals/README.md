@@ -89,7 +89,7 @@ This lab walks you through:
 5. Reading the Trivy scan step
 6. Practicing the failure/recovery cycle
 
-**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.1 and uFawkesDevX v1.2.0 (Docker Compose)
 
 > **Last run for real**: 2026-11-20, every step, against uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1. The Woodpecker runs used uFawkesDevX v1.0.1. The lab pins v1.2.0 now: its `python-flask-app` template differs from v1.0.1 by one comment in `src/app.py`, and Step 2's scaffold and pipeline generation were re-run on v1.2.0 (2026-11-21) with identical output. The pipeline runs themselves were not repeated on v1.2.0.
 
