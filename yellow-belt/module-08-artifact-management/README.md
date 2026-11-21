@@ -95,9 +95,7 @@ This lab walks you through:
 5. Practicing artifact promotion across environments
 6. Verifying artifact lifecycle
 
-**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
-
-> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+**Runs against**: uFawkesPipe v2.0.0 (Docker Compose), last run for real on 2026-11-21 with a local registry. The lab covers build, image scan, push and the generated deploy step; v2.0.0 does not implement retention, promotion, signing or the `kubernetes` section (see the lab's Scope note).
 
 **Prerequisites**: Module 7 completed, uFawkesPipe running
 

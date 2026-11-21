@@ -1,11 +1,13 @@
-# Lab 01: Artifact Lifecycle with uFawkesPipe
+# Lab 01: Build, Scan and Push an Image with uFawkesPipe
 
 **Module**: Yellow Belt — Module 8: Artifact Management
-**Estimated Time**: 10 minutes
+**Estimated Time**: about 25 minutes (an estimate, not timed)
 **Difficulty**: Intermediate (Modules 5-7 complete required)
-**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.0 (Docker Compose)
 
-> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1, with a local `registry:2` container instead of Docker Hub. The agent needed the Docker socket mounted (Step 1); this is not a run of an unmodified release.
+>
+> **Scope.** v2.0.0 turns `build`, `image_scan`, `push` and `deploy` into pipeline steps, and that is all this lab runs. It does **not** implement the module's retention policies, tag-pattern retention, artifact promotion, Cosign signing or the `kubernetes` section: the generator ignores them (Step 5 shows how to check). The `deploy` step does not work as generated (Step 4).
 
 ---
 
@@ -13,448 +15,243 @@
 
 By the end of this lab you will have:
 
-1. Explored uFawkesPipe's artifact management capabilities in Woodpecker UI
-2. Created a customized `.fawkespipe.yml` with artifact build, scan, push, retention, and promotion
-3. Pushed the configuration to Git, activated the repository in Woodpecker
-4. Watched the pipeline execute through all artifact stages
-5. Verified image scanning, retention configuration, and promotion configuration
-6. Practiced the full artifact lifecycle: build → scan → push → promote → retain
-
----
-
-## Why This Lab Uses uFawkesPipe
-
-This lab runs against **uFawkesPipe v2.0.0** — the CI/CD plane of the Fawkes IDP — because it provides a complete artifact management pipeline in Docker Compose:
-
-- **CNB Builder** — Cloud Native Buildpacks for OCI images without Dockerfiles
-- **Trivy** — Vulnerability scanning (filesystem + container images)
-- **Gitleaks** — Secret detection (hard gate)
-- **Woodpecker CI** — Pipeline orchestration with artifact management
-- **Prometheus/Grafana** — Build metrics and artifact metrics
-- **DefectDojo** — Centralized findings management
-
-No Kubernetes required — runs entirely in Docker Compose on your laptop.
+1. Built an image in the pipeline and pushed it to a registry you control
+2. Watched the `image_scan` gate stop the pipeline before `push`
+3. Pushed after disabling the gate, and read what the registry actually holds
+4. Seen the generated `deploy` step fail, and why
+5. Checked which contract fields the generator really turns into steps
 
 ---
 
 ## Prerequisites
 
-**Required**: uFawkesPipe v2.0.0 running locally
+This lab continues [Module 5](../../module-05-ci-fundamentals/lab-01/instructions.md), [Module 6](../../module-06-golden-path/lab-01/instructions.md) and [Module 7](../../module-07-security-scanning/lab-01/instructions.md). Use their **Prerequisites** (tools, GitHub OAuth App, `uFawkesPipe` and `uFawkesDevX` checkouts, `.env`, `WOODPECKER_TOKEN`). Never stop the stack with `make down` (it runs `down -v`).
 
 ```bash
-# Verify your stack is running
-cd ~/dojo-labs/uFawkesPipe
-make status
+git -C ~/dojo-labs/uFawkesPipe describe --tags   # must print v2.0.0
+export WP=http://localhost:8000        # your Woodpecker URL (check WOODPECKER_UI_PORT in .env)
+export WOODPECKER_TOKEN='eyJ...'
+curl -s -H "Authorization: Bearer $WOODPECKER_TOKEN" $WP/api/user | jq .login
 ```
 
-**Expected**: All services healthy (woodpecker-server, woodpecker-agent, sonarqube, portainer, trivy-server, defectdojo)
-
-**Required**: Modules 5, 6, 7 completed (understand CI workflow, golden paths, security pipeline)
-
-**Tools required** (already installed from previous modules):
-- `curl` — HTTP client
-- `jq` — JSON processor
-- `git` — version control
-- `cookiecutter` — `pip install cookiecutter`
+**Expected**: your GitHub login.
 
 ---
 
-## Step 0 — Read the Theory First (if you haven't)
+## Step 1 — A Registry and Docker Access (5 minutes)
 
-This lab assumes you've read the [Module 8 theory](../README.md#theory-summary-25-minutes) up through "Complete Artifact Management Example". You should be able to name the artifact-related stages and identify the key uFawkesPipe artifact management components.
-
----
-
-## Step 1 — Explore Artifact Management in Woodpecker (Worked Example) (2 minutes)
-
-### 1.1 Access Woodpecker UI
-
-Open **http://localhost:8000** in your browser.
-
-1. Click **"Sign in with GitHub"** (OAuth)
-2. Navigate to **Repositories** → find **uFawkesPipe** (the platform's own repo)
-3. Click on the latest **pipeline run**
-
-### 1.2 Examine Artifact-Related Stages
-
-1. Click on the **build** stage
-   - Observe `build-image` step (CNB build)
-
-2. Click on **image_scan** stage
-   - Observe `image-scan` step (Trivy container scan)
-
-3. Click on **push** stage
-   - Observe `push` step (registry push)
-
-4. Click on **deploy** stage
-   - Observe `deploy` step (if enabled)
-
-> ✅ **Checkpoint**: You can identify all artifact-related stages in the Woodpecker pipeline and understand their purpose.
-
----
-
-## Step 2 — Scaffold and Customize Artifact Pipeline (3 minutes)
-
-### 2.1 Scaffold a Sample Application
+The default `cnb` builder runs `pack build --publish` and needs `registry_username` and `registry_password` secrets for Docker Hub. To keep the lab self-contained, use the `docker` builder and a throwaway local registry:
 
 ```bash
-# Work in a temporary directory
-mkdir -p ~/dojo-labs/artifact-lab && cd ~/dojo-labs/artifact-lab
+docker run -d --name lab-registry -p 5001:5000 registry:2
+curl -s localhost:5001/v2/_catalog     # {"repositories":[]}
+```
 
-# Scaffold a Python Flask app using uFawkesDevX template
-# (Requires uFawkesDevX v1.0.1 from White Belt Module 1)
+(Port 5001 because macOS uses 5000.) The generated `build` and `push` steps run `docker build` and `docker push` in `docker:24-cli`, which has no Docker socket. Mount it into every step from the agent, with an override file kept outside the repos:
+
+```yaml
+services:
+  woodpecker-agent:
+    environment:
+      - WOODPECKER_BACKEND_DOCKER_VOLUMES=/var/run/docker.sock:/var/run/docker.sock
+```
+
+```bash
+cd ~/dojo-labs/uFawkesPipe
+docker compose -f compose.yaml -f /path/to/override.yaml up -d woodpecker-agent
+```
+
+**This gives every step control of your Docker daemon; use it only for this lab.** Because the image name starts with `localhost:5001`, the Docker daemon (which runs inside Colima's VM) treats it as insecure and pushes over plain HTTP.
+
+> ✅ **Checkpoint**: the registry answers and the agent restarted.
+
+---
+
+## Step 2 — Build and Scan: the Gate Stops the Push (8 minutes)
+
+```bash
 cd ~/dojo-labs/uFawkesDevX
 cookiecutter templates/python-flask-app --no-input \
-  project_name="My Artifact Lab App" \
-  project_slug="my-artifact-app" \
-  language="python" \
-  registry_namespace="dojo"
+  project_name="My Artifact App" project_slug="my-artifact-app" \
+  language="python" registry_namespace="dojo"
+cd my-artifact-app
 ```
 
-### 2.2 Examine and Customize the Artifact Pipeline Contract
+Replace everything from `build:` down in `.fawkespipe.yml` (the scaffold has a top-level `image:` block that v2.0.0 does not read; the image name comes from `build.image`):
 
-```bash
-cd ~/dojo-labs/uFawkesDevX/my-artifact-app
-
-# Examine the generated .fawkespipe.yml
-cat .fawkespipe.yml
-```
-
-### 2.3 Customize for Full Artifact Lifecycle
-
-```bash
-# Create an enhanced artifact lifecycle configuration
-cat > .fawkespipe.yml <<'EOF'
-# uFawkesPipe Artifact Lifecycle Pipeline Contract
-app:
-  name: my-artifact-app
-  type: service
-  language: python
-  version: 1.0.0
-
+```yaml
 build:
-  builder: cnb
-  cnb:
-    builder: paketobuildpacks/builder:base
-    env:
-      BP_CPYTHON_VERSION: "3.11"
+  builder: docker
+  docker:
+    dockerfile: Dockerfile
+    context: .
   image:
-    registry: docker.io
-    namespace: dojo
+    namespace: localhost:5001/dojo
     name: my-artifact-app
-    tags:
-      - "${GIT_COMMIT_SHORT}"      # Immutable: build-42-abc1234
-      - "${GIT_BRANCH}"            # branch-based: main, feature-auth
-      - "latest"                   # moving target
-
 stages:
-  lint:
-    enabled: true
-    commands:
-      - language: python
-        cmd: |
-          pip install ruff black
-          ruff check src/
-          black --check src/
-    dockerfile:
-      enabled: true
-
-  test:
-    enabled: true
-    commands:
-      - language: python
-        cmd: |
-          pip install pytest pytest-cov
-          pytest tests/ --cov=src --cov-report=xml --cov-report=html
-    coverage:
-      enabled: true
-      threshold: 80
-      report: coverage.xml
-
-  sast:
-    enabled: true
-    sonarqube:
-      enabled: true
-      projectKey: my-artifact-app
-      sources: src/
-      qualityGate: true
-    trivy:
-      enabled: true
-      severity: HIGH,CRITICAL
-    bandit:
-      enabled: true
-      severity: MEDIUM
-      confidence: MEDIUM
-
-  dependency_scan:
-    enabled: true
-    tools:
-      - trivy
-    fail_on: HIGH
-
   build:
     enabled: true
-
   image_scan:
     enabled: true
-    severity: CRITICAL
-    fail_on: CRITICAL
-
-  dast:
-    enabled: false  # Enable for staging environment
-    tool: zap
-    target_url: http://staging-app:8000
-
-  defectdojo:
-    enabled: true
-    url: http://defectdojo:8080
-    engagement_name: CI-Engagement
-
   push:
     enabled: true
-    registries:
-      - docker.io
-
   deploy:
     enabled: true
     target: docker
     port: 8080
-    network: ufawkespipe_default
-
-notifications:
-  slack:
-    enabled: false
-    channel: "#ci-cd"
-    events:
-      - build_success
-      - build_failure
-      - deployment
-
-advanced:
-  timeout: 30
-  parallel:
-    enabled: true
-  workspace:
-    cleanup: true
-  artifacts:
-    paths:
-      - coverage.xml
-      - htmlcov/
-      - artifacts/security/
-    retention: 30
-  workspace:
-    cleanup: true
-EOF
 ```
 
-### 2.4 Verify the Contract
+Generate, push and activate, then define `run` as in Module 7 (starts a run, waits, prints each step):
 
 ```bash
-# Validate the contract syntax
-python3 -c "import yaml; yaml.safe_load(open('.fawkespipe.yml'))" && echo "YAML valid"
+cd ~/dojo-labs/uFawkesPipe
+make generate-pipeline \
+  FILE=$HOME/dojo-labs/uFawkesDevX/my-artifact-app/.fawkespipe.yml \
+  OUTPUT=$HOME/dojo-labs/uFawkesDevX/my-artifact-app/.woodpecker.yml
+cd ~/dojo-labs/uFawkesDevX/my-artifact-app
+git init -b main && git add . && git commit -m "Initial commit: scaffolded Python Flask app"
+gh repo create my-artifact-app --private --source=. --remote=origin --push
+RID=$(gh api repos/$(gh api user --jq .login)/my-artifact-app --jq .id)
+curl -s -X POST -H "Authorization: Bearer $WOODPECKER_TOKEN" "$WP/api/repos?forge_remote_id=$RID" | jq '{id, active}'
+WPID=$(curl -s -H "Authorization: Bearer $WOODPECKER_TOKEN" "$WP/api/repos/lookup/$(gh api user --jq .login)/my-artifact-app" | jq .id)
+run() {
+  n=$(curl -s -X POST -H "Authorization: Bearer $WOODPECKER_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"branch":"main"}' "$WP/api/repos/$WPID/pipelines" | jq .number)
+  while :; do
+    P=$(curl -s -H "Authorization: Bearer $WOODPECKER_TOKEN" "$WP/api/repos/$WPID/pipelines/$n")
+    case $(echo "$P" | jq -r .status) in pending|running) sleep 8;; *) break;; esac
+  done
+  echo "$P" | jq -r '"build \(.number): \(.status)", (.workflows[0].children[] | "  \(.name)\t\(.state)")'
+}
+run
 ```
 
-> ✅ **Checkpoint**: Your artifact lifecycle `.fawkespipe.yml` is ready with build, scan, push, retention, and promotion configured.
+**What we got**:
+
+```
+build 1: failure
+  clone       success
+  build       success
+  image-scan  failure
+  push        skipped
+```
+
+The image is not in the registry (`curl -s localhost:5001/v2/_catalog` shows no repositories): `push` only runs after `image-scan` passes. The scan is `trivy image --exit-code 1` with no `--severity`, so any finding fails it. Run Trivy yourself to see what it found:
+
+```bash
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --quiet --severity HIGH,CRITICAL localhost:5001/dojo/my-artifact-app
+```
+
+**What we got**: 51 HIGH findings (and 79 LOW, 103 MEDIUM, 7 UNKNOWN) in the Debian layer of `python:3.12-slim`, none in the app. We tried `python:3.13-alpine`: it still had 5 HIGH, mostly vulnerable packages bundled inside pip. Fixing the base image is a moving target that depends on the day you run this, so the lab does not do it. `fail_on` and `severity` in the module's examples are not read by the generator either.
+
+> ✅ **Checkpoint**: a run where `build` is green, `image-scan` is red and `push` is skipped.
 
 ---
 
-## Step 3 — Push to Git and Watch Artifact Pipeline (3 minutes)
+## Step 3 — Push (5 minutes)
 
-### 3.1 Initialize Git Repository
-
-```bash
-cd ~/dojo-labs/uFawkesDevX/my-artifact-app
-
-# Initialize Git
-git init
-git add .
-git commit -m "Initial commit: Artifact lifecycle Python Flask app"
-
-# Create a bare remote (local Git server simulation)
-cd ..
-git clone --bare my-artifact-app my-artifact-app.git
-cd my-artifact-app
-git remote add origin ../my-artifact-app.git
-git push -u origin main
-```
-
-### 3.2 Push to GitHub (Alternative)
-
-If you have a GitHub account, push to a real repository:
-
-```bash
-# Create repo on GitHub named "my-artifact-app", then:
-cd ~/dojo-labs/uFawkesDevX/my-artifact-app
-git remote add origin https://github.com/<your-username>/my-artifact-app.git
-git branch -M main
-git push -u origin main
-```
-
-### 3.3 Activate Repository in Woodpecker
-
-1. Open **http://localhost:8000** (Woodpecker UI)
-2. Click **Repositories** in the sidebar
-3. Click **Add Repository** (or "Activate" if already listed)
-3. Find your `my-artifact-app` repository
-4. Click **Activate**
-5. Woodpecker will:
-   - Detect `.woodpecker.yml` (generated from `.fawkespipe.yml`)
-   - Register webhook with GitHub
-   - Show repository as "Active"
-
-### 3.3 Trigger Pipeline
+To reach `push`, disable the gate for this lab (a real team would fix or accept the findings instead):
 
 ```bash
 cd ~/dojo-labs/uFawkesDevX/my-artifact-app
-
-# Make a small change to trigger pipeline
-echo "# My Artifact Lab App" > README.md
-git add README.md
-git commit -m "Add README"
-git push origin main
+python3 - <<'PY'
+t = open('.fawkespipe.yml').read().replace("  image_scan:\n    enabled: true", "  image_scan:\n    enabled: false")
+open('.fawkespipe.yml', 'w').write(t)
+PY
+(cd ~/dojo-labs/uFawkesPipe && make generate-pipeline \
+  FILE=$HOME/dojo-labs/uFawkesDevX/my-artifact-app/.fawkespipe.yml \
+  OUTPUT=$HOME/dojo-labs/uFawkesDevX/my-artifact-app/.woodpecker.yml)
+git commit -am "Disable image_scan to reach push" && git push origin main
+run
 ```
 
-### 3.2 Watch Artifact Pipeline Execute
+**What we got**:
 
-1. Open **http://localhost:8000** → Repositories → `my-artifact-app`
-2. Click the **pipeline run** (should show "Running" or "Pending")
-3. Click the **build number** (e.g., #1)
+```
+build 2: success
+  clone  success
+  build  success
+  push   success
+  (no deploy step shown)
+```
 
-**Watch the artifact-related stages execute**:
+**Ask the registry, not the pipeline:**
 
-| Stage | Steps | Expected Time |
-|-------|-------|---------------|
-| **validate** | `init` → `lint-yaml` + `lint-shell` | ~30s |
-| **test** | `unit-tests` + `integration-tests` + `contract-tests` | ~2-3 min |
-| **security** | `secrets-scan` → `vuln-scan-fs` → `vuln-scan-image` | ~1-2 min |
-| **sast** | `sonarqube-analysis` + `trivy-fs-scan` + `bandit-scan` | ~2-3 min |
-| **dependency_scan** | `dep-scan` | ~1 min |
-| **build** | `build-image` (CNB) | ~2-4 min |
-| **image_scan** | `image-scan` | ~1 min |
-| **push** | `push` | ~1 min |
-| **deploy** | `deploy` | ~30s |
+```bash
+curl -s localhost:5001/v2/dojo/my-artifact-app/tags/list
+```
 
-**Click each artifact step** to see real-time logs:
-- `build-image`: CNB build with layer caching
-- `image-scan`: Trivy container vulnerabilities
-- `push`: Registry push logs
+**What we got**: `{"name":"dojo/my-artifact-app","tags":["latest"]}`. Only `latest`. The generated `build` runs `docker build -t localhost:5001/dojo/my-artifact-app` with no tag, and `push` pushes that same name, so there is **no commit-SHA tag**. The `tags:` list from the module (`${GIT_COMMIT_SHORT}`, `${GIT_BRANCH}`) is ignored for the `docker` builder. `latest` is a moving target: a second push replaces it, so you cannot tell which commit it holds.
 
-> ✅ **Checkpoint**: Pipeline completes with all artifact stages passing (green).
+> ✅ **Checkpoint**: the registry holds `dojo/my-artifact-app:latest`, and you can say why that is not a traceable artifact.
 
 ---
 
-## Step 4 — Verify Artifact Lifecycle (2 minutes)
+## Step 4 — The Generated Deploy Step (4 minutes)
 
-### 4.1 Verify Image Scan Results
+`deploy` did not appear in build 2: it is generated with `when: event: push`, and the lab's runs started from the API have event `manual`. A push to GitHub would trigger it, but GitHub's webhook cannot reach `localhost`. To see the step run, widen the event by hand in `.woodpecker.yml` (regenerating removes this):
 
-1. In the pipeline run, click **image_scan** step
-2. Scroll to see Trivy output:
-   - **Container image vulnerabilities**
-   - Severity breakdown: CRITICAL, HIGH, MEDIUM, LOW
-
-### 4.2 Verify Push Stage
-
-1. Click **push** step
-2. Verify image pushed to registry:
-   - Image tag visible in logs
-   - Registry response shown
-
-### 4.3 Verify Deploy Stage (if enabled)
-
-1. Check **deploy** stage
-2. Verify deployment target configured
-
-> ✅ **Checkpoint**: You've verified the complete artifact lifecycle: build → scan → push → deploy.
-
----
-
-## Step 5 — Verify Retention & Promotion Configuration (1 minute)
-
-### 5.1 Check Retention Configuration
-
-```bash
-# Check the .fawkespipe.yml for retention config
-cd ~/dojo-labs/uFawkesDevX/my-artifact-app
-grep -A 5 "artifacts:" .fawkespipe.yml
-```
-
-**Expected output**:
 ```yaml
-  artifacts:
-    paths:
-      - coverage.xml
-      - htmlcov/
-      - artifacts/security/
-    retention: 30
+  when:
+    event: [push, manual]
+    branch: main
 ```
-
-### 5.2 Verify Promotion Configuration
 
 ```bash
-# Check deploy stage config
-grep -A 10 "deploy:" .fawkespipe.yml
+git commit -am "Let deploy run on manual" && git push origin main
+run
 ```
 
-**Expected output**:
-```yaml
-  deploy:
-    enabled: true
-    target: docker
-    port: 8080
-    network: ufawkespipe_default
+**What we got**: `build 3: failure` with `deploy  failure`. The log:
+
+```
+docker run -d --name $CI_REPO_NAME --network ufawkespipe_default -p 8080:8000 --restart unless-stopped  /my-artifact-app:0d4467e
+docker: invalid reference format.
 ```
 
-> ✅ **Checkpoint**: Retention and promotion are correctly configured in `.fawkespipe.yml`.
+Three defects show here. The image reference is `${REGISTRY_USERNAME}/${CI_REPO_NAME}:${CI_COMMIT_SHA:0:7}`, but `REGISTRY_USERNAME` is not set in that step, so the name starts with `/`. The tag is the commit SHA, but `push` never pushed a SHA tag (Step 3). And `-p 8080:8000` maps to container port 8000 while the scaffolded app listens on 8080. This step is written for the `cnb` builder, where `pack build --publish` pushes `<user>/<repo>:<sha>`; it does not work with the `docker` builder.
+
+> ✅ **Checkpoint**: you have seen `deploy` fail and can name the empty variable.
+
+---
+
+## Step 5 — What the Generator Ignores (2 minutes)
+
+The module describes retention, promotion, signing and Kubernetes. Check each against the generator:
+
+```bash
+cd ~/dojo-labs/uFawkesPipe
+sed -n '/^STAGE_ORDER/,/^)/p' scripts/generate_woodpecker_yml.py
+grep -n 'retention\|cosign\|kubernetes\|sign' scripts/generate_woodpecker_yml.py
+```
+
+**What we got**: `STAGE_ORDER` has `lint, test, sast, dependency_scan, build, image_scan, dast, defectdojo, push, deploy, notify_obs`. The `grep` finds nothing for `retention`, `cosign` or `kubernetes`. So `advanced.artifacts.retention`, a `sign` stage and a `kubernetes:` section can be written in the contract and pass generation, but produce no step: nothing expires, signs or deploys to a cluster. Promotion by re-tagging (`docker tag` then `docker push`) is something you would do yourself; no stage does it.
+
+The golden-path repos agree: `java-fawkes-path` enables `test`, `dependency_scan`, `build` and `image_scan` (`docker` builder, `${GIT_COMMIT_SHORT}` tag listed but not applied); `python-fawkes-path` enables only `build` and `notify_obs`. Neither has a `push` stage. We did not run their pipelines.
+
+> ✅ **Checkpoint**: you can name which of retention, promotion, signing and Kubernetes v2.0.0 does not implement.
 
 ---
 
 ## Step 6 — Run the Validation Script
 
 ```bash
-# From your uFawkesDojo checkout
 cd /path/to/uFawkesDojo
-bash yellow-belt/module-08-artifact-management/lab-01/validate.sh
+WOODPECKER_URL=$WP bash yellow-belt/module-08-artifact-management/lab-01/validate.sh
 ```
 
-**Expected output** (all checks pass):
-
-```
-[INFO] Starting Yellow Belt Module 08 Lab 01 validation...
-
-[✓] Prerequisites: curl, jq, git, cookiecutter installed
-[✓] uFawkesPipe Stack: all 6 services healthy
-[✓] Woodpecker API: reachable
-[✓] Pipeline Run: my-artifact-app pipeline completed successfully
-[✓] Artifact Build: build-image completed
-[✓] Image Scan: Trivy scan executed
-[✓] Push Stage: Image pushed to registry
-[✓] Retention Config: 30-day retention configured
-[✓] Promotion Config: Deploy stage configured
-
-==========================================
-Total Tests: 9
-Passed: 9
-Failed: 0
-
-[✓] All tests passed! ✅
-
-🎉 Congratulations! You've completed Yellow Belt Module 8 Lab 01.
-   You've experienced the full artifact lifecycle: build → scan → push → promote → retain.
-   You've completed all Yellow Belt modules!
-```
+It reads `WOODPECKER_TOKEN` from your shell. **Expected**: 9 checks, all `[✓]`: prerequisites, stack running, API token accepted, repo activated, a successful run, a run where `build` succeeded, a run where `image-scan` failed and `push` was skipped, a run where `build` and `push` succeeded, and a tag in the registry (`REGISTRY_URL` defaults to `http://localhost:5001`). Nothing checks `deploy`, because it fails as generated.
 
 ---
 
 ## Clean Up
 
 ```bash
-# Remove local repos (optional)
-rm -rf ~/dojo-labs/artifact-lab
-rm -rf ~/dojo-labs/my-artifact-app.git
-
-# Stop uFawkesPipe when done (optional)
-cd ~/dojo-labs/uFawkesPipe
-make down
+docker rm -f lab-registry
+cd ~/dojo-labs/uFawkesPipe && docker compose -f compose.yaml up -d woodpecker-agent   # without the override: drops the socket mount
+gh repo delete my-artifact-app --yes
+rm -rf ~/dojo-labs/uFawkesDevX/my-artifact-app
+docker image rm localhost:5001/dojo/my-artifact-app
 ```
 
 ---
@@ -463,25 +260,34 @@ make down
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| Pipeline fails at `image_scan` | CRITICAL vulnerabilities in base image | Use updated base image, or adjust `fail_on` |
-| Pipeline fails at `push` | Registry auth / quota | Check Woodpecker secrets for registry credentials |
-| CNB build fails | Docker access / builder image | Check Docker access, `docker ps` |
-| Retention not working | Config not in `.fawkespipe.yml` | Add `advanced.artifacts.retention` |
-| Deploy stage not running | `deploy.enabled: false` | Set `deploy.enabled: true` in `.fawkespipe.yml` |
+| `build`: cannot connect to the Docker daemon | No socket in the step | Mount it from the agent (Step 1) |
+| `push`: `http: server gave HTTP response to HTTPS client` | Registry name is not `localhost` | Use `localhost:5001` in `build.image.namespace` (Step 2) |
+| `image-scan` fails | Any finding fails it; base image CVEs | Step 2; fix the base image or disable the stage knowingly |
+| `push` is skipped | An earlier step failed | Fix the earlier step |
+| `deploy` does not appear | `when: event: push` excludes API runs | Step 4 |
+| `deploy`: `invalid reference format` | `REGISTRY_USERNAME` empty, no SHA tag pushed | Step 4; deploy is for the `cnb` builder |
+| Retention or signing "not working" | The generator has no such step | Step 5 |
+| Run stays `pending` | Agent lost its connection | `docker compose -f compose.yaml restart woodpecker-agent`, run again |
 
 ---
 
 ## Retrieval Check (Answer Without Looking Back)
 
-Write your answers down — the act of writing (not just thinking) strengthens retention.
+1. Why was `push` skipped in build 1?
+2. Which tags did the registry hold after the push, and what does that say about traceability?
+3. Why did you ask the registry rather than trust a green `push` step?
+4. Where did the image-scan findings come from?
+5. Name two things the module describes that v2.0.0 does not implement.
 
-1. What file defines the artifact lifecycle contract in uFawkesPipe?
-2. Which stage builds the container image using CNB?
-3. What does `stages.image_scan.fail_on: CRITICAL` do?
-4. How do you configure artifact retention in uFawkesPipe?
-5. How does uFawkesPipe promote artifacts between environments?
+---
 
-(Suggested answers: 1 = .fawkespipe.yml; 2 = build (build-image step); 3 = Fails build if CRITICAL vulnerabilities found; 4 = advanced.artifacts.retention in .fawkespipe.yml; 5 = deploy stage promotes same artifact with new tag)
+## Retrieval Check Answers
+
+1. `image-scan` failed (Trivy found vulnerabilities, exit code 1), and `push` runs after it
+2. Only `latest`; it moves with every push, so it does not identify a commit
+3. A step can be green without proving the result you care about; the registry is the source of truth for what was pushed
+4. The Debian base image (`python:3.12-slim`), not the app
+5. Any two of: retention, promotion between environments, Cosign signing, the `kubernetes` section, tag lists for the `docker` builder
 
 ---
 
@@ -489,14 +295,7 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 
 | File | Purpose |
 |------|---------|
-| `.fawkespipe.yml` | Complete artifact lifecycle contract (build, scan, push, retain, promote) |
-| `.woodpecker.yml` | Generated Woodpecker pipeline (from .fawkespipe.yml) |
-| `src/app.py` | Flask app with `/health` endpoint |
-| `tests/test_app.py` | Pytest suite |
-| `.devcontainer/devcontainer.json` | Coder workspace definition |
+| `.fawkespipe.yml` | Contract: build, image scan, push, deploy |
+| `.woodpecker.yml` | Generated pipeline; regenerate after editing the contract (hand edits are lost) |
 
-You've now experienced the complete uFawkesPipe artifact lifecycle — from build through security scanning, pushing to registry, configuring retention, and setting up promotion. This is the foundation for reliable, traceable, and secure artifact management in your CI/CD pipelines!
-
----
-
-➡️ **Next**: Return to [Module 8 README](../README.md), then prepare for the **Yellow Belt Assessment**!
+➡️ **Next**: Return to [Module 8 README](../README.md), then prepare for the **Yellow Belt Assessment**.
