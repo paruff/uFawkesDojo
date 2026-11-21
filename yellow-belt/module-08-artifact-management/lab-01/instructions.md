@@ -3,9 +3,9 @@
 **Module**: Yellow Belt — Module 8: Artifact Management
 **Estimated Time**: about 25 minutes (an estimate, not timed)
 **Difficulty**: Intermediate (Modules 5-7 complete required)
-**Runs against**: uFawkesPipe v2.0.0 (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (Docker Compose)
 
-> **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1, with a local `registry:2` container instead of Docker Hub. The agent needed the Docker socket mounted (Step 1); this is not a run of an unmodified release.
+> **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1, with a local `registry:2` container instead of Docker Hub. The agent needed the Docker socket mounted (Step 1); this is not a run of an unmodified release. The Woodpecker runs used uFawkesDevX v1.0.1. The lab pins v1.2.0 now: its `python-flask-app` template differs from v1.0.1 by one comment in `src/app.py`, and Step 2's scaffold and pipeline generation were re-run on v1.2.0 (2026-11-21) with identical output. The pipeline runs themselves were not repeated on v1.2.0.
 >
 > **Scope.** v2.0.0 turns `build`, `image_scan`, `push` and `deploy` into pipeline steps, and that is all this lab runs. It does **not** implement the module's retention policies, tag-pattern retention, artifact promotion, Cosign signing or the `kubernetes` section: the generator ignores them (Step 5 shows how to check). The `deploy` step fails as generated and ran only after two hand edits (Step 4).
 

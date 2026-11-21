@@ -789,7 +789,7 @@ You'll use the running uFawkesPipe stack to:
 
 ### Lab Environment
 
-**Prerequisites**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (see the lab)
+**Prerequisites**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (see the lab)
 
 **Get uFawkesPipe** (the tag the lab was run against; never `main`):
 

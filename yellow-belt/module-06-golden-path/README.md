@@ -71,7 +71,7 @@ This lab walks you through:
 4. Running the pipeline and seeing which steps run in parallel
 5. Reading per-step timings from the Woodpecker API and comparing repeat runs
 
-**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (Docker Compose)
 
 **Prerequisites**: Module 5 completed, uFawkesPipe running
 
