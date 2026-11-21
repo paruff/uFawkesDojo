@@ -11,7 +11,7 @@ check_prerequisites
 check_network
 check_stack
 check_catalog
-check_score_health
+check_gateway
 check_coder
 check_scaffold hello-devx
 check_spec hello-devx "Score registration"

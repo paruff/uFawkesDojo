@@ -93,7 +93,7 @@ check_catalog() {
   fi
 }
 
-check_score_health() {
+check_gateway() {
   local code
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${GATEWAY_URL}/health" 2> /dev/null || echo "000")
   if [ "$code" = "200" ]; then

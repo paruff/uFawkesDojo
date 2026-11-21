@@ -12,7 +12,7 @@ check_rollback() {
   local body
   body=$(curl -s --max-time 10 "${SCORE_API_URL}/specs/hello-gitops" 2> /dev/null || true)
   if [ "$(jq -r '.spec.containers["hello-gitops"].image // empty' <<< "$body" 2> /dev/null)" = "ghcr.io/dojo/hello-gitops:latest" ] \
-    && [ "$(jq -r '.version // 0' <<< "$body")" -ge 3 ]; then
+    && [ "$(jq -r '.version // 0' <<< "$body" 2> /dev/null || echo 0)" -ge 3 ]; then
     record_test "Rollback Pattern" "PASS" "hello-gitops is back on :latest at version $(jq -r .version <<< "$body")"
   else
     record_test "Rollback Pattern" "FAIL" "hello-gitops should be on ghcr.io/dojo/hello-gitops:latest at version 3+: redo Step 4"
@@ -23,7 +23,7 @@ log_info "Starting White Belt Module 03 Lab 01 validation..."
 check_prerequisites
 check_stack
 check_catalog
-check_score_health
+check_gateway
 check_spec hello-gitops "Direct API Registration"
 check_rollback
 check_scaffold hello-scaffolded

@@ -59,7 +59,11 @@ while IFS= read -r file; do
     dirs+=("$d")
   done < <(grep -oE "uFawkes[A-Za-z]+[^A-Za-z0-9]{1,3}${TAG_RE}" <<< "$line" \
     | sed -E "s/^(uFawkes[A-Za-z]+)[^A-Za-z0-9]+(${TAG_RE})\$/\\1 \\2/")
-  [[ ${#dirs[@]} -gt 0 ]] || continue
+  if [[ ${#dirs[@]} -eq 0 ]]; then
+    echo "FAIL  $file: its 'Runs against' line pins no uFawkes stack tag, so nothing was checked" >&2
+    failed=1
+    continue
+  fi
 
   all_targets=$(for d in "${dirs[@]}"; do targets "$d/Makefile"; done | sort -u)
   haystack=$(for d in "${dirs[@]}"; do
