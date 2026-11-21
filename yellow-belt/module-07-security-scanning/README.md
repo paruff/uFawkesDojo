@@ -55,9 +55,6 @@ Deploy → Production                       ↑                    ↑
 
 | Stage | Purpose | Tools |
 |-------|---------|-------|
-| **secrets-scan** | Secret/credential detection | Gitleaks |
-| **vuln-scan-fs** | Filesystem vulnerability scan | Trivy |
-| **vuln-scan-image** | Container image scan | Trivy |
 | **sast** | Static Application Security Testing | SonarQube, Trivy, Bandit |
 | **dependency_scan** | Dependency vulnerability scan | Trivy / OSV-Scanner |
 | **image_scan** | Container image scan | Trivy |
@@ -83,16 +80,18 @@ Deploy → Production                       ↑                    ↑
 ➡️ **[Lab 01: Security Scanning with uFawkesPipe](lab-01/instructions.md)**
 
 This lab walks you through:
-1. Exploring security stages in Woodpecker
-2. Configuring SAST with SonarQube + Trivy + Bandit
-4. Configuring dependency and image scanning
-5. Enabling secret detection with Gitleaks
-5. Integrating with DefectDojo
-6. Practicing quality gate enforcement
+1. Reading the security stages in the generator
+2. Running a Trivy `dependency_scan` pipeline green
+3. Making it fail with a vulnerable dependency, then finding the CVE
+4. Making the same stage fail on a planted secret
+5. Fixing both and recovering
+6. Adding SonarQube SAST and seeing what v2.0.0 needs from you
+7. Building an image and scanning it
+8. Gating on Bandit, running a ZAP scan, and uploading findings to DefectDojo
 
-**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
-> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0. Every stage the lab covers was run: `dependency_scan`, `sast` (SonarQube), `build` plus `image_scan`, Bandit (through the lint command), `dast` (ZAP) and the `defectdojo` upload. None works out of the box in v2.0.0; the lab spells out each defect and workaround. Known gaps: Trivy and Bandit inside `sast` do not work, the `dast` step still ends red, and v2.0.0 has no Gitleaks stage. The theory sections have a correction banner but are otherwise unchanged.
 
 **Prerequisites**: Module 5 & 6 completed, uFawkesPipe running
 
