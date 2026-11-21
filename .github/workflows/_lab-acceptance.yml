@@ -177,6 +177,18 @@ jobs:
           fi
           echo "all expected services healthy"
 
+      # uFawkesObs v1.0.1 publishes no dora_* sample until an event arrives, and
+      # the labs' Step 2 (the student half) sends one. Send the same event, so
+      # the self-checks see the metrics a student who did Step 2 would see.
+      - name: Send the deployment event the labs' Step 2 sends
+        run: |
+          curl -fsS -X POST http://localhost:8088/event -H "Content-Type: application/json" -d '{
+            "schema_version": "1.0", "event_type": "deployment",
+            "repo": "your-name/dojo-lab", "service": "dojo-lab-service",
+            "environment": "production", "commit_sha": "'"$(printf '%040d' 1)"'",
+            "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
+            "status": "success", "pipeline_url": "https://example.com/ci/1"}'
+
       - name: Steady state (60s — telemetry export and metric computation)
         run: sleep 60
 
