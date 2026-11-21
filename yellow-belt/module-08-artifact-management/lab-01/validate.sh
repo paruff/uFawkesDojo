@@ -2,40 +2,37 @@
 # =============================================================================
 # Script: validate.sh
 # Purpose: Validate Yellow Belt Module 08 Lab 01 completion criteria
-# Usage:   Run from uFawkesDojo repo root:
-#            bash yellow-belt/module-08-artifact-management/lab-01/validate.sh
+# Usage:   WOODPECKER_TOKEN=<token> bash yellow-belt/module-08-artifact-management/lab-01/validate.sh
+#          WOODPECKER_URL defaults to http://localhost:8000; set it to match
+#          WOODPECKER_UI_PORT in uFawkesPipe's .env if you changed the port.
 # Exit Codes: 0=all checks passed, 1=one or more checks failed
+#
+# A check that cannot run (server down, bad token, unexpected response) says so
+# and why; it never reports that as "you have not done the step".
 # =============================================================================
 
-set -euo pipefail
+set -uo pipefail
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
 WOODPECKER_URL="${WOODPECKER_URL:-http://localhost:8000}"
-SONARQUBE_URL="${SONARQUBE_URL:-http://localhost:9000}"
-DEFECTDOJO_URL="${DEFECTDOJO_URL:-http://localhost:8080}"
-TRIVY_URL="${TRIVY_URL:-http://localhost:8080}"
-UFPIPE_DIR="${UFPIPE_DIR:-~/dojo-labs/uFawkesPipe}"
+WOODPECKER_TOKEN="${WOODPECKER_TOKEN:-}"
+LAB_REPO="${LAB_REPO:-my-artifact-app}"
+REGISTRY_URL="${REGISTRY_URL:-http://localhost:5001}"
+REGISTRY_REPO="${REGISTRY_REPO:-dojo/my-artifact-app}"
 
-# Test results
 TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
-
-# =============================================================================
-# Helper Functions
-# =============================================================================
+REPO_ID=""
+PIPELINES=""
 
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[✓]${NC} $1"; }
 log_error() { echo -e "${RED}[✗]${NC} $1"; }
-log_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
 
 record_test() {
   local test_name="$1" status="$2" message="$3"
@@ -49,338 +46,175 @@ record_test() {
   fi
 }
 
-check_command() {
-  command -v "$1" > /dev/null 2>&1
+# GET <path> from the Woodpecker API. Prints the body on HTTP 200. On any other
+# outcome it prints why to stderr and returns 1, so callers can report the cause.
+api() {
+  local out code
+  if ! out=$(curl -sS --max-time 15 -w '\n%{http_code}' -H "Authorization: Bearer ${WOODPECKER_TOKEN}" "${WOODPECKER_URL}/api$1"); then
+    echo "API call failed: GET $1 (curl error above)" >&2
+    return 1
+  fi
+  code="${out##*$'\n'}"
+  if [ "$code" != "200" ]; then
+    echo "API call failed: GET $1 returned HTTP ${code} (401 = stale or wrong token)" >&2
+    return 1
+  fi
+  printf '%s' "${out%$'\n'*}"
 }
 
-# =============================================================================
-# Check Functions
-# =============================================================================
+# Record a FAIL and return 1 unless the lab repo was found by check_repo_active.
+need_repo() {
+  [ -n "$REPO_ID" ] && return 0
+  record_test "$1" "FAIL" "skipped: ${LAB_REPO} was not found active (see Repo Activated)"
+  return 1
+}
+
+# Record a FAIL and return 1 unless check_pipeline_success fetched the pipeline list.
+need_pipelines() {
+  [ -n "$PIPELINES" ] && return 0
+  record_test "$1" "FAIL" "skipped: the pipeline list could not be read (see Pipeline Success)"
+  return 1
+}
 
 check_prerequisites() {
-  log_info "Checking prerequisites..."
-
   local missing=()
-  for cmd in curl jq git cookiecutter; do
-    if ! check_command "$cmd"; then
-      missing+=("$cmd")
-    fi
+  for cmd in curl jq git cookiecutter docker; do
+    command -v "$cmd" > /dev/null 2>&1 || missing+=("$cmd")
   done
-
   if [ ${#missing[@]} -eq 0 ]; then
-    record_test "Prerequisites" "PASS" "curl, jq, git, cookiecutter installed"
+    record_test "Prerequisites" "PASS" "curl, jq, git, cookiecutter, docker installed"
   else
-    record_test "Prerequisites" "FAIL" "Missing: ${missing[*]} — install jq (brew/apt), pip install cookiecutter"
+    record_test "Prerequisites" "FAIL" "Missing: ${missing[*]}"
   fi
 }
 
-check_ufpipe_services() {
-  log_info "Checking uFawkesPipe service health..."
+check_stack() {
+  local running bad=()
+  for svc in woodpecker-server woodpecker-agent; do
+    if ! running=$(docker ps --filter "label=com.docker.compose.service=${svc}" --filter "status=running" --format '{{.Names}}'); then
+      record_test "Stack" "FAIL" "could not query Docker (error above); is the Docker daemon running?"
+      return
+    fi
+    [ -n "$running" ] || bad+=("$svc")
+  done
+  if [ ${#bad[@]} -eq 0 ]; then
+    record_test "Stack" "PASS" "woodpecker-server and woodpecker-agent are running"
+  else
+    record_test "Stack" "FAIL" "Not running: ${bad[*]} — run: docker compose -f compose.yaml up -d woodpecker-server woodpecker-agent (in uFawkesPipe)"
+  fi
+}
 
-  local services=(
-    "woodpecker-server:Woodpecker Server"
-    "woodpecker-agent:Woodpecker Agent"
-    "sonarqube:SonarQube"
-    "portainer:Portainer CE"
-    "trivy-server:Trivy Server"
-    "defectdojo:DefectDojo"
-  )
+check_api_auth() {
+  if [ -z "$WOODPECKER_TOKEN" ]; then
+    record_test "Woodpecker API" "FAIL" "WOODPECKER_TOKEN is not set (Woodpecker UI → avatar → User settings → Personal Access Token)"
+    return
+  fi
+  if api "/user" > /dev/null; then
+    record_test "Woodpecker API" "PASS" "token accepted at ${WOODPECKER_URL}"
+  else
+    record_test "Woodpecker API" "FAIL" "GET /api/user failed at ${WOODPECKER_URL} (reason above)"
+  fi
+}
 
-  local all_healthy=true
-  for entry in "${services[@]}"; do
-    local container="${entry%%:*}"
-    local label="${entry##*:}"
+check_repo_active() {
+  local body
+  if ! body=$(api "/user/repos?all=true"); then
+    record_test "Repo Activated" "FAIL" "could not list repos (reason above)"
+    return
+  fi
+  if ! REPO_ID=$(echo "$body" | jq -r --arg n "$LAB_REPO" '[.[] | select(.name == $n and .active == true)][0].id // empty'); then
+    REPO_ID=""
+    record_test "Repo Activated" "FAIL" "unexpected response from /api/user/repos (jq error above)"
+    return
+  fi
+  if [ -n "$REPO_ID" ]; then
+    record_test "Repo Activated" "PASS" "${LAB_REPO} is active in Woodpecker (id ${REPO_ID})"
+  else
+    record_test "Repo Activated" "FAIL" "${LAB_REPO} not found or not active — activate it (Step 3)"
+  fi
+}
 
-    if docker ps --filter "name=^${container}$" --filter "status=running" --format '{{.Names}}' 2> /dev/null | grep -q "^${container}$"; then
-      local health
-      health=$(docker inspect --format '{{.State.Health.Status}}' "${container}" 2> /dev/null || echo "none")
-      if [ "$health" = "healthy" ] || [ "$health" = "none" ]; then
-        log_success "  $label ($container): running${health:+ (health: $health)}"
-      else
-        log_error "  $label ($container): health=$health"
-        all_healthy=false
-      fi
-    else
-      log_error "  $label ($container): not running"
-      all_healthy=false
+check_pipeline_success() {
+  need_repo "Pipeline Success" || return
+  local body n
+  if ! body=$(api "/repos/${REPO_ID}/pipelines?perPage=50"); then
+    record_test "Pipeline Success" "FAIL" "could not list pipelines (reason above)"
+    return
+  fi
+  PIPELINES="$body"
+  if ! n=$(echo "$PIPELINES" | jq '[.[] | select(.status == "success")] | length'); then
+    record_test "Pipeline Success" "FAIL" "unexpected pipelines response (jq error above)"
+    return
+  fi
+  if [ "$n" -ge 1 ]; then
+    record_test "Pipeline Success" "PASS" "${n} successful pipeline run(s)"
+  else
+    record_test "Pipeline Success" "FAIL" "no successful pipeline run — trigger one (Step 4)"
+  fi
+}
+
+# Pass if any run's detail matches a jq predicate over its steps. Usage:
+#   find_run <label> <hint if none> <jq filter returning true/false over .workflows[].children[]>
+find_run() {
+  local label="$1" hint="$2" filter="$3" num body
+  need_repo "$label" || return
+  need_pipelines "$label" || return
+  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
+    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
+      record_test "$label" "FAIL" "could not read pipeline #${num} (reason above)"
+      return
+    fi
+    if echo "$body" | jq -e "[.workflows[]?.children[]?] as \$s | ${filter}" > /dev/null; then
+      record_test "$label" "PASS" "matched in pipeline #${num}"
+      return
     fi
   done
-
-  if [ "$all_healthy" = "true" ]; then
-    record_test "uFawkesPipe Stack" "PASS" "All 6 services healthy (woodpecker, sonarqube, portainer, trivy, defectdojo)"
-  else
-    record_test "uFawkesPipe Stack" "FAIL" "One or more services not healthy — run 'make status' in uFawkesPipe"
-  fi
+  record_test "$label" "FAIL" "$hint"
 }
 
-check_woodpecker_api() {
-  log_info "Checking Woodpecker API..."
-
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "000")
-
-  if [ "$http_code" = "200" ]; then
-    record_test "Woodpecker API" "PASS" "API reachable at ${WOODPECKER_URL}"
-  else
-    record_test "Woodpecker API" "FAIL" "Woodpecker API returned HTTP $http_code at ${WOODPECKER_URL}/api/repos"
-  fi
+check_build() {
+  find_run "Build" "no run where the build step succeeded (Step 2)" \
+    '[$s[] | select(.name == "build" and .state == "success")] | length >= 1'
 }
 
-check_pipeline_execution() {
-  log_info "Checking pipeline execution for lab app..."
-
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "000")
-
-  if [ "$http_code" = "200" ]; then
-    local body
-    body=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "[]")
-    local repo_id
-    repo_id=$(echo "$body" | jq -r '.[] | select(.full_name | test("my-artifact-app"; "i")) | .id' 2> /dev/null | head -1)
-
-    if [ -n "$repo_id" ] && [ "$repo_id" != "null" ]; then
-      local builds
-      builds=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds" 2> /dev/null || echo "[]")
-      local latest_build
-      latest_build=$(echo "$builds" | jq -r '.[0]' 2> /dev/null)
-
-      if [ -n "$latest_build" ] && [ "$latest_build" != "null" ]; then
-        local build_status
-        build_status=$(echo "$latest_build" | jq -r '.status' 2> /dev/null)
-
-        if [ "$build_status" = "success" ] || [ "$build_status" = "running" ] || [ "$build_status" = "pending" ]; then
-          record_test "Pipeline Execution" "PASS" "Pipeline runs found for my-artifact-app (status: ${build_status})"
-        else
-          record_test "Pipeline Execution" "FAIL" "Pipeline failed with status: ${build_status}"
-        fi
-      else
-        record_test "Pipeline Execution" "FAIL" "No builds found for my-artifact-app — push to Git to trigger"
-      fi
-    else
-      record_test "Pipeline Execution" "FAIL" "Repository my-artifact-app not found in Woodpecker — activate repo first"
-    fi
-  else
-    record_test "Pipeline Execution" "FAIL" "Could not fetch repositories from Woodpecker"
-  fi
+# The scan gate worked if image-scan failed and push never ran. The scaffold's base image fails it.
+check_scan_gate() {
+  find_run "Scan Gate" "no run where image-scan failed and push was skipped (Step 2)" \
+    '([$s[] | select(.name == "image-scan" and .state == "failure")] | length >= 1)
+     and ([$s[] | select(.name == "push" and .state == "skipped")] | length >= 1)'
 }
 
-check_artifact_build() {
-  log_info "Checking artifact build stage..."
-
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "000")
-
-  if [ "$http_code" = "200" ]; then
-    local body
-    body=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "[]")
-    local repo_id
-    repo_id=$(echo "$body" | jq -r '.[] | select(.full_name | test("my-artifact-app"; "i")) | .id' 2> /dev/null | head -1)
-
-    if [ -n "$repo_id" ] && [ "$repo_id" != "null" ]; then
-      local builds
-      builds=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds" 2> /dev/null || echo "[]")
-      local latest_build
-      latest_build=$(echo "$builds" | jq -r '.[0]' 2> /dev/null)
-
-      if [ -n "$latest_build" ] && [ "$latest_build" != "null" ]; then
-        local build_number
-        build_number=$(echo "$latest_build" | jq -r '.number' 2> /dev/null)
-
-        if [ -n "$build_number" ] && [ "$build_number" != "null" ]; then
-          local steps
-          steps=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds/${build_number}/steps" 2> /dev/null || echo "[]")
-
-          if echo "$steps" | jq -e '.[] | select(.name == "build-image")' > /dev/null 2>&1; then
-            record_test "Artifact Build" "PASS" "build-image step found in pipeline"
-          else
-            record_test "Artifact Build" "FAIL" "build-image step not found in pipeline"
-          fi
-        else
-          record_test "Artifact Build" "FAIL" "Could not fetch build steps"
-        fi
-      else
-        record_test "Artifact Build" "FAIL" "No builds found for my-artifact-app"
-      fi
-    else
-      record_test "Artifact Build" "FAIL" "Repository my-artifact-app not found in Woodpecker"
-    fi
-  else
-    record_test "Artifact Build" "FAIL" "Could not fetch repositories from Woodpecker"
-  fi
+check_push() {
+  find_run "Push Step" "no run where build and push both succeeded (Step 3)" \
+    '([$s[] | select(.name == "build" and .state == "success")] | length >= 1)
+     and ([$s[] | select(.name == "push" and .state == "success")] | length >= 1)'
 }
 
-check_image_scan() {
-  log_info "Checking image scan stage..."
-
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "000")
-
-  if [ "$http_code" = "200" ]; then
-    local body
-    body=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "[]")
-    local repo_id
-    repo_id=$(echo "$body" | jq -r '.[] | select(.full_name | test("my-artifact-app"; "i")) | .id' 2> /dev/null | head -1)
-
-    if [ -n "$repo_id" ] && [ "$repo_id" != "null" ]; then
-      local builds
-      builds=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds" 2> /dev/null || echo "[]")
-      local latest_build
-      latest_build=$(echo "$builds" | jq -r '.[0]' 2> /dev/null)
-
-      if [ -n "$latest_build" ] && [ "$latest_build" != "null" ]; then
-        local build_number
-        build_number=$(echo "$latest_build" | jq -r '.number' 2> /dev/null)
-
-        if [ -n "$build_number" ] && [ "$build_number" != "null" ]; then
-          local steps
-          steps=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds/${build_number}/steps" 2> /dev/null || echo "[]")
-
-          if echo "$steps" | jq -e '.[] | select(.name == "image-scan")' > /dev/null 2>&1; then
-            record_test "Image Scan" "PASS" "image-scan step found in pipeline"
-          else
-            record_test "Image Scan" "FAIL" "image-scan step not found in pipeline"
-          fi
-        else
-          record_test "Image Scan" "FAIL" "Could not fetch build steps"
-        fi
-      else
-        record_test "Image Scan" "FAIL" "No builds found for my-artifact-app"
-      fi
-    else
-      record_test "Image Scan" "FAIL" "Repository my-artifact-app not found in Woodpecker"
-    fi
-  else
-    record_test "Image Scan" "FAIL" "Could not fetch repositories from Woodpecker"
-  fi
+check_deploy() {
+  find_run "Deploy Step" "no run where deploy succeeded: fix the generated deploy step by hand (Step 4)" \
+    '[$s[] | select(.name == "deploy" and .state == "success")] | length >= 1'
 }
 
-check_push_stage() {
-  log_info "Checking push stage..."
-
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "000")
-
-  if [ "$http_code" = "200" ]; then
-    local body
-    body=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "[]")
-    local repo_id
-    repo_id=$(echo "$body" | jq -r '.[] | select(.full_name | test("my-artifact-app"; "i")) | .id' 2> /dev/null | head -1)
-
-    if [ -n "$repo_id" ] && [ "$repo_id" != "null" ]; then
-      local builds
-      builds=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds" 2> /dev/null || echo "[]")
-      local latest_build
-      latest_build=$(echo "$builds" | jq -r '.[0]' 2> /dev/null)
-
-      if [ -n "$latest_build" ] && [ "$latest_build" != "null" ]; then
-        local build_number
-        build_number=$(echo "$latest_build" | jq -r '.number' 2> /dev/null)
-
-        if [ -n "$build_number" ] && [ "$build_number" != "null" ]; then
-          local steps
-          steps=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds/${build_number}/steps" 2> /dev/null || echo "[]")
-
-          if echo "$steps" | jq -e '.[] | select(.name == "push")' > /dev/null 2>&1; then
-            record_test "Push Stage" "PASS" "push step found in pipeline"
-          else
-            record_test "Push Stage" "FAIL" "push step not found in pipeline"
-          fi
-        else
-          record_test "Push Stage" "FAIL" "Could not fetch build steps"
-        fi
-      else
-        record_test "Push Stage" "FAIL" "No builds found for my-artifact-app"
-      fi
-    else
-      record_test "Push Stage" "FAIL" "Repository my-artifact-app not found in Woodpecker"
-    fi
-  else
-    record_test "Push Stage" "FAIL" "Could not fetch repositories from Woodpecker"
+# A green push step is not proof: ask the registry itself what it holds.
+check_registry() {
+  local out code tags
+  if ! out=$(curl -sS --max-time 15 -w '\n%{http_code}' "${REGISTRY_URL}/v2/${REGISTRY_REPO}/tags/list"); then
+    record_test "Registry Tags" "FAIL" "could not reach ${REGISTRY_URL} (curl error above); is the lab registry running? (Step 1)"
+    return
   fi
-}
-
-check_retention_config() {
-  log_info "Checking retention configuration in .fawkespipe.yml..."
-
-  local lab_dir="${HOME}/dojo-labs/uFawkesDevX/my-artifact-app"
-  if [ -f "${lab_dir}/.fawkespipe.yml" ]; then
-    local has_retention
-    has_retention=$(grep -c "retention:" "${lab_dir}/.fawkespipe.yml" || true)
-
-    if [ "$has_retention" -gt 0 ]; then
-      local retention_value
-      retention_value=$(grep "retention:" "${lab_dir}/.fawkespipe.yml" | head -1 | sed 's/.*retention:[[:space:]]*//' | tr -d ' ')
-      record_test "Retention Config" "PASS" "Found retention config: ${retention_value} days"
-    else
-      record_test "Retention Config" "FAIL" "Missing retention config in .fawkespipe.yml"
-    fi
-  else
-    record_test "Retention Config" "FAIL" "Optimized .fawkespipe.yml not found at ${lab_dir}"
+  code="${out##*$'\n'}"
+  if [ "$code" != "200" ]; then
+    record_test "Registry Tags" "FAIL" "${REGISTRY_URL}/v2/${REGISTRY_REPO}/tags/list returned HTTP ${code} (404 = nothing pushed yet)"
+    return
   fi
-}
-
-check_promotion_config() {
-  log_info "Checking promotion configuration in .fawkespipe.yml..."
-
-  local lab_dir="${HOME}/dojo-labs/uFawkesDevX/my-artifact-app"
-  if [ -f "${lab_dir}/.fawkespipe.yml" ]; then
-    local has_deploy
-    has_deploy=$(grep -c "deploy:" "${lab_dir}/.fawkespipe.yml" || true)
-    local has_target
-    has_target=$(grep -c "target:" "${lab_dir}/.fawkespipe.yml" || true)
-
-    if [ "$has_deploy" -gt 0 ] && [ "$has_target" -gt 0 ]; then
-      record_test "Promotion Config" "PASS" "Found deploy stage and target config in .fawkespipe.yml"
-    else
-      record_test "Promotion Config" "FAIL" "Missing deploy stage or target config in .fawkespipe.yml"
-    fi
-  else
-    record_test "Promotion Config" "FAIL" "Optimized .fawkespipe.yml not found at ${lab_dir}"
+  if ! tags=$(printf '%s' "${out%$'\n'*}" | jq -r '.tags // [] | join(",")'); then
+    record_test "Registry Tags" "FAIL" "unexpected registry response (jq error above)"
+    return
   fi
-}
-
-check_promotion_stage() {
-  log_info "Checking deploy/promotion stage..."
-
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "000")
-
-  if [ "$http_code" = "200" ]; then
-    local body
-    body=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos" 2> /dev/null || echo "[]")
-    local repo_id
-    repo_id=$(echo "$body" | jq -r '.[] | select(.full_name | test("my-artifact-app"; "i")) | .id' 2> /dev/null | head -1)
-
-    if [ -n "$repo_id" ] && [ "$repo_id" != "null" ]; then
-      local builds
-      builds=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds" 2> /dev/null || echo "[]")
-      local latest_build
-      latest_build=$(echo "$builds" | jq -r '.[0]' 2> /dev/null)
-
-      if [ -n "$latest_build" ] && [ "$latest_build" != "null" ]; then
-        local build_number
-        build_number=$(echo "$latest_build" | jq -r '.number' 2> /dev/null)
-
-        if [ -n "$build_number" ] && [ "$build_number" != "null" ]; then
-          local steps
-          steps=$(curl -s --max-time 10 "${WOODPECKER_URL}/api/repos/${repo_id}/builds/${build_number}/steps" 2> /dev/null || echo "[]")
-
-          if echo "$steps" | jq -e '.[] | select(.name == "deploy")' > /dev/null 2>&1; then
-            record_test "Promotion Stage" "PASS" "deploy step found in pipeline"
-          else
-            record_test "Promotion Stage" "PASS" "Pipeline completed; deploy stage configured (may not run on non-main branches)"
-          fi
-        else
-          record_test "Promotion Stage" "FAIL" "Could not fetch build steps"
-        fi
-      else
-        record_test "Promotion Stage" "FAIL" "No builds found for my-artifact-app"
-      fi
-    else
-      record_test "Promotion Stage" "FAIL" "Repository my-artifact-app not found in Woodpecker"
-    fi
+  if [ -n "$tags" ]; then
+    record_test "Registry Tags" "PASS" "${REGISTRY_REPO} has tag(s): ${tags}"
   else
-    record_test "Promotion Stage" "FAIL" "Could not fetch repositories from Woodpecker"
+    record_test "Registry Tags" "FAIL" "${REGISTRY_REPO} has no tags in ${REGISTRY_URL}"
   fi
 }
 
@@ -393,51 +227,30 @@ print_summary() {
   echo "Passed      : $PASSED_TESTS"
   echo "Failed      : $FAILED_TESTS"
   echo ""
-
   if [ "$FAILED_TESTS" -eq 0 ]; then
-    log_success "All tests passed! ✅"
-    echo ""
-    echo "🎉 Congratulations! You've completed Yellow Belt Module 8 Lab 01."
-    echo "   You've experienced the full artifact lifecycle: build → scan → push → promote → retain."
-    echo "   You've completed all Yellow Belt modules!"
+    log_success "All tests passed!"
+    echo "Next: the Yellow Belt Assessment."
     return 0
-  else
-    log_error "Some tests failed! ❌"
-    echo ""
-    echo "Please review the failures above. Common fixes:"
-    echo "  - Run 'make status' in uFawkesPipe if services aren't healthy"
-    echo "  - Re-run cookiecutter and customize .fawkespipe.yml"
-    echo "  - Push to Git to trigger pipeline: git push origin main"
-    echo "  - Check Woodpecker UI for pipeline status: http://localhost:8000"
-    echo "  - See lab-01/instructions.md Troubleshooting for more"
-    return 1
   fi
+  log_error "Some tests failed."
+  echo "See lab-01/instructions.md (Troubleshooting) for fixes."
+  return 1
 }
-
-# =============================================================================
-# Main Execution
-# =============================================================================
 
 main() {
   log_info "Starting Yellow Belt Module 08 Lab 01 validation..."
-  log_info "uFawkesPipe dir: $UFPIPE_DIR"
-  log_info "Woodpecker URL : $WOODPECKER_URL"
-  log_info "SonarQube URL  : $SONARQUBE_URL"
-  log_info "DefectDojo URL : $DEFECTDOJO_URL"
-  log_info "Trivy URL      : $TRIVY_URL"
+  log_info "Woodpecker URL: ${WOODPECKER_URL}   Lab repo: ${LAB_REPO}   Registry: ${REGISTRY_URL}"
   echo ""
-
   check_prerequisites
-  check_ufpipe_services
-  check_woodpecker_api
-  check_pipeline_execution
-  check_artifact_build
-  check_image_scan
-  check_push_stage
-  check_retention_config
-  check_promotion_config
-  check_promotion_stage
-
+  check_stack
+  check_api_auth
+  check_repo_active
+  check_pipeline_success
+  check_build
+  check_scan_gate
+  check_push
+  check_deploy
+  check_registry
   print_summary
 }
 

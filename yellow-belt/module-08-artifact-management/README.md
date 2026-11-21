@@ -1,7 +1,7 @@
 # Module 8: Artifact Management with uFawkesPipe
 
 **Belt Level**: 🟡 Yellow Belt
-**Estimated Time**: 60 minutes (25 min theory + 10 min build/push + 10 min scanning + 5 min retention + 10 min promotion + 5 min lab + 5 min quiz)
+**Estimated Time**: 60 minutes of theory and quiz plus about 25 minutes of lab (estimates, not timed)
 **Prerequisites**: Module 5, 6, 7 complete, uFawkesPipe v2.0.0 running
 **DORA Capability**: Artifact Traceability, Deployment Automation, Release Management
 
@@ -14,8 +14,8 @@ By the end of this module, you will be able to:
 - ✅ Understand artifact management principles and how uFawkesPipe implements them
 - ✅ Configure artifact build, tagging, and push via `.fawkespipe.yml`
 - ✅ Configure container image scanning with Trivy
-- ✅ Configure artifact retention policies
-- ✅ Implement artifact promotion across environments
+- ✅ Know that retention policies are not implemented by v2.0.0 (the contract field is ignored)
+- ✅ Know that promotion is manual re-tagging in v2.0.0; no stage does it
 - ✅ Monitor artifact metrics using Woodpecker UI and Prometheus/Grafana
 
 ---
@@ -29,7 +29,7 @@ By the end of this module, you will be able to:
 | Security      | 10 min | Image scanning, vulnerability thresholds            |
 | Retention     | 5 min  | Artifact lifecycle and retention policies           |
 | Promotion     | 10 min | Artifact promotion across environments              |
-| Lab 01        | 10 min | Full artifact lifecycle: build → scan → push → promote |
+| Lab 01        | 25 min | Build → scan → push, plus the generated deploy step and what the generator ignores |
 | Quiz          | 5 min  | 10-question knowledge check                         |
 
 ---
@@ -51,7 +51,7 @@ Team C: Rebuild from source every time
 ```
 Single Source of Truth (.fawkespipe.yml)
        ↓
-Build (CNB) → Scan (Trivy) → Push (Registry) → Promote (Deploy)
+Build → Scan (Trivy) → Push (Registry) → Deploy (as generated; promotion and retention are not implemented in v2.0.0)
        ↓
 Retention Policies → Metrics & Monitoring
 ```
@@ -89,15 +89,13 @@ Retention Policies → Metrics & Monitoring
 ➡️ **[Lab 01: Artifact Lifecycle with uFawkesPipe](lab-01/instructions.md)**
 
 This lab walks you through:
-1. Configuring artifact build, tagging, and push via `.fawkespipe.yml`
-4. Configuring image scanning with Trivy
-4. Configuring artifact retention policies
-5. Practicing artifact promotion across environments
-6. Verifying artifact lifecycle
+1. Building an image in the pipeline and pushing it to a local registry
+2. Watching the `image_scan` (Trivy) gate stop the push
+3. Reading what the registry actually holds after a push
+4. Seeing the generated `deploy` step fail, and fixing it by hand
+5. Checking which contract fields (retention, promotion, signing, `kubernetes`) the generator ignores
 
-**Runs against**: uFawkesPipe v2.0.0 (not released yet) (Docker Compose)
-
-> **Written ahead of its stack, not yet run for real.** uFawkesPipe v2.0.0 has not been released, so no one has run every step of this lab against it. Treat the steps and the expected output as unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+**Runs against**: uFawkesPipe v2.0.0 (Docker Compose), last run for real on 2026-11-21 with a local registry. The lab covers build, image scan, push and the generated deploy step; v2.0.0 does not implement retention, promotion, signing or the `kubernetes` section (see the lab's Scope note).
 
 **Prerequisites**: Module 7 completed, uFawkesPipe running
 
@@ -112,8 +110,8 @@ You have mastered this module when you can:
 - Explain artifact management principles and how uFawkesPipe implements them
 - Configure artifact build, tagging, and push via `.fawkespipe.yml`
 - Configure container image scanning with Trivy
-- Configure artifact retention policies
-- Implement artifact promotion across environments
+- Know which artifact features v2.0.0 does not implement (retention)
+- Promote artifacts by re-tagging by hand (no stage does it)
 - Monitor artifact metrics using Woodpecker UI and Prometheus/Grafana
 
 ---
