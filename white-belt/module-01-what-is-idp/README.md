@@ -80,12 +80,11 @@ toil, enforcing quality gates, and providing golden paths.
 
 This lab walks you through starting the uFawkesDevX platform, exploring the Backstage
 catalog, and scaffolding a new service (`hello-devx`) using the Fawkes golden path
-template. You will register the service in Backstage and verify it appears in the
-catalog with TechDocs.
+template. You will register the service with the Score service API and verify it there.
 
-**Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose), not `fawkes`/Kubernetes
+**Runs against**: [uFawkesDevX v1.2.0](https://github.com/paruff/uFawkesDevX/releases/tag/v1.2.0) (Docker Compose), not `fawkes`/Kubernetes
 
-> **Blocked: this lab cannot run on its pinned tag.** uFawkesDevX v1.0.1 cannot build its Backstage image (`backstage/` has no app source), so Step 2 fails; tracked in [uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98). Step 1 was run for real. Steps 2 onward are unverified. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-21** against uFawkesDevX v1.2.0; see the lab for what is and is not covered.
 
 **Validation**: `bash white-belt/module-01-what-is-idp/lab-01/validate.sh`
 

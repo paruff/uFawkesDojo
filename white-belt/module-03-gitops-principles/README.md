@@ -2,7 +2,7 @@
 
 **Belt Level**: 🥋 White Belt
 **Estimated Time**: 60 minutes (20 min theory + 10 min architecture + 10 min DORA + 15 min lab + 5 min quiz)
-**Prerequisites**: Module 1 & 2 completed, Docker basics, uFawkesDevX v1.0.1 running
+**Prerequisites**: Module 1 & 2 completed, Docker basics, uFawkesDevX v1.2.0 running
 **DORA Capability**: Continuous Delivery, Deployment Pipeline
 
 ---
@@ -101,9 +101,9 @@ This lab walks you through:
 4. Observing the GitOps-like workflow
 5. Practicing rollback via spec revert
 
-**Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose)
+**Runs against**: [uFawkesDevX v1.2.0](https://github.com/paruff/uFawkesDevX/releases/tag/v1.2.0) (Docker Compose)
 
-> **Blocked: this lab cannot run on its pinned tag.** It needs Module 1's stack, and uFawkesDevX v1.0.1 cannot build its Backstage image ([uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98)). No step has been run for real. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-21** against uFawkesDevX v1.2.0; see the lab for what is and is not covered.
 
 **Prerequisites**: Module 1 lab completed (uFawkesDevX running)
 

@@ -114,6 +114,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: paruff/uFawkesAI
+          ref: v2.0.0 # the tag the labs pin (AC-003); not the default branch
           path: uFawkesAI
 
       - name: Configure the stack .env (the flow the labs document)

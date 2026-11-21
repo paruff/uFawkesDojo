@@ -325,14 +325,15 @@ groups:
         annotations:
           summary: "High memory usage on {{ $labels.instance }}"
 
-      - alert: DeploymentFailure
-        expr: increase(deployment_result{status="failure"}[5m]) > 0
+      # uFawkesObs emits no per-deployment result metric, so alert on the
+      # change failure rate dora-api computes (percent of deployments that failed).
+      - alert: HighChangeFailureRate
+        expr: dora_cfr_pct > 15
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "Deployment failure detected"
-          description: "Deployment for {{ $labels.application }} failed"
+          summary: "Change failure rate is {{ $value }}% for {{ $labels.team_id }}"
 EOF
 ```
 
@@ -370,7 +371,7 @@ curl -s -o /dev/null -w "reload -> HTTP %{http_code}\n" -X POST http://localhost
 ### 6.3 Verify Alert Rules
 
 1. Open **http://localhost:9090/alerts** (Prometheus Alerts page)
-2. Verify your rules appear: `HighCPUUsage`, `HighMemoryUsage`, `DeploymentFailure`
+2. Verify your rules appear: `HighCPUUsage`, `HighMemoryUsage`, `HighChangeFailureRate`
 3. Check **http://localhost:9093** (Alertmanager) → see routing configuration
 
 To check from the terminal:
@@ -384,7 +385,7 @@ curl -s http://localhost:9090/api/v1/rules | jq -r '.data.groups[] | select(.nam
 ```
 HighCPUUsage
 HighMemoryUsage
-DeploymentFailure
+HighChangeFailureRate
 ```
 
 > ✅ **Checkpoint**: Alert rules loaded and visible in Prometheus/Alertmanager

@@ -26,10 +26,10 @@ Kubernetes earns its operational cost."**
 Labs follow the suite's release order and pin a released stack tag, never
 `main`: uFawkesAI (Dojo 0.2), then uFawkesObs, uFawkesPipe and uFawkesDevX.
 uFawkesAI tagged `v2.0.0` on 2026-10-07 (with `fawkes-space:2.0.0`).
-**As of 2026-10-07 neither Obs nor Pipe has a stable release** (newest: Obs
-`v1.2.0-rc.1`, Pipe `v1.11.1-beta.1`), and uFawkesDevX is at stable `v1.0.1`. Labs written ahead of a release are marked
-"not yet run for real" until they are verified against a tag that exists (see
-the audit below).
+**As of 2026-11-21** the stable tags the labs pin are uFawkesObs `v1.0.1`,
+uFawkesPipe `v2.0.0` and uFawkesDevX `v1.2.0`. Labs written ahead of a release
+are marked "not yet run for real" until they are verified against a tag that
+exists (see the audit below).
 
 The feature chain is
 [`docs/ai-sdlc/compose-curriculum/`](docs/ai-sdlc/compose-curriculum/)
@@ -55,25 +55,33 @@ been run, for real").
   (pre-release pin), re-run in #79.
 - `brown-belt/module-13-observability/lab-01/` — on uFawkesObs
   `v1.1.0-rc.1` (pre-release pin), run verbatim end to end in #86.
-- `brown-belt/module-14-dora-deep-dive/lab-01/` — partly: Steps 1, 2, 5, 7,
-  the prerequisites and the clean-up, on uFawkesObs `v1.1.0-rc.1` (#90).
-  Steps 3, 4 and 6 (PromQL, the Grafana dashboard, alert rules) are not run
-  and still use pre-1.0 metric names (#43).
+- `brown-belt/module-13-observability/` to `module-16-incident-management/`
+  (`lab-01` each) — on uFawkesObs `v1.0.1` (stable), run on 2026-11-10 through
+  the stack's APIs; Grafana's browser-only clicks were not exercised.
+- `white-belt/module-01-what-is-idp/`, `module-03-gitops-principles/` and
+  `module-04-first-deployment/` (`lab-01` each) — on uFawkesDevX `v1.2.0`,
+  run on 2026-11-21 (no database to set up). Not run: Module 1 Step 6 (needs
+  the `coder` CLI). Module 3's Backstage Scaffolder template fails on `v1.2.0`
+  (no `http:post` action) and is documented as such; Module 4 uses Cookiecutter,
+  the Score API and a local container instead of the Scaffolder, Woodpecker and
+  Coder.
+- `yellow-belt/module-05-ci-fundamentals/` to `module-08-artifact-management/`
+  (`lab-01` each) — on uFawkesPipe `v2.0.0`, run on 2026-11-20 and 2026-11-21.
+  Several steps needed workarounds that the labs list; it is not a run of an
+  unmodified release.
 - A nightly live acceptance run (`live-acceptance.yml`) boots a real uFawkesObs
   stack and runs the self-checks of Module 2 labs 01 and 02 and Brown Belt
   13 and 14 in full, and Brown Belt 15 and 16 as `validate.sh --stack-only`:
   the stack, and for BB15 the metric its SLIs use, but not the rules, alerts,
   dashboard or postmortem a student creates. A stack-only pass is not a lab
-  pass. It runs `validate.sh`, not the instructions' steps. The other seven
-  labs (White Belt 1, 3, 4 and Yellow Belt 5-8) are not covered: they target
-  other stacks and verify student artifacts, so they cannot pass on a clean
-  runner without scripting the whole lab (#73).
-
-**Written, but not yet run for real** (9 labs; see the audit):
-- White Belt 1, 3 and 4 on uFawkesDevX `v1.0.1`. The tag exists, but it cannot build
-  its Backstage image (uFawkesDevX#98), so these labs cannot run yet.
-- Yellow Belt 5–8 on a uFawkesPipe `v2.0.0` that does not exist yet.
-- Brown Belt 15–16 on a uFawkesObs `v1.0.0` that does not exist yet.
+  pass. It runs `validate.sh`, not the instructions' steps. A second job boots
+  uFawkesDevX at the tag Lab 1 pins, scripts the student half of White Belt 1, 3
+  and 4 (`scripts/run-devx-labs.sh`) and runs their `validate.sh`. Yellow Belt
+  5-8 are not covered: they target uFawkesPipe and verify student artifacts, so
+  they cannot pass on a clean runner without scripting the whole lab (#73).
+  A lab-commands check (`scripts/check-lab-commands.sh`, AC-008) also fails the
+  nightly when a lab names a `make` target or `localhost` port its pinned tag
+  does not define.
 
 **Other real content:**
 - The 20 belt module docs under `modules/<belt>/`. Green Belt has its "why

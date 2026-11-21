@@ -3,9 +3,9 @@
 **Module**: White Belt — Module 4: Your First Deployment
 **Estimated Time**: 20 minutes
 **Difficulty**: Beginner (Modules 1-3 complete required)
-**Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose)
+**Runs against**: [uFawkesDevX v1.2.0](https://github.com/paruff/uFawkesDevX/releases/tag/v1.2.0) (Docker Compose)
 
-> **Blocked: this lab cannot run on its pinned tag.** It needs Module 1's stack, and uFawkesDevX v1.0.1 cannot build its Backstage image ([uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98)). No step has been run for real. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-21** against uFawkesDevX v1.2.0 (the Module 1 stack). This lab no longer uses the Backstage Scaffolder (it fails on v1.2.0, see Module 3), a Woodpecker pipeline or a Coder workspace: none of them can be driven from this stack alone. The pipeline here is the Score service's trigger record; a real build runs in uFawkesPipe (Yellow Belt).
 
 ---
 
@@ -13,11 +13,10 @@
 
 By the end of this lab you will have:
 
-1. Created a new service (`my-first-app`) using the Backstage Scaffolder and Python Flask golden path template
-2. Observed the Score Service validate the spec and trigger the uFawkesPipe pipeline
-3. Monitored the pipeline execution in Woodpecker (uFawkesPipe) UI
-4. Created a Coder workspace from the scaffolded repository
-5. Verified the application responds to health checks in the workspace
+1. Created a new service (`my-first-app`) from the Python Flask golden path template
+2. Registered its Score spec and triggered the pipeline webhook
+3. Read the recorded pipeline run from the Score API
+4. Ran the application's tests and checked its health endpoint in a container
 
 ---
 
@@ -25,10 +24,9 @@ By the end of this lab you will have:
 
 This lab runs against **uFawkesDevX** — the Developer Experience plane — because it provides a complete deployment workflow in Docker Compose:
 
-- **Backstage Scaffolder** creates services from golden path templates
-- **Score Service** validates workload specs and triggers pipelines
-- **uFawkesPipe (Woodpecker)** runs CI/CD: lint → test → build → push
-- **Coder** provisions devcontainer workspaces
+- **Golden-path templates** (Cookiecutter) create services
+- **Score Service** validates workload specs and records pipeline triggers
+- **uFawkesPipe (Woodpecker)** runs the real CI/CD in its own stack: lint → test → build → push
 - **No Kubernetes required** — runs on your laptop
 
 This demonstrates the full deployment workflow without cluster complexity.
@@ -37,7 +35,7 @@ This demonstrates the full deployment workflow without cluster complexity.
 
 ## Prerequisites
 
-**Required**: uFawkesDevX v1.0.1 running from Module 1
+**Required**: uFawkesDevX v1.2.0 running from Module 1
 
 ```bash
 # Verify your stack is still running
@@ -54,6 +52,7 @@ make status
 - `jq` — JSON processor
 - `git` — version control
 - `cookiecutter` — `pip install cookiecutter`
+- `docker` — runs `yq` and the app's container
 
 ---
 
@@ -65,199 +64,120 @@ of the uFawkesDevX deployment workflow and identify the components.
 
 ---
 
-## Step 1 — Create Service via Backstage Scaffolder (5 minutes)
-
-### 1.1 Open Backstage
-
-Navigate to **http://localhost:7007** in your browser.
-
-### 1.2 Access the Scaffolder
-
-1. Click **Create** in the left sidebar
-2. You should see the **Deploy Score Workload** template (registered in uFawkesDevX catalog)
-3. Click **Choose** on the template
-
-### 1.3 Fill in Template Parameters
-
-Fill in the form:
-
-| Field | Value |
-|-------|-------|
-| **Workload Name** | `my-first-app` |
-| **Description** | `My first deployment on uFawkesDevX` |
-| **Container Image** | `ghcr.io/dojo/my-first-app` |
-| **Replicas** | `1` |
-| **Port** | `8080` |
-| **CPU Limit** | `100m` |
-| **Memory Limit** | `128Mi` |
-
-### 1.4 Submit and Wait
-
-1. Click **Review** → **Create**
-2. Wait ~30 seconds for the template to execute
-3. You'll see a progress indicator showing:
-   - Template rendering (Cookiecutter)
-   - Git repository initialization
-   - Git push to local Git remote
-   - Component registration in Backstage
-
-### 1.5 Verify Component Created
-
-1. When complete, click **Open in catalog**
-2. You should see the `my-first-app` component page with:
-   - **Overview** tab: description, owner
-   - **TechDocs** tab: README rendered
-   - **APIs** tab: (empty until Score spec submitted)
-
-> ✅ **Checkpoint**: `my-first-app` appears in Backstage catalog with TechDocs.
-> The Scaffolder created the Git repo and registered the component.
-
----
-
-## Step 2 — Examine Generated Files (3 minutes)
-
-### 2.1 Clone the Generated Repository
+## Step 1 — Scaffold the Service (3 minutes)
 
 ```bash
-# The Scaffolder pushed to a local Git remote
-# Find the repo URL from Backstage component page (GitHub link)
-# Or check the Scaffolder task output for the repo URL
-
-# For this lab, the repo was created locally:
 cd ~/dojo-labs/uFawkesDevX
 
-# Check if there's a local bare repo from Scaffolder
-ls -la ~/dojo-labs/ | grep my-first-app
+cookiecutter templates/python-flask-app --no-input \
+  project_name="My First App" \
+  project_slug="my-first-app" \
+  language="python" \
+  registry_namespace="dojo"
 
-# If found, clone it:
-git clone ~/dojo-labs/my-first-app.git
 cd my-first-app
 ```
 
-**Alternative**: If the Scaffolder created a GitHub repo, clone from there:
-```bash
-git clone https://github.com/<your-username>/my-first-app.git
-cd my-first-app
-```
-
-### 2.2 Examine Key Files
+### Examine the key files
 
 ```bash
-# Score workload spec — declarative desired state
-cat score.yaml
-
-# uFawkesPipe CI/CD contract
-cat .fawkespipe.yml
-
-# Coder devcontainer definition
-cat .devcontainer/devcontainer.json
-
-# Container build (uses Cloud Native Buildpacks)
-cat Dockerfile
-
-# Application code
-cat src/app.py
-
-# Tests
-cat tests/test_app.py
-
-# Documentation (renders as TechDocs in Backstage)
+cat score.yaml                       # Score workload spec: declarative desired state
+cat .fawkespipe.yml                  # uFawkesPipe CI/CD contract
+cat .devcontainer/devcontainer.json  # Coder devcontainer definition
+cat Dockerfile                       # Container build
+cat src/app.py                       # Application code
+cat tests/test_app.py                # Tests
 head -30 README.md
 ```
 
 **Key observations**:
 - `score.yaml` declares the workload (containers, variables, service ports)
-- `.fawkespipe.yml` defines lint → test → build stages
-- `.devcontainer/devcontainer.json` pins Python 3.12 image with Docker-in-Docker
-- `Dockerfile` uses CNB builder (paketobuildpacks/builder-jammy-base)
+- `.fawkespipe.yml` defines `lint` and `test` stages, then a Cloud Native Buildpacks build (`paketobuildpacks/builder-jammy-base`) pushing to `ghcr.io/dojo/my-first-app`
+- `src/app.py` serves `/` and `/health`
 
 ---
 
-## Step 3 — Submit Score Spec and Watch Pipeline (5 minutes)
+## Step 2 — Submit the Score Spec and Trigger the Pipeline (5 minutes)
 
-### 3.1 Submit Score Spec via API
+### 2.1 Submit the spec
 
-The Scaffolder may have already submitted the spec. Let's verify and submit if needed:
+The Score API takes JSON, and a plugin rejects specs without
+`metadata.annotations`, so convert `score.yaml` and add one on the way:
 
 ```bash
-# Submit the score.yaml to Score Service
-cd ~/dojo-labs/my-first-app  # or wherever you cloned
-
-curl -s -X POST http://localhost:8000/api/score/specs \
-  -H "Content-Type: application/json" \
-  -d @score.yaml | jq .
+docker run --rm -i mikefarah/yq:4 -o=json '.metadata.annotations."dojo/lab" = "white-belt-04"' < score.yaml \
+  | curl -s -X POST http://localhost:8000/api/score/specs \
+      -H "Content-Type: application/json" -d @- | jq '{name, version, status}'
 ```
 
-**Expected response**: JSON with `spec_id` and validated spec.
+**Expected response**: `{"name": "my-first-app", "version": 1, "status": "validated"}`
 
-> **What happened**: Score Service validated `score.yaml` against `score.dev/v1b1`, stored it in Backstage catalog, and POSTed to uFawkesPipe webhook.
+### 2.2 Trigger the pipeline webhook
 
-### 3.2 Watch Pipeline in Woodpecker (uFawkesPipe)
+The Score service exposes a webhook the platform calls when a workload changes.
+Call it yourself:
 
-1. Open **http://localhost:8000** in your browser (Woodpecker UI)
-2. You may need to log in with your Gitea/GitHub credentials
-3. Find the `my-first-app` pipeline
-4. Click on the latest run
+```bash
+curl -s -X POST http://localhost:8000/webhooks/score/pipeline/trigger \
+  -H "Content-Type: application/json" \
+  -d '{"workload":"my-first-app","action":"deploy"}' | jq .
+```
 
-**Watch the stages execute**:
-1. **lint** → Runs ruff (Python linter)
-2. **test** → Runs pytest
-3. **build** → CNB creates container image
-4. **push** → Pushes to ghcr.io/dojo/my-first-app
+**Expected response**: HTTP 202 with `"message": "Pipeline triggered"` and a `pipelineRun` whose `status` is `running`.
 
-> ✅ **Checkpoint**: Pipeline shows green checkmarks for all stages.
-> Total time: ~3-5 minutes.
+### 2.3 Read the pipeline run
 
-### 3.3 Verify in Backstage
+```bash
+sleep 6
+curl -s http://localhost:8000/api/score/pipelines/my-first-app | jq '.pipelines[] | {id, workload, action, status}'
+```
 
-1. Refresh the `my-first-app` component page in Backstage
-2. Check **TechDocs** tab — README should render
-3. Check if any **APIs** tab shows registered endpoints
+**Expected output**: your run, `status` now `completed`.
+
+> **What this is, and is not**: the Score service records the run and marks it
+> completed after a few seconds. It does not build anything. The real pipeline
+> (lint → test → build → push, as `.fawkespipe.yml` describes) runs in
+> uFawkesPipe's Woodpecker, a separate stack you set up in Yellow Belt.
+
+> ✅ **Checkpoint**: `my-first-app` is registered and has a recorded pipeline run.
 
 ---
 
-## Step 4 — Open in Coder Workspace (5 minutes)
+## Step 3 — Run the App and Its Tests (5 minutes)
 
-### 4.1 Access Coder
+You'll do by hand what the pipeline's `test` stage and a workspace would do,
+in a throwaway Python container.
 
-Navigate to your `CODER_ACCESS_URL` (e.g., `http://192.168.1.42:7080`)
+### 3.1 Run the tests
 
-### 4.2 Create Workspace
+```bash
+cd ~/dojo-labs/uFawkesDevX/my-first-app
+docker run --rm -v "$PWD":/app -w /app python:3.12-slim sh -c \
+  'pip install -q -r requirements.txt pytest && python -m pytest -q'
+```
 
-1. Click **New workspace**
-2. Select template: **devcontainer-docker** (pushed in Module 1)
-3. **Repository URL**: Enter your `my-first-app` Git repo URL
-   - Local: `file:///home/user/dojo-labs/my-first-app.git`
-   - GitHub: `https://github.com/<user>/my-first-app.git`
-4. Click **Create workspace**
+**Expected output**: `2 passed`
 
-### 4.3 Wait for Workspace to Start
+### 3.2 Run the app and check its health
 
-1. Status will show: **Starting** → **Building** → **Running**
-2. First build takes ~2-3 minutes (pulls base image, installs dependencies)
-3. Subsequent starts are faster
+```bash
+docker run -d --rm --name my-first-app -v "$PWD":/app -w /app -p 8090:8080 python:3.12-slim sh -c \
+  'pip install -q -r requirements.txt && python src/app.py'
 
-### 4.4 Verify Application in Workspace
+sleep 12
+curl -s http://localhost:8090/health
+```
 
-Once workspace is **Running**:
+**Expected response**: `{"status":"ok"}`
 
-1. Click **Open in VS Code Web** (or use SSH)
-2. In the terminal, run:
-   ```bash
-   # The app should auto-start via postCreateCommand
-   # If not, start manually:
-   python src/app.py &
-   ```
+(Port 8090 avoids clashing with anything on 8080. The app listens on `PORT`, default 8080, inside the container.)
 
-3. Test health endpoint:
-   ```bash
-   curl -s http://localhost:8080/health
-   ```
+```bash
+docker rm -f my-first-app
+```
 
-**Expected response**: `{"status":"healthy"}` or similar JSON
-
-> ✅ **Checkpoint**: Application responds to health check in Coder workspace.
-> The full workflow: Template → Spec → Pipeline → Workspace → Running App.
+> ✅ **Checkpoint**: The app passes its tests and answers `/health`.
+> The full workflow: Template → Spec → Pipeline trigger → Running app.
 
 ---
 
@@ -274,23 +194,22 @@ bash white-belt/module-04-first-deployment/lab-01/validate.sh
 ```
 [INFO] Starting White Belt Module 04 Lab 01 validation...
 
-[✓] Prerequisites: curl, jq, git, cookiecutter installed
-[✓] uFawkesDevX Stack: all 5 services healthy
-[✓] Backstage Catalog: API reachable with my-first-app component
-[✓] Score Service: Spec submission and validation works
-[✓] uFawkesPipe: Pipeline executed for my-first-app
-[✓] Coder: Workspace created and running for my-first-app
-[✓] Application Health: Responds to /health in workspace
+[✓] Prerequisites: docker, docker compose, git, curl, jq, cookiecutter installed
+[✓] uFawkesDevX Stack: all 5 services healthy (coder, backstage, score-service, plugin-manager, gateway)
+[✓] Backstage Catalog: systems: developer-control-plane ufawkes-obs ufawkes-pipe ufawkes-sec
+[✓] Scaffolded Service: my-first-app has score.yaml and .fawkespipe.yml
+[✓] Score Spec Submit: my-first-app is registered (version 1)
+[✓] Pipeline Trigger: my-first-app has 1 recorded pipeline run(s)
 
 ==========================================
-Total Tests: 7
-Passed: 7
-Failed: 0
+Total Tests : 6
+Passed      : 6
+Failed      : 0
 
 [✓] All tests passed! ✅
 
 🎉 Congratulations! You've completed White Belt Module 4 Lab 01.
-   You've deployed your first app: Scaffolder → Score → Pipeline → Coder.
+   You've taken your first app from template to a registered, tested service.
    You're ready for the White Belt Assessment!
 ```
 
@@ -301,12 +220,11 @@ Failed: 0
 When you are done with the lab:
 
 ```bash
-# Stop Coder workspace (from Coder UI)
-# Or let it auto-stop after inactivity
+# Remove the spec from the Score service (optional)
+curl -s -X DELETE http://localhost:8000/api/score/specs/my-first-app
 
-# Remove local repo (optional)
-rm -rf ~/dojo-labs/my-first-app
-rm -rf ~/dojo-labs/my-first-app.git
+# Remove the scaffolded service (optional)
+rm -rf ~/dojo-labs/uFawkesDevX/my-first-app
 ```
 
 ---
@@ -315,12 +233,11 @@ rm -rf ~/dojo-labs/my-first-app.git
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
-| Scaffolder task fails | Template not found / Git push failed | Check Backstage task logs; ensure uFawkesDevX catalog has template |
-| Score API returns 422 | Spec schema validation failed | Check `score.yaml` syntax; validate against score.dev/v1b1 |
-| Pipeline stuck in Woodpecker | Build queue / runner issue | Check Woodpecker runner status; `docker logs woodpecker-server` |
-| Coder workspace won't start | CODER_ACCESS_URL is localhost | Set to LAN IP in `.env`; `make up` again |
-| App not responding in workspace | Port mismatch / app not started | Check `score.yaml` port matches app; run `python src/app.py` manually |
-| Image push fails | Registry auth / quota | Check ghcr.io credentials in Woodpecker; verify namespace |
+| Score API returns 400 `Invalid Score specification` | Body fails the schema, or isn't JSON | Post through the `yq` pipe in Step 2.1; read `details` |
+| Score API returns 400 `Plugin example-validator validation failed` | No `metadata.annotations` | Add the annotation as in Step 2.1 |
+| `pipelines` list is empty | Trigger not sent, or wrong workload name | Redo Step 2.2 with `"workload":"my-first-app"` |
+| `curl: (7)` on port 8090 | The app is still installing Flask | Wait 10 more seconds; `docker logs my-first-app` |
+| `docker: port is already allocated` on 8090 | Another service holds it | Change the left side of `-p 8090:8080` |
 
 ---
 
@@ -328,13 +245,13 @@ rm -rf ~/dojo-labs/my-first-app.git
 
 Write your answers down — the act of writing (not just thinking) strengthens retention.
 
-1. What are the four stages of the uFawkesDevX deployment workflow?
+1. What are the stages of the workflow you ran in this lab?
 2. Which component validates the `score.yaml` and triggers the pipeline?
 3. What does the `.fawkespipe.yml` file define?
-4. How does Coder know how to build the workspace container?
-5. Where do you view pipeline stage logs?
+4. Which file tells Coder how to build the workspace container?
+5. Does the Score service build your image? What does?
 
-(Suggested answers: 1 = Scaffolder → Score → Pipeline → Coder; 2 = Score Service; 3 = uFawkesPipe CI/CD contract (lint, test, build, push); 4 = .devcontainer/devcontainer.json; 5 = Woodpecker UI at http://localhost:8000)
+(Suggested answers: 1 = template → Score spec → pipeline trigger → running app; 2 = Score Service; 3 = uFawkesPipe CI/CD contract (lint, test, build); 4 = .devcontainer/devcontainer.json; 5 = no, it only records the trigger; uFawkesPipe's Woodpecker builds)
 
 ---
 
@@ -344,13 +261,13 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 |------|---------|
 | `score.yaml` | Score workload spec (declarative desired state) |
 | `.fawkespipe.yml` | uFawkesPipe CI/CD contract |
-| `.devcontainer/devcontainer.json` | Coder workspace definition |
+| `.devcontainer/devcontainer.json` | Coder workspace definition (not exercised in this lab) |
 | `Dockerfile` | CNB-based container build |
 | `src/app.py` | Flask app with `/health` endpoint |
 | `tests/test_app.py` | Pytest suite |
 | `README.md` | TechDocs source |
 
-You've now experienced the complete uFawkesDevX workflow — from template to running application in a devcontainer workspace. This is the foundation for all your future deployments!
+You've now experienced the uFawkesDevX workflow from template to a registered, tested, running application. In Yellow Belt you'll run the real pipeline in uFawkesPipe.
 
 ---
 

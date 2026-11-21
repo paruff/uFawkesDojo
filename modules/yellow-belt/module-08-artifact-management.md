@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟡 Yellow Belt
 **Duration**: 60 minutes
-**Prerequisites**: Module 5, 6, 7 complete, uFawkesPipe v2.0.0 running
+**Prerequisites**: Module 5, 6, 7 complete, uFawkesPipe v2.0.0 running (`git clone --branch v2.0.0 https://github.com/paruff/uFawkesPipe.git`, then `make up`)
 **DORA Capabilities**: Artifact Traceability, Deployment Automation, Release Management
 
 ---
@@ -473,7 +473,7 @@ You'll use the running uFawkesPipe stack to:
 ### Lab Environment
 
 **Prerequisites**:
-- ✅ uFawkesPipe v2.0.0 running locally
+- ✅ uFawkesPipe v2.0.0 running locally (`git clone --branch v2.0.0 https://github.com/paruff/uFawkesPipe.git && cd uFawkesPipe && make up`)
 - ✅ Module 7 completed (security pipeline)
 
 ➡️ **[Lab 01: Artifact Lifecycle with uFawkesPipe](yellow-belt/module-08-artifact-management/lab-01/instructions.md)**

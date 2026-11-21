@@ -224,7 +224,6 @@ stages:
     enabled: true
     tools:
       - trivy
-    fail_on: HIGH
 
   build:
     enabled: true
@@ -305,9 +304,16 @@ You'll use the running uFawkesPipe stack to:
 
 ### Lab Environment
 
+**Get uFawkesPipe** (the tag the lab was run against; never `main`):
+
+```bash
+git clone --branch v2.0.0 --depth 1 https://github.com/paruff/uFawkesPipe.git
+cd uFawkesPipe && make up
+```
+
 **Prerequisites**: uFawkesPipe v2.0.0 running locally
 - ✅ Woodpecker CI at http://localhost:8000
-- ✅ SonarQube at http://localhost:9000
+- ✅ SonarQube at http://localhost:9001 (the compose file maps it there, not 9000; 9000 is Woodpecker's agent port)
 - ✅ Portainer CE at https://localhost:9443
 
 ➡️ **[Lab 01: Your First Pipeline with uFawkesPipe](yellow-belt/module-05-ci-fundamentals/lab-01/instructions.md)**

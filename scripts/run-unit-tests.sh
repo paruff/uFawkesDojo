@@ -22,6 +22,7 @@ SUITES=(
   scripts/test-dojo-feedback-intent.sh
   scripts/test-doc-dora-freshness.sh
   scripts/test-check-lab-pins.sh
+  scripts/test-check-lab-commands.sh
 )
 
 failed=0

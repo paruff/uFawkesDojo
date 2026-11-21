@@ -2,7 +2,7 @@
 
 **Belt Level**: 🥋 White Belt
 **Estimated Time**: 60 minutes (15 min theory + 10 min demo + 20 min lab + 5 min quiz + 5 min reflection)
-**Prerequisites**: Modules 1, 2, 3 completed, uFawkesDevX v1.0.1 running
+**Prerequisites**: Modules 1, 2, 3 completed, uFawkesDevX v1.2.0 running
 **DORA Capability**: Continuous Delivery, Deployment Automation
 
 ---
@@ -68,14 +68,14 @@ Each template includes: `score.yaml`, `.fawkespipe.yml`, `.devcontainer/`, `Dock
 ➡️ **[Lab 01: Your First Deployment with uFawkesDevX](lab-01/instructions.md)**
 
 This lab walks you through:
-1. Creating a service from a golden path template via Backstage Scaffolder
-2. Submitting the Score spec and watching pipeline execution
-3. Opening the service in a Coder workspace
-4. Verifying the application health
+1. Creating a service from a golden path template with Cookiecutter
+2. Submitting the Score spec and triggering the pipeline webhook
+3. Reading the recorded pipeline run
+4. Running the app's tests and checking its health in a container
 
-**Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose)
+**Runs against**: [uFawkesDevX v1.2.0](https://github.com/paruff/uFawkesDevX/releases/tag/v1.2.0) (Docker Compose)
 
-> **Blocked: this lab cannot run on its pinned tag.** It needs Module 1's stack, and uFawkesDevX v1.0.1 cannot build its Backstage image ([uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98)). No step has been run for real. See the [audit](../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-21** against uFawkesDevX v1.2.0; see the lab for what is and is not covered.
 
 **Prerequisites**: Module 1 lab completed (uFawkesDevX running), Module 3 completed
 
@@ -87,11 +87,11 @@ This lab walks you through:
 
 You have mastered this module when you can:
 
-- Create a service end-to-end using the Scaffolder
+- Create a service end-to-end from a golden path template
 - Explain each stage of the uFawkesDevX deployment workflow
 - Find and interpret deployment status across Backstage, Score API, and uFawkesPipe
 - Identify when a deployment succeeded or failed
-- Access your deployed application in a Coder workspace
+- Run your application and check its health
 
 ---
 
