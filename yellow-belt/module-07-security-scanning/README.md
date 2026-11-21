@@ -85,10 +85,12 @@ This lab walks you through:
 3. Making it fail with a vulnerable dependency, then finding the CVE
 4. Making the same stage fail on a planted secret
 5. Fixing both and recovering
+6. Adding SonarQube SAST and seeing what v2.0.0 needs from you
+7. Building an image and scanning it
 
 **Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
 
-> **Last run for real**: 2026-11-20, against uFawkesPipe v2.0.0. Only `dependency_scan` (Trivy) was run. SonarQube SAST, Bandit, image scanning, DAST, DefectDojo and a separate Gitleaks gate were **not** run (v2.0.0 has no Gitleaks stage; they need services and credentials the lab does not set up). The theory covers them; treat those parts as unrun.
+> **Last run for real**: 2026-11-21, against uFawkesPipe v2.0.0. Run: `dependency_scan` (Trivy), `sast` (SonarQube only) and `build` plus `image_scan`, each with workarounds the lab spells out. **Not run**: Bandit and Trivy inside `sast` (the step's image lacks both), DAST, DefectDojo, and a separate Gitleaks gate (v2.0.0 has no Gitleaks stage). The theory covers the unrun parts; treat them as unrun.
 
 **Prerequisites**: Module 5 & 6 completed, uFawkesPipe running
 

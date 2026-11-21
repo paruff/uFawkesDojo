@@ -190,6 +190,44 @@ check_gate() {
   fi
 }
 
+# sast succeeded in some run.
+check_sast() {
+  need_repo "SAST" || return
+  need_pipelines "SAST" || return
+  local num body
+  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
+    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
+      record_test "SAST" "FAIL" "could not read pipeline #${num} (reason above)"
+      return
+    fi
+    if echo "$body" | jq -e '[.workflows[]?.children[]? | select(.name == "sast" and .state == "success")] | length >= 1' > /dev/null; then
+      record_test "SAST" "PASS" "sast succeeded in pipeline #${num}"
+      return
+    fi
+  done
+  record_test "SAST" "FAIL" "no run where sast succeeded (Step 6)"
+}
+
+# build succeeded and image-scan executed (it fails on a stock python base image, so either result counts).
+check_image_scan() {
+  need_repo "Image Scan" || return
+  need_pipelines "Image Scan" || return
+  local num body
+  for num in $(echo "$PIPELINES" | jq -r 'sort_by(.number) | .[].number'); do
+    if ! body=$(api "/repos/${REPO_ID}/pipelines/${num}"); then
+      record_test "Image Scan" "FAIL" "could not read pipeline #${num} (reason above)"
+      return
+    fi
+    if echo "$body" | jq -e '[.workflows[]?.children[]?] as $s
+        | ([$s[] | select(.name == "build" and .state == "success")] | length >= 1)
+          and ([$s[] | select(.name == "image-scan" and (.state == "success" or .state == "failure"))] | length >= 1)' > /dev/null; then
+      record_test "Image Scan" "PASS" "build succeeded and image-scan ran in pipeline #${num}"
+      return
+    fi
+  done
+  record_test "Image Scan" "FAIL" "no run where build succeeded and image-scan ran (Step 7)"
+}
+
 print_summary() {
   echo ""
   echo "=========================================="
@@ -219,6 +257,8 @@ main() {
   check_repo_active
   check_pipeline_success
   check_gate
+  check_sast
+  check_image_scan
   print_summary
 }
 
