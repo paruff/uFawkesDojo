@@ -17,7 +17,7 @@ live status is on the
 |---|---|---|---|
 | 0.2.1 Accuracy + "Start here" | uFawkesAI `v2.0.0` (tagged 2026-10-07) | Guide, PR template, Module 0 and its lab merged | "Start here" on `v2.0.0`, verbatim in CI (`start-here-live.yml`); AC-DOJO-01 passes |
 | 0.2.2 uFawkesObs | `v1.0.1` (stable, 2026-10-18). Module 2 lab-01 pins `v1.0.0`, lab-02 `v1.1.0-rc.1`, Brown Belt 13–16 `v1.0.1` | Module 2 lab-01 re-run (#79, #90); Brown Belt 13–16 written | Module 2 lab-01 and lab-02, M13 and M14 in the nightly; M15 and M16 as `--stack-only`. The lab headers say 13–16 ran on 2026-11-10 |
-| 0.2.3 uFawkesPipe | `v2.0.0` (2026-11-19) | Yellow Belt 5–8 run against `v2.0.0` (PRs #136–#140) | run on 2026-11-20 and 21, with the workarounds the labs list; not in the nightly |
+| 0.2.3 uFawkesPipe | `v2.0.0` (2026-11-19) | Yellow Belt 5–8 run against `v2.0.0` (PRs #136–#140) | run on 2026-11-20 and 21, with the workarounds the labs list; not in the nightly. Labs pin uFawkesDevX `v1.2.0` for the `python-flask-app` template (one comment differs from `v1.0.1`; scaffold and pipeline generation re-run on `v1.2.0`, pipeline runs not repeated) |
 | 0.2.4 uFawkesDevX | `v1.2.0` pinned (stable, 2026-10-17; newer tags exist) | White Belt 1/3/4 re-pinned to `v1.2.0` and run (#123) | run on 2026-11-21; in the nightly (`white-belt-devx-labs`). Not run: Module 1 Step 6 (needs the `coder` CLI) |
 | 0.2.5 Green Belt framing | none needed | Done (Modules 9–12) | n/a |
 

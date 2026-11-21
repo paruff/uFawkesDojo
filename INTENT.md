@@ -68,7 +68,9 @@ been run, for real").
 - `yellow-belt/module-05-ci-fundamentals/` to `module-08-artifact-management/`
   (`lab-01` each) — on uFawkesPipe `v2.0.0`, run on 2026-11-20 and 2026-11-21.
   Several steps needed workarounds that the labs list; it is not a run of an
-  unmodified release.
+  unmodified release. They pin uFawkesDevX `v1.2.0` for the `python-flask-app` template: it
+  differs from `v1.0.1` by one comment, and the scaffold and pipeline-generation
+  steps were re-run on `v1.2.0` with identical output (the pipeline runs were not).
 - A nightly live acceptance run (`live-acceptance.yml`) boots a real uFawkesObs
   stack and runs the self-checks of Module 2 labs 01 and 02 and Brown Belt
   13 and 14 in full, and Brown Belt 15 and 16 as `validate.sh --stack-only`:

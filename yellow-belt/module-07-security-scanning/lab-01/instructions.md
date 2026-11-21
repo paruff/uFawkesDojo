@@ -3,9 +3,9 @@
 **Module**: Yellow Belt — Module 7: Security Scanning & Quality Gates
 **Estimated Time**: about 25 minutes for Steps 1-5; Steps 6-10 took us several hours, mostly setup and image pulls (an estimate, not timed)
 **Difficulty**: Intermediate (Modules 5 & 6 complete required)
-**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (Docker Compose)
 
-> **Last run for real**: Steps 1-5 on 2026-11-20 and Steps 6-10 on 2026-11-21, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1. Steps 6-10 needed the workarounds they list, a Docker VM resized to 4 CPUs and 6 GB, and a DefectDojo initialised by hand; this is not a run of an unmodified release.
+> **Last run for real**: Steps 1-5 on 2026-11-20 and Steps 6-10 on 2026-11-21, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1. Steps 6-10 needed the workarounds they list, a Docker VM resized to 4 CPUs and 6 GB, and a DefectDojo initialised by hand; this is not a run of an unmodified release. The Woodpecker runs used uFawkesDevX v1.0.1. The lab pins v1.2.0 now: its `python-flask-app` template differs from v1.0.1 by one comment in `src/app.py`, and Step 2's scaffold and pipeline generation were re-run on v1.2.0 (2026-11-21) with identical output. The pipeline runs themselves were not repeated on v1.2.0.
 >
 > **Scope.** Steps 1-5 run `dependency_scan` (Trivy). Steps 6-10 run `sast` (SonarQube), `image_scan`, Bandit, `dast` (OWASP ZAP) and the `defectdojo` upload. v2.0.0 does not work out of the box for any of Steps 6-10: each step lists the defects we hit and the workaround that got it running. The `dast` step still ends red (Step 9 says why) and the Trivy and Bandit options inside `sast` do not work (Step 6). uFawkesPipe has no separate Gitleaks stage; Trivy's filesystem scan also looks for secrets (Step 4). Steps 6-10 need a Docker VM with about 6 GB of RAM and a lot of patience; on a laptop already under load the runs were very slow, and starting SonarQube, ZAP and DefectDojo at the same time overloaded ours.
 
