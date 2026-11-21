@@ -192,9 +192,18 @@ check_push() {
 
 # A green push step is not proof: ask the registry itself what it holds.
 check_registry() {
-  local tags
-  if ! tags=$(curl -sS --max-time 15 "${REGISTRY_URL}/v2/${REGISTRY_REPO}/tags/list" | jq -r '.tags // [] | join(",")'); then
-    record_test "Registry Tags" "FAIL" "could not read ${REGISTRY_URL}/v2/${REGISTRY_REPO}/tags/list (error above); is the lab registry running? (Step 2)"
+  local out code tags
+  if ! out=$(curl -sS --max-time 15 -w '\n%{http_code}' "${REGISTRY_URL}/v2/${REGISTRY_REPO}/tags/list"); then
+    record_test "Registry Tags" "FAIL" "could not reach ${REGISTRY_URL} (curl error above); is the lab registry running? (Step 1)"
+    return
+  fi
+  code="${out##*$'\n'}"
+  if [ "$code" != "200" ]; then
+    record_test "Registry Tags" "FAIL" "${REGISTRY_URL}/v2/${REGISTRY_REPO}/tags/list returned HTTP ${code} (404 = nothing pushed yet)"
+    return
+  fi
+  if ! tags=$(printf '%s' "${out%$'\n'*}" | jq -r '.tags // [] | join(",")'); then
+    record_test "Registry Tags" "FAIL" "unexpected registry response (jq error above)"
     return
   fi
   if [ -n "$tags" ]; then
