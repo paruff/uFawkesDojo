@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟡 Yellow Belt
 **Duration**: 60 minutes
-**Prerequisites**: Module 5 (CI Fundamentals) complete, uFawkesPipe v2.0.0 running
+**Prerequisites**: Module 5 (CI Fundamentals) complete, uFawkesPipe v2.0.1 running
 **DORA Capabilities**: Continuous Integration (CD3, CD4), Deployment Pipeline
 
 ---
@@ -789,12 +789,12 @@ You'll use the running uFawkesPipe stack to:
 
 ### Lab Environment
 
-**Prerequisites**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (see the lab)
+**Prerequisites**: uFawkesPipe v2.0.1 and uFawkesDevX v1.2.0 (see the lab)
 
 **Get uFawkesPipe** (the tag the lab was run against; never `main`):
 
 ```bash
-git clone --branch v2.0.0 --depth 1 https://github.com/paruff/uFawkesPipe.git
+git clone --branch v2.0.1 --depth 1 https://github.com/paruff/uFawkesPipe.git
 cd uFawkesPipe && make up
 ```
 

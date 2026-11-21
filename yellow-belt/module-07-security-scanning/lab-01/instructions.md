@@ -3,7 +3,7 @@
 **Module**: Yellow Belt — Module 7: Security Scanning & Quality Gates
 **Estimated Time**: about 25 minutes for Steps 1-5; Steps 6-10 took us several hours, mostly setup and image pulls (an estimate, not timed)
 **Difficulty**: Intermediate (Modules 5 & 6 complete required)
-**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.1 and uFawkesDevX v1.2.0 (Docker Compose)
 
 > **Last run for real**: Steps 1-5 on 2026-11-20 and Steps 6-10 on 2026-11-21, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1. Steps 6-10 needed the workarounds they list, a Docker VM resized to 4 CPUs and 6 GB, and a DefectDojo initialised by hand; this is not a run of an unmodified release. The Woodpecker runs used uFawkesDevX v1.0.1. The lab pins v1.2.0 now: its `python-flask-app` template differs from v1.0.1 by one comment in `src/app.py`, and Step 2's scaffold and pipeline generation were re-run on v1.2.0 (2026-11-21) with identical output. The pipeline runs themselves were not repeated on v1.2.0.
 >
@@ -30,7 +30,7 @@ By the end of this lab you will have:
 This lab continues [Module 5](../../module-05-ci-fundamentals/lab-01/instructions.md) and [Module 6](../../module-06-golden-path/lab-01/instructions.md). Use their **Prerequisites** (tools, GitHub OAuth App, `uFawkesPipe` and `uFawkesDevX` checkouts, `.env`, `WOODPECKER_TOKEN`). Start only `docker compose -f compose.yaml up -d woodpecker-server woodpecker-agent`, and never stop the stack with `make down` (it runs `down -v`).
 
 ```bash
-git -C ~/dojo-labs/uFawkesPipe describe --tags   # must print v2.0.0; if not: git -C ~/dojo-labs/uFawkesPipe checkout v2.0.0
+git -C ~/dojo-labs/uFawkesPipe describe --tags   # must print v2.0.1; if not: git -C ~/dojo-labs/uFawkesPipe checkout v2.0.1
 export WP=http://localhost:8000        # your Woodpecker URL (check WOODPECKER_UI_PORT in .env)
 export WOODPECKER_TOKEN='eyJ...'
 curl -s -H "Authorization: Bearer $WOODPECKER_TOKEN" $WP/api/user | jq .login

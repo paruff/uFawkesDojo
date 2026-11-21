@@ -3,7 +3,7 @@
 **Module**: Yellow Belt — Module 5: CI Fundamentals
 **Estimated Time**: about 45 minutes (an estimate, not timed; the first run pulls container images)
 **Difficulty**: Intermediate (White Belt complete required)
-**Runs against**: uFawkesPipe v2.0.0 and uFawkesDevX v1.2.0 (Docker Compose)
+**Runs against**: uFawkesPipe v2.0.1 and uFawkesDevX v1.2.0 (Docker Compose)
 
 > **Last run for real**: 2026-11-20, every step below, against uFawkesPipe v2.0.0 (Woodpecker 3.20.1) and uFawkesDevX v1.0.1. Where the platform behaves differently from what you might expect, the step says so. The Woodpecker runs used uFawkesDevX v1.0.1. The lab pins v1.2.0 now: its `python-flask-app` template differs from v1.0.1 by one comment in `src/app.py`, and Step 2's scaffold and pipeline generation were re-run on v1.2.0 (2026-11-21) with identical output. The pipeline runs themselves were not repeated on v1.2.0.
 
@@ -37,7 +37,7 @@ If port 8000 is taken on your machine (a Docker container or an `ssh` tunnel oft
 
 ```bash
 mkdir -p ~/dojo-labs && cd ~/dojo-labs
-git clone --branch v2.0.0 --depth 1 https://github.com/paruff/uFawkesPipe.git
+git clone --branch v2.0.1 --depth 1 https://github.com/paruff/uFawkesPipe.git
 git clone --branch v1.2.0 --depth 1 https://github.com/paruff/uFawkesDevX.git
 ```
 

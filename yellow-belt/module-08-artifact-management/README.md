@@ -2,7 +2,7 @@
 
 **Belt Level**: 🟡 Yellow Belt
 **Estimated Time**: 60 minutes of theory and quiz plus about 25 minutes of lab (estimates, not timed)
-**Prerequisites**: Module 5, 6, 7 complete, uFawkesPipe v2.0.0 running
+**Prerequisites**: Module 5, 6, 7 complete, uFawkesPipe v2.0.1 running
 **DORA Capability**: Artifact Traceability, Deployment Automation, Release Management
 
 ---
@@ -95,7 +95,7 @@ This lab walks you through:
 4. Seeing the generated `deploy` step fail, and fixing it by hand
 5. Checking which contract fields (retention, promotion, signing, `kubernetes`) the generator ignores
 
-**Runs against**: uFawkesPipe v2.0.0 (Docker Compose), last run for real on 2026-11-21 with a local registry. The lab covers build, image scan, push and the generated deploy step; v2.0.0 does not implement retention, promotion, signing or the `kubernetes` section (see the lab's Scope note).
+**Runs against**: uFawkesPipe v2.0.1 (Docker Compose), last run for real on 2026-11-21 with a local registry. The lab covers build, image scan, push and the generated deploy step; v2.0.0 does not implement retention, promotion, signing or the `kubernetes` section (see the lab's Scope note).
 
 **Prerequisites**: Module 7 completed, uFawkesPipe running
 

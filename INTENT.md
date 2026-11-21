@@ -27,7 +27,7 @@ Labs follow the suite's release order and pin a released stack tag, never
 `main`: uFawkesAI (Dojo 0.2), then uFawkesObs, uFawkesPipe and uFawkesDevX.
 uFawkesAI tagged `v2.0.0` on 2026-10-07 (with `fawkes-space:2.0.0`).
 **As of 2026-11-21** the stable tags the labs pin are uFawkesObs `v1.0.1`,
-uFawkesPipe `v2.0.0` and uFawkesDevX `v1.2.0`. Labs written ahead of a release
+uFawkesPipe `v2.0.1` and uFawkesDevX `v1.2.0`. Labs written ahead of a release
 are marked "not yet run for real" until they are verified against a tag that
 exists (see the audit below).
 
