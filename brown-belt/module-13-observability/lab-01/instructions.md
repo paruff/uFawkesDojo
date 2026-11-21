@@ -402,6 +402,9 @@ The DORA profile adds to the running stack. You do not need to stop anything fir
 cd ~/dojo-labs/uFawkesObs
 make up-dora
 ./scripts/wait-healthy.sh
+
+# wait-healthy.sh does not wait for dora-api; give it a moment to start serving
+until curl -sf http://localhost:8088/health > /dev/null; do sleep 2; done
 ```
 
 > `make down` does not stop this stack at this version: it runs `docker compose down`
