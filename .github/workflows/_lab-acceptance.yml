@@ -114,6 +114,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: paruff/uFawkesAI
+          ref: v2.0.0 # the tag the labs pin (AC-003); not the default branch
           path: uFawkesAI
 
       - name: Configure the stack .env (the flow the labs document)
@@ -175,6 +176,28 @@ jobs:
             exit 1
           fi
           echo "all expected services healthy"
+
+      # uFawkesObs v1.0.1 publishes no dora_* sample until events arrive, and
+      # the labs' Step 2 (the student half) sends them. Send the same shapes:
+      # a failure, then a success carrying first_commit_at (lead time needs it;
+      # recovery time needs a success after a failure), and a rework event.
+      - name: Send the deployment events the labs' Step 2 sends
+        run: |
+          now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          before=$(date -u -d '2 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          send() { curl -fsS -X POST http://localhost:8088/event -H "Content-Type: application/json" -d "$1"; echo; }
+          deploy() { # <n> <status> <deployed_at> [first_commit_at]
+            jq -nc --arg sha "$(printf '%040d' "$1")" --arg st "$2" --arg at "$3" --arg fc "${4:-}" \
+              '{schema_version: "1.0", event_type: "deployment", repo: "your-name/dojo-lab",
+                service: "dojo-lab-service", environment: "production", commit_sha: $sha,
+                deployed_at: $at, status: $st, pipeline_url: "https://example.com/ci"}
+               + (if $fc == "" then {} else {first_commit_at: $fc} end)'
+          }
+          send "$(deploy 1 failed "$before")"
+          send "$(deploy 2 success "$now" "$before")"
+          send "$(jq -nc --arg sha "$(printf '%040d' 2)" --arg at "$now" \
+            '{schema_version: "1.0", event_type: "rework", repo: "your-name/dojo-lab",
+              deployment_sha: $sha, rework_type: "hotfix", triggered_at: $at, user_visible: true}')"
 
       - name: Steady state (60s — telemetry export and metric computation)
         run: sleep 60

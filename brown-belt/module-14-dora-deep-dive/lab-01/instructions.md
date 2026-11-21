@@ -568,7 +568,7 @@ docker compose --profile '*' down -v --remove-orphans
 | No metrics in Prometheus | dora-api has not computed since your events (it computes at start, then hourly by default) | `docker compose restart dora-api` |
 | An event returns `HTTP 422` | It does not match schema 1.0 (a missing field, an extra field, or a short `commit_sha`) | Compare it with Step 2.1; the response body names the field |
 | Grafana dashboard empty | No data in Prometheus | Restart dora-api (Step 2.5), then check the scrape config |
-| Alert rules not loading | Syntax error | `promtool check config /etc/prometheus/prometheus.yml` |
+| Alert rules not loading | Syntax error | `promtool check config /etc/prometheus/prometheus.yaml` |
 
 ---
 
@@ -582,7 +582,7 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 4. How do you enable the DORA profile in uFawkesObs?
 5. What PromQL query gives you Deployment Frequency per day?
 
-(Suggested answers: 1 = DF/Lead Time/CFR/MTTR/Rework Rate with Elite benchmarks; 2 = POST to dora-api/event; 3 = inside `dora-api`, which aggregates events into DORA metrics and serves them on `/metrics`; 4 = `make up-dora`; 5 = `sum(rate(dora_deployment_frequency[7d])) * 86400`)
+(Suggested answers: 1 = DF/Lead Time/CFR/MTTR/Rework Rate with Elite benchmarks; 2 = POST to dora-api/event; 3 = inside `dora-api`, which aggregates events into DORA metrics and serves them on `/metrics`; 4 = `make up-dora`; 5 = `dora_deployment_frequency_per_week / 7`)
 
 ---
 
@@ -605,7 +605,7 @@ You've now built a complete DORA metrics pipeline with uFawkesObs — from event
 2. **Event collection**: POST to `dora-api` at `http://localhost:8088/event` with deployment event JSON
 3. **Where metrics are computed**: in `dora-api`, from the events in SQLite, served on `/metrics`
 4. **Enable DORA**: `make up-dora` (starts the core stack plus `dora-api`)
-5. **DF query**: `sum(rate(dora_deployment_frequency[7d])) * 86400`
+5. **DF query**: `dora_deployment_frequency_per_week / 7` (deployments per day)
 
 ---
 

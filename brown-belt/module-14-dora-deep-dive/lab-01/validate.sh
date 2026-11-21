@@ -219,6 +219,10 @@ check_prometheus_metrics() {
       # Prometheus answers success to any well-formed query, so require a sample.
       if echo "$body" | jq -e '.status == "success" and (.data.result | length) > 0' > /dev/null 2>&1; then
         log_success "  $metric: queryable"
+      elif [[ "$metric" == dora_lead_time_* ]]; then
+        # The lab's events carry no first_commit_at or pr_merged_at, so lead time has
+        # no input (Step 3): "no data" here is the lab's expected result, not a failure.
+        log_info "  $metric: no data (expected: the lab's events carry no first_commit_at)"
       else
         log_error "  $metric: query succeeded but no data"
         all_pass=false
@@ -230,7 +234,7 @@ check_prometheus_metrics() {
   done
 
   if [ "$all_pass" = "true" ]; then
-    record_test "DORA Metrics Query" "PASS" "All 5 DORA metrics queryable via PromQL"
+    record_test "DORA Metrics Query" "PASS" "DORA metrics queryable via PromQL (lead time has no input on this lab's events)"
   else
     record_test "DORA Metrics Query" "FAIL" "One or more DORA metrics not queryable"
   fi

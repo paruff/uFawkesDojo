@@ -28,11 +28,18 @@ Each module's hands-on lab is a per-lab `instructions.md`:
 
 - **White Belt Module 0 — Start here**: uFawkesAI template + devcontainer (`v2.0.0`) — one intent → spec → plan cycle
   [`white-belt/module-00-vibe-coding-to-agentic/lab-01/instructions.md`](white-belt/module-00-vibe-coding-to-agentic/lab-01/instructions.md)
-- **White Belt Module 1**: uFawkesDevX (Docker Compose) — scaffold a service via golden path Cookiecutter template
+- **White Belt Module 1**: uFawkesDevX `v1.2.0` (Docker Compose) — scaffold a service via golden path Cookiecutter template
   [`white-belt/module-01-what-is-idp/lab-01/instructions.md`](white-belt/module-01-what-is-idp/lab-01/instructions.md)
 - **White Belt Module 2**: uFawkesObs (Docker Compose) — send events to live DORA dashboard
   [`white-belt/module-02-dora-metrics/lab-01/instructions.md`](white-belt/module-02-dora-metrics/lab-01/instructions.md)
-- **Modules 3-4**: Kubernetes-based (transitional — to be migrated)
+- **White Belt Module 3**: uFawkesDevX (Docker Compose) — GitOps workflow with the Score service
+  [`white-belt/module-03-gitops-principles/lab-01/instructions.md`](white-belt/module-03-gitops-principles/lab-01/instructions.md)
+- **White Belt Module 4**: uFawkesDevX (Docker Compose) — your first deployment
+  [`white-belt/module-04-first-deployment/lab-01/instructions.md`](white-belt/module-04-first-deployment/lab-01/instructions.md)
+- **Yellow Belt Modules 5-8**: uFawkesPipe (Docker Compose) — pipelines, golden paths, security scanning, artifacts
+  [`yellow-belt/`](yellow-belt/)
+- **Brown Belt Modules 13-16**: uFawkesObs (Docker Compose) — observability, DORA, SLOs, incidents
+  [`brown-belt/`](brown-belt/)
 
 There is no wrapping CLI — a prior `labs/fawkes-cli.py` prototype was removed as unnecessary (each `make up`/`make init`-driven uFawkes stack already has its own interface); see [`INTENT.md`](INTENT.md) for current direction.
 

@@ -3,9 +3,9 @@
 **Module**: White Belt — Module 3: GitOps Principles
 **Estimated Time**: 15 minutes
 **Difficulty**: Beginner (Module 1 completion required)
-**Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose)
+**Runs against**: [uFawkesDevX v1.2.0](https://github.com/paruff/uFawkesDevX/releases/tag/v1.2.0) (Docker Compose)
 
-> **Blocked: this lab cannot run on its pinned tag.** It needs Module 1's stack, and uFawkesDevX v1.0.1 cannot build its Backstage image ([uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98)). No step has been run for real. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-21** against uFawkesDevX v1.2.0 (the Module 1 stack). The Backstage Scaffolder template **fails** on v1.2.0 (Step 3.1); the Cookiecutter path in Step 3.2 is the one that works.
 
 ---
 
@@ -13,10 +13,10 @@
 
 By the end of this lab you will have:
 
-1. Explored the Backstage catalog as the source of truth
+1. Explored the Backstage catalog and the Score service's spec store
 2. Registered a new service via the Score API
-3. Created a service using the Backstage Scaffolder
-4. Observed the GitOps-like workflow (spec → validation → pipeline trigger → catalog update)
+3. Created a service with Cookiecutter and registered it
+4. Observed the GitOps-like workflow (spec → validation → versioned store)
 5. Practiced rollback by reverting a Score workload spec
 
 ---
@@ -26,8 +26,8 @@ By the end of this lab you will have:
 This lab runs against **uFawkesDevX** — the Developer Experience plane — because it provides a complete GitOps workflow in Docker Compose:
 
 - **Score Service** validates workload specs and triggers pipelines (like ArgoCD but for Score specs)
-- **Backstage Catalog** serves as the source of truth (like Git repository state)
-- **Scaffolder** creates services from templates (GitOps-ready from the start)
+- **Score spec store** keeps every spec with a version number (like Git history)
+- **Golden-path templates** create services that are GitOps-ready from the start
 - **No Kubernetes required** — runs on your laptop
 
 This demonstrates GitOps principles without the cluster complexity.
@@ -36,7 +36,7 @@ This demonstrates GitOps principles without the cluster complexity.
 
 ## Prerequisites
 
-**Required**: uFawkesDevX v1.0.1 running from Module 1
+**Required**: uFawkesDevX v1.2.0 running from Module 1
 
 ```bash
 # Verify your stack is still running
@@ -49,6 +49,7 @@ make status
 **Tools required** (already installed from Module 1):
 - `curl` — HTTP client
 - `jq` — JSON processor (install: `brew install jq` or `apt install jq`)
+- `docker` — runs `yq` in a container to convert YAML specs to JSON
 - `git` — version control
 - `cookiecutter` — `pip install cookiecutter`
 
@@ -68,27 +69,30 @@ Open Backstage in your browser: **http://localhost:7007**
 
 ### 1.1 Tour the Catalog (Worked Example)
 
-1. Click **Catalog** in the left sidebar
-2. Click **Components** tab
-3. You should see your `hello-devx` service from Module 1
-4. Click on `hello-devx`
+1. Sign in as a guest and click **Catalog** in the left sidebar
+2. Set **Kind** to **Component**
+3. You should see `plugin-manager`, `score-service` and `ufawkes-devx`. Your `hello-devx` service from Module 1 is **not** there: the Score service doesn't write to the catalog
+4. Click on `ufawkes-devx`
 5. Observe:
    - **Overview** tab: Description, owner, links
-   - **APIs** tab: Any APIs provided (Score API, etc.)
-   - **TechDocs** tab: Your README rendered as documentation
 
-> ✅ **Checkpoint**: You can navigate to your Module 1 service in the catalog.
-> This catalog is the **source of truth** — like "Git state" in traditional GitOps.
+> ✅ **Checkpoint**: You can navigate the catalog. It describes the platform's own
+> parts; the specs you submit live in the Score service (Step 2).
 
 ### 1.2 Check Score Service in Catalog
 
-1. Search for `score-service` in the catalog
-2. Click on it
-3. Check the **APIs** tab — you should see:
-   - `score-api` — REST API for spec management
-   - `score-webhooks` — Pipeline trigger webhooks
+1. Click on `score-service`
+2. Check the **APIs** tab — you should see `score-api` (REST API for spec management)
 
-This is the **GitOps engine** — it validates specs and triggers pipelines.
+This is the **GitOps engine** — it validates specs and keeps every version.
+
+### 1.3 List the specs the Score service holds
+
+```bash
+curl -s http://localhost:8000/api/score/specs | jq '.specs[] | {name, version, status}'
+```
+
+**Expected output**: `hello-devx` at version 1 or 2 from Module 1 (it is the only one on a fresh stack).
 
 ---
 
@@ -103,10 +107,13 @@ Now you'll register a new service by submitting a Score workload spec directly t
 mkdir -p ~/dojo-labs/gitops-lab && cd ~/dojo-labs/gitops-lab
 
 # Create a Score workload spec for a new service
+# (the Score service rejects a spec without metadata.annotations)
 cat > hello-gitops.yaml <<'EOF'
 apiVersion: score.dev/v1b1
 metadata:
   name: hello-gitops
+  annotations:
+    dojo/lab: white-belt-03
 containers:
   hello-gitops:
     image: ghcr.io/dojo/hello-gitops:latest
@@ -125,78 +132,65 @@ cat hello-gitops.yaml
 
 ### 2.2 Submit to Score Service
 
+The API takes JSON, so define a small helper that converts a YAML spec with
+`yq` (in a container) and posts it. Define it once in this shell:
+
 ```bash
+submit() {
+  docker run --rm -i mikefarah/yq:4 -o=json . < "$1" \
+    | curl -s -X POST http://localhost:8000/api/score/specs \
+        -H "Content-Type: application/json" -d @- | jq .
+}
+
 # Submit the spec to Score Service via API Gateway
-curl -s -X POST http://localhost:8000/api/score/specs \
-  -H "Content-Type: application/json" \
-  -d @hello-gitops.yaml | jq .
+submit hello-gitops.yaml
 ```
 
-**Expected response**: JSON with the validated spec and a `spec_id`.
+**Expected response**: HTTP 201 and JSON with `id`, `name`, your `spec`,
+`version` (`1`) and `status` (`validated`). There is no `spec_id` field.
 
 ```json
 {
-  "spec_id": "abc123...",
-  "metadata": {
-    "name": "hello-gitops"
-  },
-  "containers": {
-    "hello-gitops": {
-      "image": "ghcr.io/dojo/hello-gitops:latest",
-      "variables": { "PORT": "8080" }
-    }
-  },
-  "service": { ... }
+  "id": 2,
+  "name": "hello-gitops",
+  "spec": { "apiVersion": "score.dev/v1b1", "metadata": { "name": "hello-gitops", "annotations": { "dojo/lab": "white-belt-03" } }, "...": "..." },
+  "version": 1,
+  "status": "validated",
+  "composeGenerated": true
 }
 ```
 
-> **What just happened**: The Score Service validated your `score.yaml` against
-> the `score.dev/v1b1` schema, stored it, and returned a spec ID. In a real
-> platform, this would also trigger the uFawkesPipe pipeline via webhook.
+> **What just happened**: The Score Service validated your spec against
+> the `score.dev/v1b1` schema and stored it as version 1. Posting the same name
+> again bumps the version. With `PIPELINE_WEBHOOK_URL` unset it does not call uFawkesPipe.
 
-### 2.3 Verify in Backstage
+### 2.3 Verify the registration
 
-1. Refresh the Backstage Catalog page (or wait ~30 seconds for auto-refresh)
-2. Search for `hello-gitops`
-3. Click on the component
-3. You should see it registered with the spec metadata
+```bash
+curl -s http://localhost:8000/api/score/specs/hello-gitops | jq '{name, version, status}'
+```
 
-> ✅ **Checkpoint**: Your `hello-gitops` service appears in the Backstage catalog
-> without using the Scaffolder — direct API submission. This is like "Git push → ArgoCD sync".
+> ✅ **Checkpoint**: `hello-gitops` is at version 1, `validated`. This is direct
+> API submission: "Git push → ArgoCD sync" in spirit.
 
 ---
 
-## Step 3 — Create Service with Scaffolder (5 minutes)
+## Step 3 — Create a Service from a Golden Path Template (5 minutes)
 
-Now you'll use the Backstage Scaffolder to create a new service from a template.
-This is the **developer self-service** path — golden path template → registered service.
+Now you'll create a service from the golden path template and register it.
+This is the **developer self-service** path.
 
-### 3.1 Access Scaffolder
+### 3.1 The Backstage Scaffolder (does not work on v1.2.0)
 
-1. In Backstage, click **Create** in the left sidebar
-2. You should see available templates:
-   - **Deploy Score Workload** (from uFawkesDevX catalog template)
-   - Any other templates registered
+The catalog has a **Deploy Score Workload** template (**Create** in the left
+sidebar). Running it fails on v1.2.0: the template's steps use the `http:post`
+action, which this Backstage doesn't register, so the task ends with
+`Template action with ID 'http:post' is not registered`. Don't spend time on it;
+use the Cookiecutter path below.
 
-### 3.2 Run the Template
+### 3.2 Cookiecutter + Score API
 
-If the "Deploy Score Workload" template is available:
-
-1. Click **Deploy Score Workload**
-2. Fill in:
-   - **Workload Name**: `hello-scaffolded`
-   - **Description**: `Scaffolded service for GitOps lab`
-   - **Container Image**: `ghcr.io/dojo/hello-scaffolded:latest`
-   - **Replicas**: `1`
-   - **Port**: `8080`
-3. Click **Review** → **Create**
-
-If the template is not available (Scaffolder not fully configured), skip to the
-alternative below.
-
-### 3.3 Alternative: Cookiecutter + Score API
-
-If Scaffolder template isn't available, create via Cookiecutter and register:
+Create the service with Cookiecutter and register it:
 
 ```bash
 # Scaffold using Cookiecutter (same as Module 1)
@@ -207,23 +201,24 @@ cookiecutter templates/python-flask-app --no-input \
   language="python" \
   registry_namespace="dojo"
 
-# Register the generated score.yaml via Score API
+# Register the generated score.yaml via Score API. The template's spec has no
+# annotations yet, so add one while converting (same idea as `submit` above).
 cd ~/dojo-labs/uFawkesDevX/hello-scaffolded
-curl -s -X POST http://localhost:8000/api/score/specs \
-  -H "Content-Type: application/json" \
-  -d @score.yaml | jq .
+docker run --rm -i mikefarah/yq:4 -o=json '.metadata.annotations."dojo/lab" = "white-belt-03"' < score.yaml \
+  | curl -s -X POST http://localhost:8000/api/score/specs \
+      -H "Content-Type: application/json" -d @- | jq '{name, version, status}'
 ```
 
-### 3.4 Verify in Backstage
+### 3.3 Verify the registration
 
-1. Refresh Backstage Catalog
-2. Search for `hello-scaffolded`
-3. Verify it appears with:
-   - **TechDocs** tab showing README
-   - **APIs** tab (if Score spec registered APIs)
+```bash
+curl -s http://localhost:8000/api/score/specs | jq '.specs[].name'
+```
 
-> ✅ **Checkpoint**: Your scaffolded service appears in Backstage with TechDocs.
-> This is the **golden path** — template → spec → catalog in minutes.
+**Expected output**: `"hello-devx"`, `"hello-gitops"` and `"hello-scaffolded"`.
+
+> ✅ **Checkpoint**: Your scaffolded service is registered. This is the **golden
+> path**: template → spec → registered in minutes.
 
 ---
 
@@ -235,10 +230,13 @@ GitOps rollback = `git revert` on spec + re-submit. Let's practice.
 
 ```bash
 # Update the hello-gitops spec with a "bad" image tag
+cd ~/dojo-labs/gitops-lab
 cat > hello-gitops-bad.yaml <<'EOF'
 apiVersion: score.dev/v1b1
 metadata:
   name: hello-gitops
+  annotations:
+    dojo/lab: white-belt-03
 containers:
   hello-gitops:
     image: ghcr.io/dojo/hello-gitops:v2.0-broken  # Broken version!
@@ -251,13 +249,10 @@ service:
       targetPort: 8080
 EOF
 
-# Submit the bad spec
-curl -s -X POST http://localhost:8000/api/score/specs \
-  -H "Content-Type: application/json" \
-  -d @hello-gitops-bad.yaml | jq .
+# Submit the bad spec (needs the submit helper from Step 2.2)
+submit hello-gitops-bad.yaml | jq '{name, version}'
 
-# In real GitOps: this would trigger pipeline → deploy broken version
-# Backstage would show the new spec version
+# Expected: version 2. In real GitOps this would trigger a pipeline and deploy the broken version
 ```
 
 ### 4.2 Perform Rollback
@@ -266,12 +261,13 @@ curl -s -X POST http://localhost:8000/api/score/specs \
 # Rollback: Revert to the previous (good) spec
 # In real GitOps: git revert HEAD
 # Here: just re-submit the original good spec
-curl -s -X POST http://localhost:8000/api/score/specs \
-  -H "Content-Type: application/json" \
-  -d @hello-gitops.yaml | jq .
+submit hello-gitops.yaml | jq '{name, version}'
 
-# In real GitOps: pipeline deploys v1.0 again
-# Backstage shows rollback
+# Expected: version 3, with the good image again. Check it:
+curl -s http://localhost:8000/api/score/specs/hello-gitops | jq '.spec.containers["hello-gitops"].image'
+# Expected: "ghcr.io/dojo/hello-gitops:latest"
+
+# In real GitOps: the pipeline deploys the good version again
 ```
 
 > ✅ **Checkpoint**: You've practiced the GitOps rollback pattern —
@@ -293,18 +289,19 @@ bash white-belt/module-03-gitops-principles/lab-01/validate.sh
 ```
 [INFO] Starting White Belt Module 03 Lab 01 validation...
 
-[✓] Prerequisites: curl, jq, git, cookiecutter installed
-[✓] uFawkesDevX Stack: all 5 services healthy
-[✓] Backstage Catalog: API reachable
-[✓] Score Service: API reachable and validates specs
-[✓] Service Registration: hello-gitops registered via Score API
-[✓] Scaffolder Service: hello-scaffolded registered
-[✓] Rollback Pattern: Spec re-submission works
+[✓] Prerequisites: docker, docker compose, git, curl, jq, cookiecutter installed
+[✓] uFawkesDevX Stack: all 5 services healthy (coder, backstage, score-service, plugin-manager, gateway)
+[✓] Backstage Catalog: systems: developer-control-plane ufawkes-obs ufawkes-pipe ufawkes-sec
+[✓] Gateway: reachable at http://localhost:8000
+[✓] Direct API Registration: hello-gitops is registered (version 3)
+[✓] Rollback Pattern: hello-gitops is back on :latest at version 3
+[✓] Scaffolded Service: hello-scaffolded has score.yaml and .fawkespipe.yml
+[✓] Cookiecutter Registration: hello-scaffolded is registered (version 1)
 
 ==========================================
-Total Tests: 7
-Passed: 7
-Failed: 0
+Total Tests : 8
+Passed      : 8
+Failed      : 0
 
 [✓] All tests passed! ✅
 
@@ -317,13 +314,11 @@ Failed: 0
 
 ## Clean Up
 
-When you are done with the lab, remove the test services from Backstage
+When you are done with the lab, remove the test specs from the Score service
 (optional — they don't consume significant resources):
 
 ```bash
-# No cleanup required for API-registered specs
-# They remain in Backstage catalog until manually removed
-# Or just leave them for reference
+for n in hello-gitops hello-scaffolded; do curl -s -X DELETE http://localhost:8000/api/score/specs/$n; done
 ```
 
 ---
@@ -333,10 +328,12 @@ When you are done with the lab, remove the test services from Backstage
 | Problem | Cause | Fix |
 |---------|-------|-----|
 | `curl: (7) Failed to connect` on port 8000 | Score service not healthy | Run `make status` in uFawkesDevX, check `developerd-score` |
-| `422` response from Score API | Spec doesn't match schema | Check `score.yaml` syntax, validate against score.dev/v1b1 |
-| Service not in Backstage catalog | Catalog not refreshed | Wait 30s, or refresh browser; check Score service logs |
+| `400` `Invalid Score specification` | Spec doesn't match the schema, or the body isn't JSON | Check `details` in the response; post through `submit` |
+| `400` `Plugin example-validator validation failed` | No `metadata.annotations` | Add an annotation, as in Step 2.1 |
+| Scaffolder task fails on `http:post` | The template needs an action v1.2.0 doesn't register | Use Cookiecutter (Step 3.2) |
 | `jq: command not found` | jq not installed | `brew install jq` (macOS) or `apt install jq` (Linux) |
 | Cookiecutter template fails | Template not found | Ensure you're in uFawkesDevX root directory |
+| `submit: command not found` | New shell | Define `submit` again (Step 2.2) |
 
 ---
 
@@ -346,11 +343,11 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 
 1. What are the four GitOps principles?
 2. In uFawkesDevX, which component validates the Score spec?
-3. What triggers the uFawkesPipe pipeline?
+3. What does the Score service do on a second POST of the same spec name?
 4. How do you rollback a service in uFawkesDevX GitOps?
-5. What serves as the "source of truth" in uFawkesDevX?
+5. Where does the Score service keep each version of a spec?
 
-(Suggested answers: 1 = Declarative, Versioned, Pulled, Reconciled; 2 = Score Service; 3 = Score Service webhook after validation; 4 = git revert score.yaml + re-submit to Score API; 5 = Backstage Catalog)
+(Suggested answers: 1 = Declarative, Versioned, Pulled, Reconciled; 2 = Score Service; 3 = it stores a new version (version 2) of the spec; 4 = git revert score.yaml + re-submit to Score API; 5 = in its own SQLite store, read back through `/api/score/specs/<name>`)
 
 ---
 
@@ -358,9 +355,9 @@ Write your answers down — the act of writing (not just thinking) strengthens r
 
 | Component | Role in GitOps |
 |-----------|----------------|
-| **Score Service** | Validates spec, triggers pipeline, updates catalog |
-| **Backstage Catalog** | Source of truth — stores spec metadata |
-| **Scaffolder** | Self-service: template → registered service |
+| **Score Service** | Validates spec, stores each version, notifies a pipeline webhook if one is set |
+| **Backstage Catalog** | Describes the platform's own components and APIs |
+| **Cookiecutter template** | Self-service: template → registered service |
 | **Score Spec (`score.yaml`)** | Declarative desired state |
 | **uFawkesPipe** | Build/test/deploy pipeline (triggered by Score) |
 

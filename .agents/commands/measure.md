@@ -43,8 +43,9 @@ what counts as an anomaly, and what to hand off.
 
 ### Phase 1 — Collect and translate (delegate to skills)
 
-Follow the `dora-measurement` skill to compute the four DORA delivery metrics
-(Deployment Frequency, Lead Time for Changes, Change Failure Rate, Time to Restore)
+Follow the `dora-measurement` skill to compute the five DORA delivery metrics
+(Deployment Frequency, Lead Time for Changes, Change Failure Rate, Failed Deployment Recovery Time,
+Deployment Rework Rate)
 over the measurement window, using its Prometheus/Loki queries and proxy-metric
 fallback. Do not invent data — if `dora-measurement` flags `proxy_metrics: true`,
 carry that flag through unchanged.
@@ -127,7 +128,7 @@ Pass improvement items to `@planner` (label: `capability-improvement`).
 
 ## Success Criteria
 
-- [ ] All four DORA metrics computed (or proxy flag set) — via `dora-measurement` skill
+- [ ] All five DORA metrics computed (or proxy flag set) — via `dora-measurement` skill
 - [ ] ROI dimensions populated in plain language — via `ROI-reporting` skill
 - [ ] Trend vs. previous snapshot computed
 - [ ] DORA tier assessed for each metric

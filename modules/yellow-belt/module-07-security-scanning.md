@@ -2,7 +2,9 @@
 
 **Belt Level**: 🟡 Yellow Belt
 **Duration**: 60 minutes
-**Prerequisites**: Module 5 & 6 complete, uFawkesPipe v2.0.0 running
+**Prerequisites**: Module 5 & 6 complete, uFawkesPipe v2.0.0 running (`git clone --branch v2.0.0 https://github.com/paruff/uFawkesPipe.git`)
+
+> **Ports and profiles on v2.0.0.** SonarQube is at `http://localhost:9001`, not 9000. DefectDojo is not part of `make up`; start it with `make up-security` (the `security` compose profile), and its UI is then at `http://localhost:8080`. `dependency_scan.fail_on` and `suppressions` are not implemented by the generator (`docs/pipeline-contract.md`); a finding fails the step through the scanner's exit code, and `tools` takes `[trivy]` or `[osv-scanner]`.
 **DORA Capabilities**: Shift Left on Security (CD6), Security & Compliance Automation
 
 ---
@@ -274,7 +276,6 @@ stages:
     enabled: true
     tools:
       - trivy
-    fail_on: HIGH
 ```
 
 **Tools Available**:
@@ -470,7 +471,6 @@ stages:
   image_scan:
     fail_on: CRITICAL
   dependency_scan:
-    fail_on: HIGH
 ```
 
 ### Quality Gate Levels
@@ -545,7 +545,6 @@ stages:
     enabled: true
     tools:
       - trivy
-    fail_on: HIGH
 
   build:
     enabled: true

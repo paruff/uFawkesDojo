@@ -161,7 +161,6 @@ stages:
   dependency_scan:
     enabled: true
     tools: [trivy]
-    fail_on: HIGH
 
   build:
     enabled: true
@@ -188,7 +187,7 @@ advanced:
 
 uFawkesPipe provides Golden Paths through:
 
-1. **Template Repository**: Pre-built `.fawkespipe.yml` examples in `examples/`
+1. **Template Repository**: a starter contract, `.fawkespipe.yml.example` at the uFawkesPipe repo root, and the uFawkesDevX Cookiecutter templates (each has a `.fawkespipe.yml`). `examples/` holds only a contract-migration example
 2. **Contract Validation**: `scripts/generate_woodpecker_yml.py` validates and generates pipeline
 3. **Standard Stages**: All templates use the same stage structure
 4. **Language Detection**: Templates for Python, Java, Node.js, Go
@@ -262,7 +261,6 @@ stages:
     enabled: true
     tools:
       - trivy
-    fail_on: HIGH
 
   build:
     enabled: true
@@ -289,7 +287,7 @@ The `scripts/generate_woodpecker_yml.py` script translates `.fawkespipe.yml` int
 
 ### Golden Path Templates
 
-uFawkesPipe provides Golden Paths through templates in `examples/`:
+uFawkesPipe provides Golden Paths through `.fawkespipe.yml.example` (repo root) and the uFawkesDevX templates:
 
 | Template | Language | Framework |
 |----------|----------|-----------|
@@ -486,7 +484,6 @@ stages:
     enabled: true
     tools:
       - trivy
-    fail_on: HIGH
 
   build:
     enabled: true
@@ -566,7 +563,6 @@ stages:
     tools:
       - owasp-dependency-check
       - trivy
-    fail_on: CRITICAL
 
   build:
     enabled: true
@@ -651,7 +647,6 @@ stages:
     enabled: true
     tools:
       - trivy
-    fail_on: HIGH
 
   build:
     enabled: true
@@ -720,7 +715,6 @@ stages:
     enabled: true
     tools:
       - trivy
-    fail_on: HIGH
 
   build:
     enabled: true
@@ -796,6 +790,14 @@ You'll use the running uFawkesPipe stack to:
 ### Lab Environment
 
 **Prerequisites**: uFawkesPipe v2.0.0 and uFawkesDevX v1.0.1 (see the lab)
+
+**Get uFawkesPipe** (the tag the lab was run against; never `main`):
+
+```bash
+git clone --branch v2.0.0 --depth 1 https://github.com/paruff/uFawkesPipe.git
+cd uFawkesPipe && make up
+```
+
 - ✅ Woodpecker CI at http://localhost:8000
 - SonarQube and Portainer are optional here; the lab needs only the Woodpecker server and agent
 
@@ -900,7 +902,7 @@ This lab walks you through writing a golden path contract, running the generated
 - [ ] C) Write a new shared Makefile library
 - [ ] D) Create a new Woodpecker plugin
 
-**Explanation**: Copy a template from `examples/`, customize `app`, `build`, `stages`, and `advanced` sections for your application.
+**Explanation**: Copy a template (`.fawkespipe.yml.example` or a uFawkesDevX Cookiecutter template), customize `app`, `build`, `stages`, and `advanced` sections for your application.
 
 ---
 

@@ -3,9 +3,9 @@
 **Module**: White Belt — Module 1: What is an Internal Delivery Platform?
 **Estimated Time**: 20 minutes
 **Difficulty**: Beginner (basic Docker and command line knowledge required)
-**Runs against**: [uFawkesDevX v1.0.1](https://github.com/paruff/uFawkesDevX/releases/tag/v1.0.1) (Docker Compose)
+**Runs against**: [uFawkesDevX v1.2.0](https://github.com/paruff/uFawkesDevX/releases/tag/v1.2.0) (Docker Compose)
 
-> **Blocked: this lab cannot run on its pinned tag.** uFawkesDevX v1.0.1 cannot build its Backstage image (`backstage/` has no app source), so Step 2 fails; tracked in [uFawkesDevX#98](https://github.com/paruff/uFawkesDevX/issues/98). Step 1 was run for real. Steps 2 onward are unverified. See the [audit](../../../docs/ai-sdlc/compose-curriculum/audit-2026-10-06.md).
+> **Run for real on 2026-11-21** against uFawkesDevX v1.2.0, Steps 1–5 and 7, on macOS with Colima and Docker. Step 6 (Coder template push) was not run: it needs the `coder` CLI, which this run did not have. The Coder server itself came up healthy.
 
 ---
 
@@ -13,11 +13,11 @@
 
 By the end of this lab you will have:
 
-1. Started the uFawkesDevX platform locally with a self-contained PostgreSQL
+1. Started the uFawkesDevX platform locally (no database to set up)
 2. Explored the Backstage catalog and its pre-populated uFawkes plane components
 3. Scaffolded a new service (`hello-devx`) using the Cookiecutter golden path template
-4. Registered the service in the Backstage catalog via the Score service API
-5. Verified the service appears in Backstage with its TechDocs
+4. Registered the service with the Score service API
+5. Checked the Score service holds your spec
 
 ---
 
@@ -42,6 +42,8 @@ that runs on your laptop.
 **Tools required** (install before starting):
 
 - `docker` and `docker compose` (v2+) — [Docker Desktop](https://www.docker.com/products/docker-desktop/) includes both
+- `jq` — JSON processor
+- Node.js 22 or 24 — `make build` bundles the Backstage backend on your machine first (Node 26 is not supported). If you don't have it, see the container alternative in Step 2
 - `git` — version control
 - `curl` — HTTP client
 - `python3` and `pip` — for Cookiecutter
@@ -54,6 +56,8 @@ docker --version
 docker compose version
 git --version
 curl --version
+jq --version
+node --version
 python3 --version
 cookiecutter --version
 ```
@@ -70,63 +74,30 @@ three characteristics of an IDP and identify the uFawkesDevX components before s
 
 ## Step 1 — Clone uFawkesDevX and Prepare Environment (5 minutes)
 
-Clone the pinned v1.0.1 release (never `main`) and set up the required PostgreSQL
-database and Docker network.
+Clone the pinned v1.2.0 release (never `main`). v1.2.0 needs no database of
+your own: the Score service and Backstage keep SQLite files on Docker volumes,
+and Coder runs its built-in Postgres.
 
 ```bash
 # Work in a temporary directory separate from your uFawkesDojo checkout
 mkdir -p ~/dojo-labs && cd ~/dojo-labs
 
 # Clone uFawkesDevX at the pinned version this lab runs against
-git clone --branch v1.0.1 https://github.com/paruff/uFawkesDevX.git
+git clone --branch v1.2.0 https://github.com/paruff/uFawkesDevX.git
 cd uFawkesDevX
 
 # Create the shared Docker network
 make network
-```
 
-### Start a Local PostgreSQL Container
-
-uFawkesDevX v1.0.1 requires an external PostgreSQL reachable as `postgres:5432`
-on the `fawkes-net` network. Since uFawkesRes (the former shared resource plane)
-is deprecated, we'll run a temporary Postgres container for this lab.
-
-```bash
-# Start PostgreSQL on fawkes-net with required databases
-docker run -d \
-  --name dojo-postgres \
-  --network fawkes-net \
-  --network-alias postgres \
-  -e POSTGRES_PASSWORD=changeme \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_DB=postgres \
-  postgres:16-alpine
-
-# Wait for Postgres to be ready, then create the three databases uFawkesDevX needs
-sleep 5
-docker exec -i dojo-postgres psql -U postgres <<'SQL'
-CREATE DATABASE coder;
-CREATE USER coder WITH PASSWORD 'changeme';
-GRANT ALL PRIVILEGES ON DATABASE coder TO coder;
-
-CREATE DATABASE backstage;
-CREATE USER backstage WITH PASSWORD 'changeme';
-GRANT ALL PRIVILEGES ON DATABASE backstage TO backstage;
-
-CREATE DATABASE score;
-CREATE USER score WITH PASSWORD 'changeme';
-GRANT ALL PRIVILEGES ON DATABASE score TO score;
-SQL
-
-echo "PostgreSQL ready with coder, backstage, and score databases"
-```
-
-### Configure `.env` for uFawkesDevX
-
-```bash
 # Copy the example env file
 cp .env.example .env
+```
 
+### Configure `.env`
+
+Two values need yours. Everything else keeps its default.
+
+```bash
 # Find the Docker socket's group ID as your containers see it (Coder needs it to manage
 # workspace containers). This works on Linux, Docker Desktop and Colima.
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock alpine stat -c %g /var/run/docker.sock
@@ -137,26 +108,16 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock alpine stat -c %g /
 # Linux: ip route get 1 | awk '{print $7; exit}'
 # macOS: ipconfig getifaddr en0
 # Then: CODER_ACCESS_URL=http://<your-lan-ip>:7080
-
-# Set database passwords to match what we created above
-# BACKSTAGE_DB_PASSWORD=changeme
-# CODER_DB_PASSWORD=changeme
-# POSTGRES_PASSWORD=changeme
-# POSTGRES_USER=postgres
 ```
-
-**Edit `.env` now** with your values. Required variables:
 
 | Variable | Value | Notes |
 |----------|-------|-------|
 | `DOCKER_GID` | Output of the `docker run ... stat` command above | e.g., `991` |
 | `CODER_ACCESS_URL` | `http://<your-lan-ip>:7080` | **Not localhost** |
-| `POSTGRES_USER` | `postgres` | |
-| `POSTGRES_PASSWORD` | `changeme` | |
-| `BACKSTAGE_DB_PASSWORD` | `changeme` | |
-| `CODER_DB_PASSWORD` | `changeme` | |
 
 > ⚠️ **Critical**: `CODER_ACCESS_URL` must be a LAN IP (e.g., `192.168.1.42`), not `localhost` or `127.0.0.1`. Workspace agents run in separate containers and need to dial back to the Coder server. `localhost` inside a container resolves to itself, not the host.
+
+> **Port 8000 busy?** The gateway publishes port 8000. If something else on your machine holds it, set `GATEWAY_PORT=8010` in `.env`, and use that port wherever this lab says `localhost:8000` (and `export GATEWAY_URL=http://localhost:8010` before Step 7).
 
 ---
 
@@ -167,21 +128,32 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock alpine stat -c %g /
 make build && make up
 ```
 
+`make build` first bundles the Backstage backend with Node 22 or 24. If your
+Node is another version, build the bundle in a container instead, then run
+`make build && make up` (it skips the bundle when one exists):
+
+```bash
+docker run --rm -v "$PWD/backstage:/w" -w /w node:24 sh -c \
+  'node .yarn/releases/yarn-4.13.0.cjs install --immutable && node .yarn/releases/yarn-4.13.0.cjs tsc && node .yarn/releases/yarn-4.13.0.cjs build:backend'
+```
+
+The first build takes several minutes.
+
 Wait for all services to report healthy:
 
 ```bash
 make status
 ```
 
-**Expected output** — all 5 services running:
+**Expected output** — all 5 services running and `(healthy)`:
 
 ```
-NAME                       STATUS
-developerd-coder           Up (healthy)
-developerd-backstage       Up (healthy)
-developerd-score           Up (healthy)
-developerd-plugin-manager  Up (healthy)
-developerd-gateway         Up (healthy)
+NAME                        SERVICE          STATUS                    PORTS
+developerd-backstage        backstage        Up 32 seconds (healthy)   0.0.0.0:7007->7007/tcp
+developerd-coder            coder            Up 33 seconds (healthy)   0.0.0.0:7080->7080/tcp
+developerd-gateway          gateway          Up 30 seconds (healthy)   0.0.0.0:8000->8000/tcp
+developerd-plugin-manager   plugin-manager   Up 32 seconds (healthy)   0.0.0.0:8083->8083/tcp
+developerd-score            score-service    Up 31 seconds (healthy)   0.0.0.0:8081-8082->8081-8082/tcp
 ```
 
 If any service is not healthy, wait 30 seconds and re-run `make status`.
@@ -191,27 +163,26 @@ Check logs with `docker logs <container-name>` if stuck.
 
 ## Step 3 — Explore the Backstage Catalog (5 minutes)
 
-Open Backstage in your browser: **http://localhost:7007**
+Open Backstage in your browser: **http://localhost:7007** and click **Enter** to sign in as a guest.
 
 ### 3.1 Tour the Catalog (Worked Example)
 
 1. Click **Catalog** in the left sidebar
-2. You should see **5 systems** pre-populated:
-   - **Developer Control Plane** (uFawkesDevX itself)
-   - **uFawkesPipe** (CI/CD plane)
-   - **uFawkesSec** (Security plane — merged into Pipe)
-   - **uFawkesRes** (Resource plane — marked deprecated)
-   - **uFawkesObs** (Observability plane)
+2. Set the **Kind** filter to **System**. You should see **4 systems** pre-populated:
+   - **developer-control-plane** (uFawkesDevX itself)
+   - **ufawkes-pipe** (CI/CD plane)
+   - **ufawkes-sec** (Security plane — merged into Pipe)
+   - **ufawkes-obs** (Observability plane)
 
-3. Click on **Developer Control Plane** → **Components**
-4. Find and click **score-service**
-   - Notice the **APIs** tab showing `score-api` and `score-webhooks`
+3. Set **Kind** to **Component**. You should see **3 components**: `plugin-manager`, `score-service`, `ufawkes-devx`
+4. Click **score-service**
+   - Notice the **APIs** tab showing `score-api`
    - This is the service that validates Score workload specs
 
 5. Click on **plugin-manager**
    - This manages platform extensions and plugins
 
-6. Click on **uFawkesDevX** (the component)
+6. Click on **ufawkes-devx** (the component)
    - This represents the DevX plane as a whole
 
 > ✅ **Checkpoint**: You should be able to navigate to each system and component
@@ -291,8 +262,8 @@ if you prefer).
 ```bash
 cd ~/dojo-labs/uFawkesDevX/hello-devx
 
-# Initialize Git repo
-git init
+# Initialize Git repo (-b main: your git's default branch may be master)
+git init -b main
 git add .
 git commit -m "Initial commit: hello-devx golden path scaffold"
 
@@ -319,42 +290,53 @@ git push -u origin main
 
 ### 5.2 Register via Score Service API
 
-The Score service validates the `score.yaml` and registers the workload.
+The Score service validates the spec and registers the workload. Its API takes
+**JSON**, not YAML, and a plugin on the service rejects any spec without
+`metadata.annotations`. So convert `score.yaml` to JSON and add one annotation
+on the way (`yq` runs in a container, nothing to install):
 
 ```bash
 # From the hello-devx directory
 cd ~/dojo-labs/uFawkesDevX/hello-devx
 
-# Submit the Score spec to the Score service
-curl -s -X POST http://localhost:8000/api/score/specs \
-  -H "Content-Type: application/json" \
-  -d @score.yaml | jq .
+docker run --rm -i mikefarah/yq:4 -o=json '.metadata.annotations."dojo/lab" = "white-belt-01"' < score.yaml \
+  | curl -s -X POST http://localhost:8000/api/score/specs \
+      -H "Content-Type: application/json" -d @- | jq .
 ```
 
-**Expected response**: JSON with the validated spec and a `spec_id`.
+**Expected response**: HTTP 201 with the stored record: `id`, `name` (`hello-devx`),
+your `spec`, `version` (`1`) and `status` (`validated`). There is no `spec_id` field.
+
+Try breaking it: post `{"bad":1}` the same way and the service answers **HTTP 400**
+with `Invalid Score specification`.
 
 > **What just happened**: The Score service (via the API Gateway at port 8000)
-> validated your `score.yaml` against the `score.dev/v1b1` schema, stored it,
-> and returned a spec ID. In a real platform, this would also trigger the
-> uFawkesPipe pipeline via the webhook.
+> validated your spec against the `score.dev/v1b1` schema, stored it, and
+> returned the record. It also tries to notify uFawkesPipe; with
+> `PIPELINE_WEBHOOK_URL` unset in `.env` it skips that call.
 
-### 5.3 Verify in Backstage
+### 5.3 Verify the registration
 
-1. Refresh the Backstage Catalog page (or wait ~30 seconds for auto-refresh)
-2. Search for `hello-devx` in the catalog search bar
-3. Click on the `hello-devx` component
-4. You should see:
-   - **Overview** tab with description
-   - **APIs** tab (if Score spec registered APIs)
-   - **TechDocs** tab (README rendered as documentation)
+```bash
+curl -s http://localhost:8000/api/score/specs/hello-devx | jq '{name, version, status}'
+```
 
-> ✅ **Checkpoint**: Your `hello-devx` service appears in the Backstage catalog
-> with its TechDocs rendered. This is the "first deployment" — from template
-> to cataloged service in under 5 minutes.
+**Expected output**: `{"name": "hello-devx", "version": 1, "status": "validated"}`
+
+> ✅ **Checkpoint**: The Score service holds your `hello-devx` spec.
+>
+> The service does **not** appear in the Backstage catalog at v1.2.0. Backstage
+> reads `catalog-info.yaml` files from registered locations, and the Score
+> service doesn't write to it. The catalog you toured in Step 3 is the worked example.
 
 ---
 
-## Step 6 — Push the Coder Template (Optional but Recommended)
+## Step 6 — Push the Coder Template (Optional, not run for real)
+
+> This step was not run for the v1.2.0 check: it needs the `coder` CLI installed
+> and logged in (`coder login $CODER_ACCESS_URL`), and the template's
+> `main.tf` has `# VERIFY` comments a person must review first (see
+> `docs/coder-guide.md` in uFawkesDevX). Treat it as a pointer, not a verified step.
 
 To complete the developer experience loop, push the devcontainer template
 to Coder so developers can open workspaces instantly.
@@ -391,19 +373,19 @@ bash white-belt/module-01-what-is-idp/lab-01/validate.sh
 ```
 [INFO] Starting White Belt Module 01 Lab 01 validation...
 
-[✓] Prerequisites: docker, docker compose, git, curl, cookiecutter installed
-[✓] PostgreSQL: dojo-postgres container running with coder, backstage, score databases
+[✓] Prerequisites: docker, docker compose, git, curl, jq, cookiecutter installed
 [✓] Network: fawkes-net exists
 [✓] uFawkesDevX Stack: all 5 services healthy (coder, backstage, score-service, plugin-manager, gateway)
-[✓] Backstage Catalog: API reachable at http://localhost:7007
-[✓] Score Service: API reachable at http://localhost:8000/api/score
-[✓] Coder: API reachable at CODER_ACCESS_URL
-[✓] Scaffolded Service: hello-devx registered in Backstage catalog
+[✓] Backstage Catalog: systems: developer-control-plane ufawkes-obs ufawkes-pipe ufawkes-sec
+[✓] Gateway: reachable at http://localhost:8000
+[✓] Coder: reachable at http://<your-lan-ip>:7080
+[✓] Scaffolded Service: hello-devx has score.yaml and .fawkespipe.yml
+[✓] Score registration: hello-devx is registered (version 1)
 
 ==========================================
-Total Tests: 9
-Passed: 9
-Failed: 0
+Total Tests : 8
+Passed      : 8
+Failed      : 0
 
 [✓] All tests passed! ✅
 
@@ -423,9 +405,6 @@ When you are done with the lab, remove the resources:
 cd ~/dojo-labs/uFawkesDevX
 make down
 
-# Stop and remove PostgreSQL
-docker stop dojo-postgres && docker rm dojo-postgres
-
 # Remove the Docker network
 docker network rm fawkes-net
 
@@ -441,12 +420,13 @@ rm -rf ~/dojo-labs
 |---------|-------|-----|
 | `docker: command not found` | Docker not installed | Install Docker Desktop |
 | `make network` fails: network exists | Previous lab didn't clean up | `docker network rm fawkes-net && make network` |
-| Postgres connection refused | Postgres not ready | Wait 10s, check `docker logs dojo-postgres` |
+| `make build` fails in the Backstage bundle | Node isn't 22 or 24 | Use the `docker run ... node:24` command in Step 2 |
+| `make up` fails: port is already allocated | Another service holds 7007, 7080 or 8000 | Stop it, or set `GATEWAY_PORT` in `.env` |
 | Coder stuck on "Connecting..." | `CODER_ACCESS_URL` is `localhost` | Set to LAN IP in `.env`, run `make up` again |
-| Backstage crash-loops | Database not created | Verify `coder`, `backstage`, `score` DBs exist in Postgres |
+| Backstage catalog calls return 401 | The API needs a token | `curl localhost:7007/api/auth/guest/refresh` returns a guest token; send it as `Authorization: Bearer` |
 | `cookiecutter: command not found` | Cookiecutter not installed | `pip install cookiecutter` |
-| Score service returns 422 | `score.yaml` invalid | Check `cat score.yaml` for syntax errors |
-| Service not in Backstage catalog | Registration failed or catalog not refreshed | Check Score service logs, refresh Backstage catalog |
+| Score service returns 400 `Invalid Score specification` | The body fails the `score.dev/v1b1` schema, or isn't JSON | Post JSON as in Step 5.2; check `details` in the response |
+| Score service returns 400 `Plugin example-validator validation failed` | The spec has no `metadata.annotations` | Add an annotation, as in Step 5.2 |
 | `make check-gid` fails with `No such file or directory` | Docker Desktop for Mac and Colima have no host `docker.sock` to read | Use the `docker run ... stat` command in Step 1 |
 
 ---
@@ -474,13 +454,13 @@ modules you'll create your own templates and extend the platform.
 
 Write your answers down — the act of writing (not just thinking) strengthens retention.
 
-1. What three databases must exist in PostgreSQL for uFawkesDevX to start?
+1. Which two services keep their data in SQLite on Docker volumes, and which one runs its own built-in Postgres?
 2. Why must `CODER_ACCESS_URL` be a LAN IP, not `localhost`?
 3. What does the Score service do with the `score.yaml` you POST to it?
 4. Name two uFawkes planes that appear as Systems in the Backstage catalog.
 5. What file tells Coder how to build the devcontainer workspace?
 
-(Suggested answers: 1 = coder, backstage, score; 2 = workspace containers resolve localhost to themselves; 3 = validates against score.dev/v1b1 schema, stores spec, triggers pipeline webhook; 4 = uFawkesPipe, uFawkesObs, uFawkesSec, uFawkesRes; 5 = .devcontainer/devcontainer.json)
+(Suggested answers: 1 = Score service and Backstage use SQLite, Coder runs built-in Postgres; 2 = workspace containers resolve localhost to themselves; 3 = validates against the score.dev/v1b1 schema, stores the spec, notifies the pipeline webhook if one is set; 4 = any two of ufawkes-pipe, ufawkes-obs, ufawkes-sec; 5 = .devcontainer/devcontainer.json)
 
 ---
 

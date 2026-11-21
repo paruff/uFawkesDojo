@@ -17,8 +17,8 @@ live status is on the
 |---|---|---|---|
 | 0.2.1 Accuracy + "Start here" | uFawkesAI `v2.0.0` (tagged 2026-10-07) | Guide, PR template, Module 0 and its lab merged | "Start here" on `v2.0.0`, verbatim in CI (`start-here-live.yml`); AC-DOJO-01 passes |
 | 0.2.2 uFawkesObs | `v1.0.1` (stable, 2026-10-18). Module 2 lab-01 pins `v1.0.0`, lab-02 `v1.1.0-rc.1`, Brown Belt 13–16 `v1.0.1` | Module 2 lab-01 re-run (#79, #90); Brown Belt 13–16 written | Module 2 lab-01 and lab-02, M13 and M14 in the nightly; M15 and M16 as `--stack-only`. The lab headers say 13–16 ran on 2026-11-10 |
-| 0.2.3 uFawkesPipe | `v1.16.0-beta.1` (no `v2.0.0`) | Yellow Belt 5–8 written against `v2.0.0` | none |
-| 0.2.4 uFawkesDevX | `v1.2.0` (stable, 2026-10-17) | White Belt 1/3/4 written against `v1.0.1` | none. `v1.2.0` lists the Backstage build (uFawkesDevX#98) as fixed and runs on SQLite, so the labs' Postgres steps are wrong. Re-pin and run: #123 |
+| 0.2.3 uFawkesPipe | `v2.0.0` (2026-11-19) | Yellow Belt 5–8 run against `v2.0.0` (PRs #136–#140) | run on 2026-11-20 and 21, with the workarounds the labs list; not in the nightly |
+| 0.2.4 uFawkesDevX | `v1.2.0` pinned (stable, 2026-10-17; newer tags exist) | White Belt 1/3/4 re-pinned to `v1.2.0` and run (#123) | run on 2026-11-21; in the nightly (`white-belt-devx-labs`). Not run: Module 1 Step 6 (needs the `coder` CLI) |
 | 0.2.5 Green Belt framing | none needed | Done (Modules 9–12) | n/a |
 
 "Written" means the lab files exist. It does not mean a learner can follow
@@ -77,22 +77,20 @@ lab is in scope, since no lab targets `fawkes` today.
 
 ## Phase 0.2.3 — uFawkesPipe (Dojo 0.4, after Pipe `v2.0.0`)
 
-1. Yellow Belt 5–8, written against a `v2.0.0` that does not exist.
-   **Remaining:** run each for real against the newest Pipe release, labeled
-   pre-release; re-pin on `v2.0.0`.
+1. Yellow Belt 5–8: done, run against `v2.0.0` (#136–#140). **Remaining:**
+   the nightly does not cover them (#73).
 2. Give the GitHub OAuth app registration its own worked example, timed from
    a real first run. Not started.
 
 ## Phase 0.2.4 — uFawkesDevX (Dojo 0.5)
 
-1. White Belt 1, 3 and 4, written against `v1.0.1`, which exists but **cannot be
-   built**: its Backstage image has no app source (uFawkesDevX#98, found by a real
-   run on 2026-10-06; Module 1 Step 1 ran, Step 2 fails). **Remaining:** wait for a
-   DevX release that builds, then run each for real. Module 4 also depends on
-   uFawkesPipe, so its run waits on a Pipe release.
-2. Postgres decision (AC-004): SQLite adopted for now, recorded on uFawkesDevX#57
-   on 2026-10-06. The three spikes in that issue are still needed, and DevX
-   `v1.0.1` still requires an external Postgres until it is implemented.
+1. White Belt 1, 3 and 4 re-pinned to `v1.2.0` and run on 2026-11-21 (#123).
+   `v1.2.0` needs no database of your own (SQLite for Score and Backstage,
+   built-in Postgres for Coder), builds Backstage from a clean clone, and the
+   nightly covers all three labs. Module 4 no longer depends on a uFawkesPipe
+   release: it triggers the Score webhook instead of a Woodpecker run.
+2. Postgres decision (AC-004): SQLite, recorded on uFawkesDevX#57 and in its
+   ADR-0001. Done.
 
 ## Phase 0.2.5 — Green Belt graduation framing
 
